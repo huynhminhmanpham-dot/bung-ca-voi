@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bụng Cá Voi</title>
+<style>
+/* ===== Thiết lập chung ===== */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", "Roboto", Arial, sans-serif;
+  background-color: #eaf4fb; /* nền xanh nhạt */
+  color: #1b2a41;
+  min-height: 100vh;
+}
+
+/* ===== Header ===== */
+.site-header { text-align: center; padding: 32px 16px 20px; }
+.logo { margin: 0; font-size: 40px; color: #0b3d91; letter-spacing: 1px; }
+.subtitle { margin: 6px 0 0; color: #4a6b8a; font-size: 15px; }
+
+/* ===== Khu vực chính ===== */
+#app { max-width: 1000px; margin: 0 auto; padding: 10px 20px 60px; }
+
+/* ===== Trang chủ: lưới các "ngăn" ===== */
+.drawer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.drawer-card {
+  position: relative;
+  background: #ffffff;
+  border: 2px solid #cfe4f5;
+  border-radius: 16px;
+  padding: 22px 18px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  text-align: left;
+}
+.drawer-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(11, 61, 145, 0.15);
+  border-color: #0b3d91;
+}
+.drawer-icon { font-size: 30px; margin-bottom: 10px; display: block; }
+.drawer-title { font-size: 18px; font-weight: 600; color: #0b3d91; margin: 0 0 4px; }
+.drawer-desc { font-size: 13px; color: #5b7590; margin: 0; }
+
+.pin-btn {
+  position: absolute;
+  top: 10px; right: 10px;
+  background: none; border: none;
+  font-size: 20px; cursor: pointer;
+  color: #b9c9db; line-height: 1; padding: 4px;
+}
+.pin-btn.pinned { color: #f4b400; }
+.pin-btn:hover { transform: scale(1.15); }
+
+.pinned-label {
+  display: inline-block;
+  font-size: 11px;
+  background: #fff4d6;
+  color: #a8760a;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-bottom: 8px;
+}
+
+/* ===== Trang chi tiết ===== */
+.detail-view { animation: fadeIn 0.2s ease; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.back-btn {
+  background: #0b3d91;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+.back-btn:hover { background: #092e6e; }
+
+.detail-title { color: #0b3d91; font-size: 26px; margin-bottom: 18px; }
+
+/* ===== Bảng thời khóa biểu ===== */
+.tkb-section { margin-bottom: 34px; }
+.tkb-section h2 {
+  font-size: 18px;
+  color: #0b3d91;
+  border-left: 5px solid #0b3d91;
+  padding-left: 10px;
+  margin-bottom: 6px;
+}
+.tkb-note { font-size: 13px; color: #6a7f96; font-style: italic; margin: 0 0 12px 15px; }
+
+.tkb-table-wrap {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #cfe4f5;
+}
+table.tkb { width: 100%; border-collapse: collapse; background: #fff; min-width: 200px; }
+table.tkb th, table.tkb td {
+  border: 1px solid #dbe9f5;
+  padding: 8px 12px;
+  text-align: center;
+  font-size: 14px;
+}
+table.tkb thead th { background: #0b3d91; color: #fff; font-size: 13px; }
+table.tkb .buoi-header { background: #1857c4; }
+table.tkb tbody tr:nth-child(even) td { background: #f7fbff; }
+
+.source-note { text-align: center; font-size: 13px; color: #3a5a80; margin-top: 10px; }
+
+/* ===== Chương Trình Khung ===== */
+.ctdt-meta {
+  font-size: 14px;
+  color: #3a5a80;
+  background: #eef6ff;
+  border: 1px solid #cfe4f5;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.hocky-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 14px;
+}
+
+.hocky-col {
+  background: #fff;
+  border: 1px solid #cfe4f5;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.hocky-header {
+  background: #0b3d91;
+  color: #fff;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.hocky-body {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mon-card {
+  background: #f7fbff;
+  border: 1px solid #e2eef8;
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.mon-ma { display: block; font-size: 10.5px; color: #8098b3; }
+.mon-tc { display: inline-block; color: #0b3d91; font-weight: 600; margin-right: 4px; }
+.mon-ten { color: #1b2a41; }
+.mon-core { color: #d1342b; font-weight: 700; }
+
+.nhom-box {
+  border: 1px dashed #f4b400;
+  background: #fffdf3;
+  border-radius: 8px;
+  padding: 8px;
+  margin-top: 4px;
+}
+
+.nhom-ten { font-size: 12px; font-weight: 700; color: #a8760a; margin: 0 0 6px; }
+.nhom-chuyennganh { border-color: #0b3d91; background: #eef6ff; }
+
+.cn-list { display: flex; flex-direction: column; gap: 10px; }
+
+.cn-details {
+  border: 1px solid #cfe4f5;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.cn-details summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  color: #0b3d91;
+  background: #eef6ff;
+}
+
+.cn-details summary::-webkit-details-marker { display: none; }
+
+.cn-tc { font-size: 12px; font-weight: 500; color: #4a6b8a; }
+
+.cn-body {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cn-group {
+  border-radius: 10px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+}
+
+.cn-group-ten {
+  font-size: 12.5px;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+.cn-group-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 8px;
+}
+
+/* Bắt buộc theo chuyên ngành: xanh biển lam */
+.cn-group-bb {
+  background: #e3edfb;
+  border-color: #9fbfec;
+}
+.cn-group-bb .cn-group-ten { color: #0b3d91; }
+.cn-group-bb .mon-card { background: #f2f7fd; border-color: #cddff5; }
+
+/* Nhóm A tự chọn: vàng nhạt */
+.cn-group-a {
+  background: #fffaeb;
+  border-color: #f6d98a;
+}
+.cn-group-a .cn-group-ten { color: #a8760a; }
+.cn-group-a .mon-card { background: #fffdf5; border-color: #f4e6bd; }
+
+/* Nhóm B tự chọn (4 chuyên ngành): vàng đậm hơn để phân biệt rõ với nhóm A */
+.cn-group-b-dam {
+  background: #fdedb0;
+  border-color: #e0ac0c;
+}
+.cn-group-b-dam .cn-group-ten { color: #7a5300; }
+.cn-group-b-dam .mon-card { background: #fff2c2; border-color: #e8c455; }
+
+/* ===== Đồng hồ Pomodoro ===== */
+.pomo-wrap {
+  max-width: 420px;
+  margin: 20px auto 0;
+  text-align: center;
+  background: #fff;
+  border: 1px solid #cfe4f5;
+  border-radius: 20px;
+  padding: 36px 24px;
+}
+
+.pomo-mode {
+  display: inline-block;
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 14px;
+  padding: 6px 16px;
+  border-radius: 999px;
+}
+.pomo-mode-work { background: #eef6ff; color: #0b3d91; }
+.pomo-mode-break { background: #fff4d6; color: #a8760a; }
+
+.pomo-time {
+  font-size: 68px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  margin: 6px 0 14px;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+.pomo-time-work { color: #0b3d91; }
+.pomo-time-break { color: #a8760a; }
+
+.pomo-cycles { font-size: 13px; color: #5b7590; margin: 0 0 24px; }
+
+.pomo-buttons { display: flex; gap: 12px; justify-content: center; }
+
+.pomo-btn {
+  border: none;
+  padding: 12px 26px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pomo-btn-primary { background: #0b3d91; color: #fff; }
+.pomo-btn-primary:hover { background: #092e6e; }
+.pomo-btn-secondary { background: #eef2f7; color: #3a5a80; }
+.pomo-btn-secondary:hover { background: #dde6f0; }
+.pomo-btn-danger { background: #fdeaea; color: #c0392b; }
+.pomo-btn-danger:hover { background: #fad9d9; }
+
+/* ===== Watermark chống sao chép ===== */
+.watermark-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 10px;
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: #0b3d91;
+  opacity: 0.32;
+  pointer-events: none;
+  z-index: 999;
+  user-select: none;
+}
+
+/* ===== Thanh nút trên mỗi trang chi tiết ===== */
+.detail-toolbar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.print-btn {
+  background: #eef2f7;
+  color: #3a5a80;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.print-btn:hover { background: #dde6f0; }
+
+/* ===== Khi in trang / lưu thành PDF ===== */
+@media print {
+  .back-btn, .print-btn, .pin-btn, .drawer-grid { display: none !important; }
+  body { background: #fff; }
+  .watermark-bar {
+    opacity: 0.5;
+    position: fixed;
+    /* in lặp lại watermark ở cả đầu trang khi in nhiều trang */
+  }
+  .detail-title { color: #000; }
+}
+</style>
+</head>
+<body>
+
+  <header class="site-header">
+    <h1 class="logo">𝓑𝓾̣𝓷𝓰 𝓒𝓪́ 𝓥𝓸𝓲</h1>
+    <p class="subtitle">Нгок Хюинь · ph</p>
+  </header>
+
+  <main id="app"></main>
+
+  <div class="watermark-bar">PH²M sưu tầm và biên soạn</div>
+
+<script>
+/* =========================================================
+   BỤNG CÁ VOI - toàn bộ JS nằm trong thẻ <script> này
+   Lưu ý cho bồ: giờ chỉ có ĐÚNG 1 FILE .html
+   -> cứ Ctrl+S rồi bấm đúp mở file là chạy, không cần Live Server.
+   ========================================================= */
+
+const app = document.getElementById("app");
+
+/* ---------- 1. DỮ LIỆU THỜI KHÓA BIỂU (lấy từ ảnh) ---------- */
+
+const TKB_LY_THUYET = {
+  title: "1. Giờ học: học phần lý thuyết, thực hành tại phòng lý thuyết / phòng Zoom",
+  note: "Nghỉ giải lao 30 phút sau tiết 3 (buổi sáng).",
+  sang: [
+    { tiet: 1, gio: "06h30 - 07h20" },
+    { tiet: 2, gio: "07h20 - 08h10" },
+    { tiet: 3, gio: "08h10 - 09h00" },
+    { tiet: 4, gio: "09h30 - 10h20" },
+    { tiet: 5, gio: "10h20 - 11h10" },
+    { tiet: 6, gio: "11h10 - 12h00" },
+  ],
+  chieu: [
+    { tiet: 7, gio: "12h30 - 13h20" },
+    { tiet: 8, gio: "13h20 - 14h10" },
+    { tiet: 9, gio: "14h10 - 15h00" },
+    { tiet: 10, gio: "15h30 - 16h20" },
+    { tiet: 11, gio: "16h20 - 17h10" },
+    { tiet: 12, gio: "17h10 - 18h00" },
+  ],
+  toi: [
+    { tiet: 13, gio: "18h10 - 19h00" },
+    { tiet: 14, gio: "19h00 - 19h50" },
+    { tiet: 15, gio: "19h50 - 20h40" },
+    { tiet: 16, gio: "20h40 - 21h30" },
+  ],
+};
+
+const TKB_THUC_HANH = {
+  title: "2. Giờ học: phòng máy tính, phòng thực hành, phòng thí nghiệm, GDQP-AN, GDTC",
+  note: "Các lớp học thí nghiệm / thực hành không nghỉ giải lao.",
+  sang: [
+    { tiet: 1, gio: "07h00 - 07h50" },
+    { tiet: 2, gio: "07h50 - 08h40" },
+    { tiet: 3, gio: "08h40 - 09h30" },
+    { tiet: 4, gio: "09h30 - 10h20" },
+    { tiet: 5, gio: "10h20 - 11h10" },
+    { tiet: 6, gio: "11h10 - 12h00" },
+  ],
+  chieu: [
+    { tiet: 7, gio: "12h30 - 13h20" },
+    { tiet: 8, gio: "13h20 - 14h10" },
+    { tiet: 9, gio: "14h10 - 15h00" },
+    { tiet: 10, gio: "15h00 - 15h50" },
+    { tiet: 11, gio: "15h50 - 16h40" },
+    { tiet: 12, gio: "16h40 - 17h30" },
+  ],
+  toi: [
+    { tiet: 13, gio: "18h00 - 18h50" },
+    { tiet: 14, gio: "18h50 - 19h40" },
+    { tiet: 15, gio: "19h40 - 20h30" },
+    { tiet: 16, gio: "20h30 - 21h20" },
+  ],
+};
+
+const TKB_GIO_THI = {
+  title: "3. Giờ thi",
+  note: "",
+  sang: [
+    { tiet: 1, gio: "07h00 - 07h50" },
+    { tiet: 2, gio: "07h50 - 08h40" },
+    { tiet: 3, gio: "08h40 - 09h30" },
+    { tiet: 4, gio: "09h30 - 10h20" },
+    { tiet: 5, gio: "10h20 - 11h10" },
+    { tiet: 6, gio: "11h10 - 12h00" },
+  ],
+  chieu: [
+    { tiet: 7, gio: "12h30 - 13h20" },
+    { tiet: 8, gio: "13h20 - 14h10" },
+    { tiet: 9, gio: "14h10 - 15h00" },
+    { tiet: 10, gio: "15h30 - 16h20" },
+    { tiet: 11, gio: "16h20 - 17h10" },
+    { tiet: 12, gio: "17h10 - 18h00" },
+  ],
+  toi: [
+    { tiet: 13, gio: "18h00 - 18h50" },
+    { tiet: 14, gio: "18h50 - 19h40" },
+    { tiet: 15, gio: "19h40 - 20h30" },
+    { tiet: 16, gio: "20h30 - 21h20" },
+  ],
+};
+
+const TKB_SOURCE_NOTE =
+  "Theo thông báo số 1427/TB-ĐCT ngày 29/12/2025, áp dụng từ Học kỳ 2 năm học 2025 - 2026.";
+
+function renderBuoiTable(tenBuoi, rows) {
+  const trs = rows.map((r) => `<tr><td>${r.tiet}</td><td>${r.gio}</td></tr>`).join("");
+  return `
+    <div class="tkb-table-wrap">
+      <table class="tkb">
+        <thead>
+          <tr><th class="buoi-header" colspan="2">${tenBuoi}</th></tr>
+          <tr><th>Tiết</th><th>Giờ</th></tr>
+        </thead>
+        <tbody>${trs}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderKhoiTKB(khoi) {
+  return `
+    <section class="tkb-section">
+      <h2>${khoi.title}</h2>
+      ${khoi.note ? `<p class="tkb-note">* ${khoi.note}</p>` : ""}
+      <div class="drawer-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px,1fr));">
+        ${renderBuoiTable("BUỔI SÁNG", khoi.sang)}
+        ${renderBuoiTable("BUỔI CHIỀU", khoi.chieu)}
+        ${renderBuoiTable("BUỔI TỐI", khoi.toi)}
+      </div>
+    </section>
+  `;
+}
+
+function renderThoiKhoaBieu() {
+  return `
+    ${renderKhoiTKB(TKB_LY_THUYET)}
+    ${renderKhoiTKB(TKB_THUC_HANH)}
+    ${renderKhoiTKB(TKB_GIO_THI)}
+    <p class="source-note">${TKB_SOURCE_NOTE}</p>
+  `;
+}
+
+/* =========================================================
+   CHƯƠNG TRÌNH KHUNG - Ngành Công nghệ Kỹ thuật Hóa học
+   Khoa Công nghệ Hóa học
+   (Số hóa lại từ file PDF "CHƯƠNG TRÌNH KHUNG", áp dụng khóa
+   15DHHH trở về sau. Sơ đồ gốc có nhiều mũi tên học phần
+   trước/song hành khá phức tạp nên mình chỉ giữ lại phần quan
+   trọng nhất: mã học phần, số tín chỉ, tên học phần, theo từng
+   học kỳ. Bạn nên đối chiếu bản gốc nếu cần chính xác 100%.)
+   ========================================================= */
+
+const CTDT_HOC_KY = [
+  {
+    so: 1,
+    tinChi: 22,
+    monHoc: [
+      { ma: "0101100651", tc: "3 (3,0)", ten: "Triết học Mác-Lênin" },
+      { ma: "0101006144", tc: "3 (3,0)", ten: "Toán cao cấp A1" },
+      { ma: "0101001831", tc: "3 (3,0)", ten: "Hóa đại cương" },
+      { ma: "0101101935", tc: "1 (0,1)", ten: "Thí nghiệm hóa đại cương 1" },
+      { ma: "0101100816", tc: "2 (2,0)", ten: "Vật lý đại cương" },
+      { ma: "0101003671", tc: "2 (2,0)", ten: "Pháp luật đại cương" },
+      { ma: "0101001657", tc: "3 (3,0)", ten: "Giáo dục Quốc phòng và an ninh 1" },
+      { ma: "0101001662", tc: "2 (2,0)", ten: "Giáo dục Quốc phòng và an ninh 2" },
+      { ma: "0101001669", tc: "1 (0,1)", ten: "Giáo dục Quốc phòng và an ninh 3" },
+      { ma: "0101001677", tc: "2 (0,2)", ten: "Giáo dục Quốc phòng và an ninh 4" },
+    ],
+    nhom: [],
+  },
+  {
+    so: 2,
+    tinChi: 21,
+    monHoc: [
+      { ma: "0101002298", tc: "2 (2,0)", ten: "Kinh tế chính trị Mác-Lênin" },
+      { ma: "0101006150", tc: "2 (2,0)", ten: "Toán cao cấp A2" },
+      { ma: "0101102246", tc: "2 (1,1)", ten: "Anh văn 1" },
+      { ma: "0101001067", tc: "3 (3,0)", ten: "Hóa vô cơ" },
+      { ma: "0101001887", tc: "3 (3,0)", ten: "Hóa hữu cơ" },
+      { ma: "0101001907", tc: "2 (2,0)", ten: "Hóa lý 1" },
+      { ma: "0101101936", tc: "1 (0,1)", ten: "Thí nghiệm hóa đại cương 2" },
+      { ma: "0101002497", tc: "2 (2,0)", ten: "Kỹ thuật điện" },
+      { ma: null, tc: "2 (0,2)", ten: "Giáo dục thể chất 1" },
+    ],
+    nhom: [
+      {
+        ten: "Chọn tối thiểu 01 học phần",
+        options: [
+          { ma: "0101003731", tc: "2 (2,0)", ten: "Phương pháp nghiên cứu khoa học" },
+          { ma: "0101002400", tc: "2 (2,0)", ten: "Kỹ năng giao tiếp" },
+          { ma: "0101100936", tc: "2 (2,0)", ten: "Đổi mới sáng tạo và khởi nghiệp" },
+        ],
+      },
+    ],
+  },
+  {
+    so: 3,
+    tinChi: 20,
+    monHoc: [
+      { ma: "0101000476", tc: "2 (2,0)", ten: "Chủ nghĩa xã hội khoa học" },
+      { ma: "0101102247", tc: "2 (1,1)", ten: "Anh văn 2" },
+      { ma: "0101001917", tc: "2 (2,0)", ten: "Hóa lý 2" },
+      { ma: "0101001935", tc: "2 (2,0)", ten: "Hóa phân tích" },
+      { ma: "0101004439", tc: "1 (0,1)", ten: "Thí nghiệm hóa vô cơ" },
+      { ma: "0101004400", tc: "1 (0,1)", ten: "Thí nghiệm hóa hữu cơ", core: true },
+      { ma: "0101101251", tc: "3 (3,0)", ten: "Quá trình và thiết bị cơ học" },
+      { ma: "0101101253", tc: "3 (3,0)", ten: "Quá trình và thiết bị truyền nhiệt" },
+      { ma: null, tc: "2 (0,2)", ten: "Giáo dục thể chất 2" },
+      { ma: "0101006434", tc: "2 (2,0)", ten: "Vật liệu học", core: true },
+    ],
+    nhom: [],
+  },
+  {
+    so: 4,
+    tinChi: 20,
+    monHoc: [
+      { ma: "0101006322", tc: "2 (2,0)", ten: "Tư tưởng Hồ Chí Minh" },
+      { ma: "0101001625", tc: "2 (2,0)", ten: "Lịch sử Đảng Cộng sản Việt Nam" },
+      { ma: "0101102134", tc: "2 (1,1)", ten: "Vẽ kỹ thuật" },
+      { ma: "0101102248", tc: "2 (1,1)", ten: "Anh văn 3" },
+      { ma: "0101101255", tc: "2 (0,2)", ten: "Thí nghiệm hóa lý", core: true },
+      { ma: "0101101242", tc: "3 (3,0)", ten: "Các phương pháp phân tích hiện đại", core: true },
+      { ma: "0101004419", tc: "1 (0,1)", ten: "Thí nghiệm hóa phân tích", core: true },
+      { ma: "0101002869", tc: "2 (2,0)", ten: "Kỹ thuật xúc tác" },
+      { ma: "0101101252", tc: "3 (3,0)", ten: "Quá trình và thiết bị truyền khối" },
+      { ma: null, tc: "1 (0,1)", ten: "Giáo dục thể chất 3" },
+    ],
+    nhom: [],
+  },
+  {
+    so: 5,
+    tinChi: 19,
+    monHoc: [
+      { ma: "0101102494", tc: "2 (2,0)", ten: "Anh văn chuyên ngành Công nghệ kỹ thuật hóa học" },
+      { ma: "0101002686", tc: "2 (2,0)", ten: "Kỹ thuật phản ứng" },
+      { ma: "0101102492", tc: "2 (2,0)", ten: "Các phương pháp phân tích và đánh giá vật liệu" },
+      { ma: "0101101241", tc: "2 (2,0)", ten: "Các hệ thống kiểm soát và quản lý chất lượng", core: true },
+      { ma: "0101101256", tc: "2 (2,0)", ten: "Thiết kế chế tạo thiết bị hóa chất và thực phẩm", core: true },
+      { ma: "0101100129", tc: "1 (0,1)", ten: "Thực hành phân tích phổ nguyên tử và UV-Vis" },
+      { ma: "0101101302", tc: "1 (0,1)", ten: "Thực hành phân tích sắc ký" },
+      { ma: "0101101260", tc: "2 (0,2)", ten: "Thực hành quá trình và thiết bị" },
+      { ma: "0101100330", tc: "2 (2,0)", ten: "Dụng cụ đo và điều khiển quá trình công nghệ" },
+      { ma: "0101101257", tc: "1 (0,1)", ten: "Thực hành dụng cụ đo và điều khiển quá trình công nghệ" },
+    ],
+    nhom: [
+      {
+        ten: "Chọn tối thiểu 01 học phần",
+        options: [
+          { ma: "0101101244", tc: "2 (2,0)", ten: "Cơ sở kỹ thuật Polymer" },
+          { ma: "0101101239", tc: "2 (2,0)", ten: "Các chất hoạt động bề mặt" },
+          { ma: "0101101248", tc: "2 (2,0)", ten: "Kỹ thuật hóa môi trường" },
+          { ma: "0101001879", tc: "2 (2,0)", ten: "Hóa học xanh" },
+        ],
+      },
+    ],
+  },
+  {
+    so: 6,
+    tinChi: 22,
+    monHoc: [
+      { ma: "0101101249", tc: "2 (1,1)", ten: "Mô phỏng các quá trình công nghệ hóa học" },
+      { ma: "0101001505", tc: "1 (0,1)", ten: "Đồ án quá trình và thiết bị", core: true },
+      { ma: "0101102493", tc: "1 (0,1)", ten: "Thực hành phân tích và đánh giá vật liệu" },
+      { ma: "0101102495", tc: "3 (2,1)", ten: "Thiết kế, phân tích và tối ưu hóa thí nghiệm hoá học" },
+    ],
+    nhom: [],
+    ghiChuChuyenNganh: true, // học kỳ này có 15 tín chỉ học phần bắt buộc + tự chọn theo chuyên ngành (xem bên dưới)
+  },
+  {
+    so: 7,
+    tinChi: 18,
+    monHoc: [
+      { ma: "0101005873", tc: "4 (0,4)", ten: "Thực tập tốt nghiệp", core: true },
+      { ma: "0101102508", tc: "6 (0,6)", ten: "Khóa luận tốt nghiệp", core: true },
+      { ma: "0101101940", tc: "2 (2,0)", ten: "Nguyên tắc quản lý công nghệ" },
+      { ma: "0101100339", tc: "2 (2,0)", ten: "Ăn mòn và bảo vệ kim loại" },
+      { ma: "0101102509", tc: "2 (2,0)", ten: "Tư duy thiết kế (CNHH)" },
+      { ma: "0101100251", tc: "2 (2,0)", ten: "An toàn - sức khỏe - môi trường (HSE)" },
+    ],
+    nhom: [],
+  },
+  {
+    so: 8,
+    tinChi: 22,
+    monHoc: [
+      { ma: "0101101328", tc: "8 (0,8)", ten: "Thực tập kỹ sư", core: true },
+      { ma: "0101102511", tc: "3 (0,3)", ten: "Đồ án kỹ sư", core: true },
+      { ma: "0101102512", tc: "3 (3,0)", ten: "Seminar chuyên ngành" },
+    ],
+    nhom: [
+      {
+        ten: "NHÓM A · Chọn tối thiểu 01 học phần",
+        options: [
+          { ma: "0101101263", tc: "2 (2,0)", ten: "Vật liệu tiên tiến" },
+          { ma: "0101101941", tc: "2 (2,0)", ten: "Thiết kế sản phẩm hóa học" },
+          { ma: "0101102513", tc: "2 (2,0)", ten: "Sản xuất xanh" },
+          { ma: "0101102514", tc: "2 (2,0)", ten: "Khoa học vật liệu nano" },
+          { ma: "0101102515", tc: "2 (2,0)", ten: "Quản lý và xây dựng dự án nhà máy hóa chất" },
+        ],
+      },
+      {
+        ten: "NHÓM B · Chọn tối thiểu 02 học phần",
+        options: [
+          { ma: "0101102516", tc: "3 (3,0)", ten: "Hóa lý bề mặt" },
+          { ma: "0101102517", tc: "3 (3,0)", ten: "Tổng hợp hóa dược" },
+          { ma: "0101102518", tc: "3 (3,0)", ten: "Các phương pháp phân tích công cụ nâng cao" },
+        ],
+      },
+    ],
+  },
+];
+
+/* Danh sách 6 chuyên ngành ở học kỳ 6 (trang 2 của file PDF)
+   Mỗi chuyên ngành có 3 nhóm:
+   - batBuoc: học phần bắt buộc riêng của chuyên ngành (màu xanh biển lam)
+   - nhomA: nhóm tự chọn A (màu vàng nhạt)
+   - nhomB: nhóm tự chọn B (vàng đậm ở 4 ngành, vàng nhạt như nhóm A ở 2 ngành còn lại
+            -> quyết định bằng cờ nhomBDam) */
+const CTDT_CHUYEN_NGANH = [
+  {
+    ten: "Kỹ thuật quá trình thiết bị - dầu khí",
+    tongTinChi: "15 tín chỉ (8 bắt buộc + 7 tự chọn)",
+    nhomBDam: false,
+    batBuoc: [
+      { ma: "0101101297", tc: "2 (2,0)", ten: "Thiết kế nhà máy hoá chất và thực phẩm" },
+      { ma: "0101006904", tc: "2 (0,2)", ten: "Thực hành cơ khí hóa chất" },
+      { ma: "0101100344", tc: "2 (2,0)", ten: "Kỹ thuật đường ống và bể chứa" },
+      { ma: "0101101306", tc: "2 (2,0)", ten: "Vận hành thiết bị trong nhà máy hóa chất" },
+    ],
+    nhomA: {
+      ten: "NHÓM A · Chọn tối thiểu 01 học phần",
+      options: [
+        { ma: "0101102496", tc: "3 (3,0)", ten: "Kỹ thuật lạnh" },
+        { ma: "0101102497", tc: "3 (3,0)", ten: "Thiết kế hệ thống sấy" },
+        { ma: "0101006808", tc: "3 (3,0)", ten: "Thiết kế hệ thống chưng cất, hấp thu" },
+      ],
+    },
+    nhomB: {
+      ten: "NHÓM B · Chọn tối thiểu 02 học phần",
+      options: [
+        { ma: "0101100335", tc: "2 (2,0)", ten: "Kỹ thuật chân không" },
+        { ma: "0101101290", tc: "2 (2,0)", ten: "Hệ thống cung cấp nhiệt" },
+        { ma: "0101100332", tc: "2 (2,0)", ten: "Kỹ thuật công trình trong công nghệ hóa học" },
+        { ma: "0101004642", tc: "2 (2,0)", ten: "Thiết kế hệ thống lạnh" },
+        { ma: "0101006809", tc: "2 (2,0)", ten: "Thiết kế hệ thống cô đặc" },
+        { ma: "0101101305", tc: "2 (2,0)", ten: "Tiết kiệm và sử dụng hiệu quả năng lượng" },
+        { ma: "0101000734", tc: "2 (2,0)", ten: "Công nghệ chế biến khí" },
+        { ma: "0101000920", tc: "2 (2,0)", ten: "Công nghệ lọc dầu" },
+        { ma: "0101000375", tc: "2 (2,0)", ten: "Các sản phẩm dầu khí" },
+      ],
+    },
+  },
+  {
+    ten: "Công nghệ vô cơ - silicate",
+    tongTinChi: "15 tín chỉ (8 bắt buộc + 7 tự chọn)",
+    nhomBDam: true,
+    batBuoc: [
+      { ma: "0101006901", tc: "3 (3,0)", ten: "Giản đồ pha" },
+      { ma: "0101102498", tc: "2 (2,0)", ten: "Tổng hợp vô cơ hiện đại" },
+      { ma: "0101100325", tc: "2 (2,0)", ten: "Hóa lý silicat" },
+      { ma: "0101101299", tc: "1 (0,1)", ten: "Thực hành chuyên đề vô cơ" },
+    ],
+    nhomA: {
+      ten: "NHÓM A · Chọn tối thiểu 03 học phần",
+      options: [
+        { ma: "0101101294", tc: "2 (2,0)", ten: "Kỹ thuật mạ - điện phân" },
+        { ma: "0101006802", tc: "2 (2,0)", ten: "Công nghệ sản xuất các chất vô cơ cơ bản" },
+        { ma: "0101100347", tc: "2 (2,0)", ten: "Công nghệ sản xuất gốm sứ" },
+        { ma: "0101100326", tc: "2 (2,0)", ten: "Công nghệ sản xuất vật liệu xây dựng" },
+        { ma: "0101001053", tc: "2 (2,0)", ten: "Công nghệ sản xuất phân bón vô cơ" },
+        { ma: "0101102499", tc: "2 (2,0)", ten: "Kỹ thuật vật liệu bán dẫn" },
+        { ma: "0101102500", tc: "2 (2,0)", ten: "Công nghệ chế tạo pin" },
+        { ma: "0101101289", tc: "2 (2,0)", ten: "Công nghệ xử lý khí và nước thải" },
+      ],
+    },
+    nhomB: {
+      ten: "NHÓM B · Chọn tối thiểu 01 học phần",
+      options: [
+        { ma: "0101101298", tc: "1 (0,1)", ten: "Thực hành chuyên đề điện hóa" },
+        { ma: "0101100341", tc: "1 (0,1)", ten: "Thực hành chuyên đề silicat" },
+        { ma: "0101101938", tc: "1 (0,1)", ten: "Thực hành sản xuất vật liệu xây dựng" },
+      ],
+    },
+  },
+  {
+    ten: "Kỹ thuật phân tích và đảm bảo chất lượng",
+    tongTinChi: "15 tín chỉ (9 bắt buộc + 6 tự chọn)",
+    nhomBDam: true,
+    batBuoc: [
+      { ma: "0101006815", tc: "2 (2,0)", ten: "Lấy mẫu và xử lý mẫu" },
+      { ma: "0101103046", tc: "2 (2,0)", ten: "Phân tích sắc ký nâng cao" },
+      { ma: "0101100135", tc: "2 (2,0)", ten: "Phương pháp phân tích điện hóa" },
+      { ma: "0101102501", tc: "1 (0,1)", ten: "Thực hành phân tích điện hóa và sắc ký nâng cao" },
+      { ma: "0101102502", tc: "2 (2,0)", ten: "Xây dựng và quản lý phòng thí nghiệm phân tích" },
+    ],
+    nhomA: {
+      ten: "NHÓM A · Chọn tối thiểu 02 học phần",
+      options: [
+        { ma: "0101100140", tc: "2 (2,0)", ten: "Kiểm tra chất lượng môi trường" },
+        { ma: "0101100141", tc: "2 (2,0)", ten: "Kiểm tra chất lượng sản phẩm tẩy rửa và mỹ phẩm" },
+        { ma: "0101101266", tc: "2 (2,0)", ten: "Kiểm tra chất lượng hóa chất cơ bản, silicat và bao bì thành phẩm" },
+        { ma: "0101101247", tc: "2 (2,0)", ten: "Kiểm tra dư lượng và phụ gia trong thực phẩm" },
+        { ma: "0101100138", tc: "2 (2,0)", ten: "Kiểm tra chất lượng phân bón và thuốc bảo vệ thực vật" },
+        { ma: "0101101240", tc: "2 (2,0)", ten: "Các công cụ thống kê để cải tiến và kiểm soát chất lượng" },
+        { ma: "0101003566", tc: "2 (2,0)", ten: "Phân tích hóa lý thực phẩm 1" },
+      ],
+    },
+    nhomB: {
+      ten: "NHÓM B · Chọn tối thiểu 02 học phần",
+      options: [
+        { ma: "0101100144", tc: "1 (0,1)", ten: "Thực hành kiểm tra chất lượng môi trường" },
+        { ma: "0101100146", tc: "1 (0,1)", ten: "Thực hành kiểm tra chất lượng sản phẩm tẩy rửa và mỹ phẩm" },
+        { ma: "0101101258", tc: "1 (0,1)", ten: "Thực hành kiểm tra chất lượng hóa chất cơ bản, silicat và bao bì thành phẩm" },
+        { ma: "0101101259", tc: "1 (0,1)", ten: "Thực hành kiểm tra dư lượng và phụ gia trong thực phẩm" },
+        { ma: "0101100279", tc: "1 (0,1)", ten: "Thực hành kiểm tra chất lượng phân bón và thuốc bảo vệ thực vật" },
+        { ma: "0101103042", tc: "1 (0,1)", ten: "Thí nghiệm phân tích hóa lý thực phẩm 1 (CNHH)" },
+      ],
+    },
+  },
+  {
+    ten: "Công nghệ hữu cơ",
+    tongTinChi: "15 tín chỉ (9 bắt buộc + 6 tự chọn)",
+    nhomBDam: true,
+    batBuoc: [
+      { ma: "0101001125", tc: "2 (2,0)", ten: "Công nghệ tổng hợp hữu cơ" },
+      { ma: "0101101291", tc: "2 (2,0)", ten: "Học tập theo dự án chuyên ngành hóa hữu cơ" },
+      { ma: "0101000316", tc: "2 (2,0)", ten: "Các hợp chất thiên nhiên" },
+      { ma: "0101006920", tc: "1 (0,1)", ten: "Thực hành tách chiết các hợp chất thiên nhiên" },
+      { ma: "0101000332", tc: "2 (2,0)", ten: "Các phương pháp xác định cấu trúc hợp chất hữu cơ" },
+    ],
+    nhomA: {
+      ten: "NHÓM A · Chọn tối thiểu 02 học phần",
+      options: [
+        { ma: "0101001004", tc: "2 (2,0)", ten: "Công nghệ sản xuất chất tẩy rửa" },
+        { ma: "0101002642", tc: "2 (2,0)", ten: "Kỹ thuật nhuộm" },
+        { ma: "0101000375", tc: "2 (2,0)", ten: "Các sản phẩm dầu khí" },
+        { ma: "0101006665", tc: "2 (2,0)", ten: "Công nghệ sản xuất giấy" },
+        { ma: "0101006946", tc: "2 (2,0)", ten: "Hóa dị vòng" },
+        { ma: "0101101287", tc: "2 (2,0)", ten: "Công nghệ sản xuất sơn" },
+        { ma: "0101007185", tc: "2 (2,0)", ten: "Công nghệ gia công cao su" },
+      ],
+    },
+    nhomB: {
+      ten: "NHÓM B · Chọn tối thiểu 02 học phần",
+      options: [
+        { ma: "0101101303", tc: "1 (0,1)", ten: "Thực hành sản xuất chất tẩy rửa" },
+        { ma: "0101101301", tc: "1 (0,1)", ten: "Thực hành kỹ thuật nhuộm" },
+        { ma: "0101102503", tc: "1 (0,1)", ten: "Thực hành kiểm tra chất lượng sản phẩm giấy" },
+        { ma: "0101101610", tc: "1 (0,1)", ten: "Thực hành gia công sản phẩm polymer" },
+      ],
+    },
+  },
+  {
+    ten: "Hóa mỹ phẩm",
+    tongTinChi: "15 tín chỉ (9 bắt buộc + 6 tự chọn)",
+    nhomBDam: true,
+    batBuoc: [
+      { ma: "0101001928", tc: "2 (2,0)", ten: "Hóa mỹ phẩm" },
+      { ma: "0101006930", tc: "2 (2,0)", ten: "Quản lý chất lượng trong hóa mỹ phẩm" },
+      { ma: "0101006817", tc: "2 (2,0)", ten: "Sản xuất sản phẩm chăm sóc cá nhân" },
+      { ma: "0101100414", tc: "1 (0,1)", ten: "Thực hành sản xuất sản phẩm chăm sóc cá nhân" },
+      { ma: "0101101292", tc: "2 (2,0)", ten: "Học tập theo dự án chuyên ngành mỹ phẩm" },
+    ],
+    nhomA: {
+      ten: "NHÓM A · Chọn tối thiểu 02 học phần",
+      options: [
+        { ma: "0101100321", tc: "2 (2,0)", ten: "Công nghệ sản xuất chất tẩy rửa gia dụng" },
+        { ma: "0101006957", tc: "2 (2,0)", ten: "Sản xuất các sản phẩm trang điểm" },
+        { ma: "0101101284", tc: "2 (2,0)", ten: "Các phương pháp tạo nhũ trong hoá mỹ phẩm" },
+        { ma: "0101001989", tc: "2 (2,0)", ten: "Hương liệu mỹ phẩm" },
+        { ma: "0101101326", tc: "2 (2,0)", ten: "Kiểm tra chất lượng hóa mỹ phẩm" },
+        { ma: "0101006818", tc: "2 (2,0)", ten: "Các hợp chất thiên nhiên trong mỹ phẩm" },
+      ],
+    },
+    nhomB: {
+      ten: "NHÓM B · Chọn tối thiểu 02 học phần",
+      options: [
+        { ma: "0101101304", tc: "1 (1,0)", ten: "Thực hành sản xuất chất tẩy rửa gia dụng" },
+        { ma: "0101006958", tc: "1 (0,1)", ten: "Thực hành sản xuất các sản phẩm trang điểm" },
+        { ma: "0101101939", tc: "1 (0,1)", ten: "Thực hành hóa mỹ phẩm nâng cao" },
+        { ma: "0101101327", tc: "2 (0,2)", ten: "Thực hành kiểm tra chất lượng mỹ phẩm" },
+        { ma: null, tc: "1 (0,1)", ten: "Thực hành kiểm tra chất lượng sản phẩm tẩy rửa" },
+        { ma: "0101006920", tc: "1 (0,1)", ten: "Thực hành tách chiết các hợp chất thiên nhiên" },
+      ],
+    },
+  },
+  {
+    ten: "Nhựa - Polymer",
+    tongTinChi: "15 tín chỉ (8 bắt buộc + 7 tự chọn)",
+    nhomBDam: false,
+    batBuoc: [
+      { ma: "0101001870", tc: "3 (3,0)", ten: "Hóa học và hóa lý polymer" },
+      { ma: "0101007183", tc: "2 (2,0)", ten: "Phương pháp phân tích và đánh giá polymer" },
+      { ma: "0101007187", tc: "2 (0,2)", ten: "Thực hành tổng hợp polymer và composite" },
+      { ma: "0101101610", tc: "1 (0,1)", ten: "Thực hành gia công sản phẩm polymer" },
+    ],
+    nhomA: {
+      ten: "NHÓM A · Chọn tối thiểu 02 học phần",
+      options: [
+        { ma: "0101006760", tc: "3 (3,0)", ten: "Vật liệu polymer và composite" },
+        { ma: "0101000867", tc: "3 (3,0)", ten: "Công nghệ gia công các sản phẩm nhựa" },
+        { ma: "0101102507", tc: "3 (3,0)", ten: "Bao bì nhựa" },
+      ],
+    },
+    nhomB: {
+      ten: "NHÓM B · Chọn tối thiểu 02 học phần",
+      options: [
+        { ma: "0101101287", tc: "2 (2,0)", ten: "Công nghệ sản xuất sơn" },
+        { ma: "0101007185", tc: "2 (2,0)", ten: "Công nghệ gia công cao su" },
+        { ma: "0101100152", tc: "2 (2,0)", ten: "Kỹ thuật chất kết dính" },
+        { ma: "0101100151", tc: "2 (2,0)", ten: "Phụ gia polymer" },
+        { ma: "0101101612", tc: "2 (2,0)", ten: "Kỹ thuật tái chế phế liệu" },
+        { ma: "0101101613", tc: "2 (2,0)", ten: "Vật liệu polymer tiên tiến" },
+      ],
+    },
+  },
+];
+
+/* Vẽ 1 thẻ môn học nhỏ */
+function renderMonHocCard(m) {
+  return `
+    <div class="mon-card">
+      ${m.ma ? `<span class="mon-ma">${m.ma}</span>` : ""}
+      <span class="mon-tc">${m.tc}</span>
+      <span class="mon-ten">${m.ten}${m.core ? ' <span class="mon-core" title="Học phần cốt lõi">(*)</span>' : ""}</span>
+    </div>
+  `;
+}
+
+/* Vẽ 1 cột học kỳ trong chương trình khung */
+function renderHocKyCard(hk) {
+  const monHocHtml = hk.monHoc.map(renderMonHocCard).join("");
+  const nhomHtml = hk.nhom
+    .map(
+      (n) => `
+      <div class="nhom-box">
+        <p class="nhom-ten">${n.ten}</p>
+        ${n.options.map(renderMonHocCard).join("")}
+      </div>
+    `
+    )
+    .join("");
+
+  const chuyenNganhHtml = hk.ghiChuChuyenNganh
+    ? `<div class="nhom-box nhom-chuyennganh">
+         <p class="nhom-ten">Học phần bắt buộc + tự chọn theo chuyên ngành**</p>
+         <p class="tkb-note" style="margin:4px 0 0;">** Xem chi tiết 6 chuyên ngành ở bảng bên dưới trang này.</p>
+       </div>`
+    : "";
+
+  return `
+    <div class="hocky-col">
+      <div class="hocky-header">
+        <span>HỌC KỲ ${hk.so}</span>
+        <span class="hocky-tc">${hk.tinChi} tín chỉ</span>
+      </div>
+      <div class="hocky-body">
+        ${monHocHtml}
+        ${nhomHtml}
+        ${chuyenNganhHtml}
+      </div>
+    </div>
+  `;
+}
+
+/* Vẽ 1 nhóm môn (bắt buộc / nhóm A / nhóm B) với màu riêng */
+function renderCnGroup(tenNhom, dsMon, mauClass) {
+  return `
+    <div class="cn-group ${mauClass}">
+      <p class="cn-group-ten">${tenNhom}</p>
+      <div class="cn-group-body">${dsMon.map(renderMonHocCard).join("")}</div>
+    </div>
+  `;
+}
+
+/* Vẽ 1 chuyên ngành (dùng thẻ <details> để bấm mở/đóng gọn gàng) */
+function renderChuyenNganh(cn, index) {
+  const batBuocHtml = renderCnGroup("Học phần bắt buộc theo chuyên ngành", cn.batBuoc, "cn-group-bb");
+  const nhomAHtml = renderCnGroup(cn.nhomA.ten, cn.nhomA.options, "cn-group-a");
+  // Nhóm B: 4 chuyên ngành tô vàng đậm hơn để phân biệt, 2 chuyên ngành còn lại dùng chung màu với nhóm A
+  const nhomBClass = cn.nhomBDam ? "cn-group-b-dam" : "cn-group-a";
+  const nhomBHtml = renderCnGroup(cn.nhomB.ten, cn.nhomB.options, nhomBClass);
+
+  return `
+    <details class="cn-details" ${index === 0 ? "open" : ""}>
+      <summary>
+        <span class="cn-ten">${cn.ten}</span>
+        <span class="cn-tc">${cn.tongTinChi}</span>
+      </summary>
+      <div class="cn-body">
+        ${batBuocHtml}
+        ${nhomAHtml}
+        ${nhomBHtml}
+      </div>
+    </details>
+  `;
+}
+
+function renderChuongTrinhKhung() {
+  const hocKyHtml = CTDT_HOC_KY.map(renderHocKyCard).join("");
+  const chuyenNganhHtml = CTDT_CHUYEN_NGANH.map(renderChuyenNganh).join("");
+
+  return `
+    <p class="ctdt-meta">
+      Khoa: <strong>Công nghệ Hóa học</strong> · Ngành: <strong>Công nghệ Kỹ thuật Hóa học</strong> ·
+      Chương trình đào tạo Kỹ sư (áp dụng khóa 15DHHH trở về sau)
+    </p>
+
+    <section class="tkb-section">
+      <h2>Lộ trình học theo 8 học kỳ</h2>
+      <p class="tkb-note">
+        * Học phần cốt lõi &nbsp;•&nbsp; Ô "Chọn tối thiểu..." là nhóm tự chọn, chọn đủ số tín chỉ theo quy định của khoa.
+      </p>
+      <div class="hocky-grid">${hocKyHtml}</div>
+    </section>
+
+    <section class="tkb-section">
+      <h2>Học phần chuyên ngành (Học kỳ 6)</h2>
+      <p class="tkb-note">
+        Bấm vào tên chuyên ngành để xem danh sách học phần &nbsp;•&nbsp;
+        <span style="color:#0b3d91; font-weight:600;">Xanh lam</span> = bắt buộc &nbsp;•&nbsp;
+        <span style="color:#a8760a; font-weight:600;">Vàng nhạt</span> = Nhóm A tự chọn &nbsp;•&nbsp;
+        <span style="color:#7a5300; font-weight:600;">Vàng đậm</span> = Nhóm B tự chọn (ở 4/6 chuyên ngành; 2 chuyên ngành còn lại Nhóm B dùng chung màu Nhóm A)
+      </p>
+      <div class="cn-list">${chuyenNganhHtml}</div>
+    </section>
+
+    <p class="source-note">
+      Dữ liệu số hóa lại từ file PDF "Chương trình khung" bạn cung cấp. Sơ đồ gốc có nhiều mũi tên
+      học phần trước / song hành khá phức tạp, nên nếu cần độ chính xác tuyệt đối (đăng ký học phần,
+      xét tốt nghiệp...) bạn nên đối chiếu lại với bản gốc hoặc phòng đào tạo nhé.
+    </p>
+  `;
+}
+
+/* =========================================================
+   ĐỒNG HỒ POMODORO
+   25 phút tập trung -> 5 phút nghỉ -> lặp lại.
+   Bộ đếm giờ chạy ở phạm vi toàn cục (module scope) nên vẫn
+   tiếp tục chạy ngầm kể cả khi bạn chuyển sang xem ngăn khác,
+   giống hệt đồng hồ pomodoro thật.
+   ========================================================= */
+
+const POMO_WORK_SECONDS = 25 * 60;
+const POMO_BREAK_SECONDS = 5 * 60;
+
+const pomoState = {
+  mode: "work", // "work" | "break"
+  running: false,
+  cyclesDone: 0,
+  remainingMs: POMO_WORK_SECONDS * 1000, // dùng khi đang tạm dừng / chưa bắt đầu
+  phaseEndTime: null, // mốc thời gian thực (Date.now()) khi phase hiện tại kết thúc; null nếu đang tạm dừng
+  timerId: null,
+};
+
+function pomoFormatTime(totalSeconds) {
+  const m = Math.floor(totalSeconds / 60).toString().padStart(2, "0");
+  const s = (totalSeconds % 60).toString().padStart(2, "0");
+  return `${m}:${s}`;
+}
+
+/* Dùng chung 1 AudioContext cho cả trang, tránh tạo quá nhiều context khi báo chuông liên tục */
+let pomoAudioCtx = null;
+function pomoGetAudioCtx() {
+  if (!pomoAudioCtx) {
+    try {
+      pomoAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (e) {
+      pomoAudioCtx = null;
+    }
+  }
+  return pomoAudioCtx;
+}
+
+/* Phát 1 tiếng "beep" ngắn bằng Web Audio API, không cần file âm thanh nào */
+function pomoPlayOneBeep() {
+  const ctx = pomoGetAudioCtx();
+  if (!ctx) return;
+  try {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 880;
+    const now = ctx.currentTime;
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    osc.start(now);
+    osc.stop(now + 0.35);
+  } catch (e) {
+    /* Một số trình duyệt chặn âm thanh tự động, bỏ qua lỗi này */
+  }
+}
+
+/* Chuông báo hết giờ: kêu liên tục (1 beep mỗi 0.7s) tối đa 10 giây,
+   hoặc tắt sớm nếu bồ bấm nút "Tắt âm thanh" */
+let pomoAlarmIntervalId = null;
+let pomoAlarmTimeoutId = null;
+
+function pomoStartAlarm() {
+  pomoStopAlarm(); // phòng khi còn chuông cũ chưa tắt hết
+  pomoPlayOneBeep();
+  pomoAlarmIntervalId = setInterval(pomoPlayOneBeep, 700);
+  pomoAlarmTimeoutId = setTimeout(pomoStopAlarm, 10000); // tự tắt sau 10 giây
+  pomoShowStopAlarmBtn(true);
+}
+
+function pomoStopAlarm() {
+  clearInterval(pomoAlarmIntervalId);
+  clearTimeout(pomoAlarmTimeoutId);
+  pomoAlarmIntervalId = null;
+  pomoAlarmTimeoutId = null;
+  pomoShowStopAlarmBtn(false);
+}
+
+function pomoShowStopAlarmBtn(show) {
+  const btn = document.getElementById("pomoStopAlarmBtn");
+  if (btn) btn.style.display = show ? "inline-block" : "none";
+}
+
+/* Xin quyền hiện thông báo (chỉ hỏi 1 lần khi bồ bấm Bắt đầu lần đầu) */
+function pomoRequestNotifyPermission() {
+  if ("Notification" in window && Notification.permission === "default") {
+    Notification.requestPermission();
+  }
+}
+
+/* Hiện thông báo đẩy góc màn hình khi hết 1 chu kỳ */
+function pomoShowNotification(text) {
+  if ("Notification" in window && Notification.permission === "granted") {
+    try {
+      new Notification("Bụng Cá Voi 🍅", { body: text });
+    } catch (e) {
+      /* bỏ qua nếu trình duyệt chặn */
+    }
+  }
+}
+
+/* Nhấp nháy tiêu đề tab vài giây để báo hết giờ, kể cả khi đang ở tab khác */
+let pomoTitleFlashId = null;
+function pomoFlashTitle(text) {
+  let showAlert = true;
+  let ticks = 0;
+  clearInterval(pomoTitleFlashId);
+  pomoTitleFlashId = setInterval(() => {
+    document.title = showAlert ? `⏰ ${text}` : "Bụng Cá Voi";
+    showAlert = !showAlert;
+    ticks++;
+    if (ticks >= 6) {
+      clearInterval(pomoTitleFlashId);
+      pomoTitleFlashId = null;
+    }
+  }, 600);
+}
+
+/* Cập nhật lại giao diện đồng hồ (nếu đang mở đúng ngăn Pomodoro) */
+function pomoUpdateDisplay() {
+  const timeEl = document.getElementById("pomoTime");
+  if (!timeEl) return; // đang không ở trang Pomodoro thì thôi, khỏi vẽ
+
+  const modeEl = document.getElementById("pomoMode");
+  const cycleEl = document.getElementById("pomoCycles");
+  const startBtn = document.getElementById("pomoStartBtn");
+
+  const secondsLeft = Math.max(0, Math.round(pomoState.remainingMs / 1000));
+  timeEl.textContent = pomoFormatTime(secondsLeft);
+
+  const isWork = pomoState.mode === "work";
+  modeEl.textContent = isWork ? "🍅 Thời gian tập trung" : "☕ Giờ nghỉ ngơi";
+  modeEl.className = "pomo-mode " + (isWork ? "pomo-mode-work" : "pomo-mode-break");
+  timeEl.className = "pomo-time " + (isWork ? "pomo-time-work" : "pomo-time-break");
+
+  cycleEl.textContent = `Đã hoàn thành: ${pomoState.cyclesDone} chu kỳ`;
+  startBtn.textContent = pomoState.running ? "Tạm dừng" : "Bắt đầu";
+
+  // Hiện thời gian đếm ngược ngay trên tiêu đề tab, để bồ chỉ cần liếc
+  // qua thanh tab trình duyệt là biết còn bao lâu, không cần mở đúng trang.
+  if (pomoState.running && !pomoTitleFlashId) {
+    const icon = isWork ? "🍅" : "☕";
+    document.title = `${pomoFormatTime(secondsLeft)} ${icon} Bụng Cá Voi`;
+  } else if (!pomoState.running && !pomoTitleFlashId) {
+    document.title = "Bụng Cá Voi";
+  }
+}
+
+/* Gọi định kỳ để cập nhật giao diện. Vì tính theo mốc thời gian thực
+   (Date.now()) chứ không đếm lùi từng giây, nên dù trình duyệt "ghìm"
+   interval khi tab chạy nền (throttle), lúc quay lại nó vẫn tự tính ra
+   đúng thời gian thực còn lại, không bị chạy chậm/lệch giờ. */
+function pomoTick() {
+  if (!pomoState.running || pomoState.phaseEndTime == null) return;
+
+  let now = Date.now();
+
+  // Dùng vòng lặp để xử lý cả trường hợp bị ghìm lâu, trôi qua nhiều
+  // chu kỳ cùng lúc (ví dụ để tab chạy nền cả tiếng đồng hồ)
+  while (pomoState.phaseEndTime - now <= 0) {
+    if (pomoState.mode === "work") {
+      pomoState.cyclesDone++;
+      pomoState.mode = "break";
+      pomoState.phaseEndTime += POMO_BREAK_SECONDS * 1000;
+      pomoStartAlarm();
+      pomoFlashTitle("Hết giờ! Nghỉ 5 phút nhé");
+      pomoShowNotification("Hết 25 phút tập trung rồi, nghỉ 5 phút thôi 🎉");
+    } else {
+      pomoState.mode = "work";
+      pomoState.phaseEndTime += POMO_WORK_SECONDS * 1000;
+      pomoStartAlarm();
+      pomoFlashTitle("Hết giờ nghỉ! Bắt đầu tập trung");
+      pomoShowNotification("Hết giờ nghỉ, quay lại tập trung 25 phút nào 🍅");
+    }
+    now = Date.now();
+  }
+
+  pomoState.remainingMs = pomoState.phaseEndTime - now;
+  pomoUpdateDisplay();
+}
+
+function pomoEnsureIntervalRunning() {
+  if (pomoState.timerId) return; // đã có 1 interval chạy rồi, khỏi tạo thêm
+  // Chạy mỗi 250ms cho mượt (giá trị hiển thị vẫn luôn đúng vì tính từ
+  // mốc thời gian thực, không phụ thuộc tick có đều đặn hay không)
+  pomoState.timerId = setInterval(pomoTick, 250);
+}
+
+// Khi tab bị ẩn đi rồi quay lại (chuyển tab, thu nhỏ trình duyệt...),
+// trình duyệt thường ghìm interval; nghe sự kiện này để cập nhật lại
+// đúng thời gian thực ngay lập tức thay vì đợi tick tiếp theo.
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) pomoTick();
+});
+
+function pomoToggleStartPause() {
+  pomoRequestNotifyPermission();
+
+  if (pomoState.running) {
+    // Tạm dừng: lưu lại số ms còn thiếu, xoá mốc kết thúc
+    pomoState.remainingMs = Math.max(0, pomoState.phaseEndTime - Date.now());
+    pomoState.phaseEndTime = null;
+    pomoState.running = false;
+  } else {
+    // Bắt đầu / tiếp tục: tính mốc kết thúc mới dựa trên số ms còn lại
+    pomoState.phaseEndTime = Date.now() + pomoState.remainingMs;
+    pomoState.running = true;
+    pomoEnsureIntervalRunning();
+  }
+
+  pomoUpdateDisplay();
+}
+
+function pomoReset() {
+  pomoState.running = false;
+  pomoState.mode = "work";
+  pomoState.remainingMs = POMO_WORK_SECONDS * 1000;
+  pomoState.phaseEndTime = null;
+  pomoStopAlarm();
+  clearInterval(pomoTitleFlashId);
+  pomoTitleFlashId = null;
+  document.title = "Bụng Cá Voi";
+  pomoUpdateDisplay();
+}
+
+function renderPomodoro() {
+  return `
+    <div class="pomo-wrap">
+      <p id="pomoMode" class="pomo-mode pomo-mode-work">🍅 Thời gian tập trung</p>
+      <div id="pomoTime" class="pomo-time pomo-time-work">${pomoFormatTime(Math.round(pomoState.remainingMs / 1000))}</div>
+      <p id="pomoCycles" class="pomo-cycles">Đã hoàn thành: ${pomoState.cyclesDone} chu kỳ</p>
+      <div class="pomo-buttons">
+        <button id="pomoStartBtn" class="pomo-btn pomo-btn-primary">${pomoState.running ? "Tạm dừng" : "Bắt đầu"}</button>
+        <button id="pomoResetBtn" class="pomo-btn pomo-btn-secondary">Đặt lại</button>
+        <button id="pomoStopAlarmBtn" class="pomo-btn pomo-btn-danger" style="display:none;">🔕 Tắt âm thanh</button>
+      </div>
+      <p class="tkb-note" style="text-align:center; margin-top:22px;">
+        Phương pháp Pomodoro: tập trung làm việc 25 phút, sau đó nghỉ 5 phút, rồi lặp lại chu kỳ.
+        Hết mỗi chu kỳ, chuông sẽ kêu liên tục tối đa 10 giây (hoặc bấm "Tắt âm thanh" để tắt sớm),
+        tiêu đề tab cũng nhấp nháy báo hết giờ và có thể hiện thông báo góc màn hình nếu bồ cho phép.
+      </p>
+    </div>
+  `;
+}
+
+/* Gắn sự kiện cho nút bấm ngay sau khi trang Pomodoro được vẽ ra màn hình */
+function initPomodoroUI() {
+  document.getElementById("pomoStartBtn").addEventListener("click", pomoToggleStartPause);
+  document.getElementById("pomoResetBtn").addEventListener("click", pomoReset);
+  document.getElementById("pomoStopAlarmBtn").addEventListener("click", pomoStopAlarm);
+  pomoEnsureIntervalRunning();
+  pomoUpdateDisplay();
+  // Nếu chuông đang kêu từ trước (do bồ rời trang giữa lúc báo hết giờ) thì hiện lại nút tắt
+  pomoShowStopAlarmBtn(!!pomoAlarmIntervalId);
+}
+
+/* ---------- 2. DANH SÁCH CÁC "NGĂN" (môn / mục) ---------- */
+
+const SUBJECTS = [
+  {
+    id: "tkb",
+    icon: "🗓️",
+    title: "Thời Khóa Biểu",
+    desc: "Khung giờ học & giờ thi theo tiết của trường",
+    render: renderThoiKhoaBieu,
+  },
+  {
+    id: "ctdt",
+    icon: "📚",
+    title: "Chương Trình Khung",
+    desc: "Ngành CNKT Hóa Học · Khoa Công nghệ Hóa học",
+    render: renderChuongTrinhKhung,
+  },
+  {
+    id: "pomodoro",
+    icon: "🍅",
+    title: "Đồng Hồ Pomodoro",
+    desc: "Đếm ngược 25 phút tập trung - 5 phút nghỉ, lặp lại",
+    render: renderPomodoro,
+    afterRender: initPomodoroUI,
+  },
+  // Thêm ngăn mới ở đây, ví dụ:
+  // {
+  //   id: "hoa-huu-co",
+  //   icon: "🧪",
+  //   title: "Hóa Hữu Cơ",
+  //   desc: "Ghi chú, tài liệu môn Hóa Hữu Cơ",
+  //   render: () => `<p>Nội dung của bạn ở đây...</p>`,
+  // },
+];
+
+/* ---------- 3. GHIM (PIN) ---------- */
+
+const PIN_KEY = "bungcavoi_pinned";
+
+function getPinned() {
+  try { return JSON.parse(localStorage.getItem(PIN_KEY)) || []; }
+  catch { return []; }
+}
+
+function togglePin(id) {
+  const pinned = getPinned();
+  const idx = pinned.indexOf(id);
+  if (idx === -1) pinned.push(id);
+  else pinned.splice(idx, 1);
+  localStorage.setItem(PIN_KEY, JSON.stringify(pinned));
+}
+
+/* ---------- 4. ĐIỀU HƯỚNG ---------- */
+
+function goHome() { location.hash = ""; renderHome(); }
+function goToSubject(id) { location.hash = id; renderDetail(id); }
+
+function renderHome() {
+  const pinned = getPinned();
+  const sorted = [...SUBJECTS].sort((a, b) => {
+    const aPinned = pinned.includes(a.id);
+    const bPinned = pinned.includes(b.id);
+    return aPinned === bPinned ? 0 : aPinned ? -1 : 1;
+  });
+
+  const cards = sorted.map((s) => {
+    const isPinned = pinned.includes(s.id);
+    return `
+      <div class="drawer-card" data-id="${s.id}">
+        <button class="pin-btn ${isPinned ? "pinned" : ""}" data-pin="${s.id}" title="Ghim / bỏ ghim">
+          ${isPinned ? "★" : "☆"}
+        </button>
+        ${isPinned ? `<span class="pinned-label">Đã ghim</span><br/>` : ""}
+        <span class="drawer-icon">${s.icon}</span>
+        <p class="drawer-title">${s.title}</p>
+        <p class="drawer-desc">${s.desc}</p>
+      </div>
+    `;
+  }).join("");
+
+  app.innerHTML = `<div class="drawer-grid">${cards}</div>`;
+
+  app.querySelectorAll(".drawer-card").forEach((card) => {
+    card.addEventListener("click", (e) => {
+      if (e.target.closest(".pin-btn")) return;
+      goToSubject(card.dataset.id);
+    });
+  });
+
+  app.querySelectorAll(".pin-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      togglePin(btn.dataset.pin);
+      renderHome();
+    });
+  });
+}
+
+function renderDetail(id) {
+  const subject = SUBJECTS.find((s) => s.id === id);
+  if (!subject) { goHome(); return; }
+
+  app.innerHTML = `
+    <div class="detail-view">
+      <div class="detail-toolbar">
+        <button class="back-btn" id="backBtn">← Quay lại</button>
+        <button class="print-btn" id="printBtn">🖨️ Tải / In trang này (PDF)</button>
+      </div>
+      <h1 class="detail-title">${subject.icon} ${subject.title}</h1>
+      <div class="detail-content">${subject.render()}</div>
+    </div>
+  `;
+
+  document.getElementById("backBtn").addEventListener("click", goHome);
+  document.getElementById("printBtn").addEventListener("click", () => window.print());
+
+  if (typeof subject.afterRender === "function") {
+    subject.afterRender();
+  }
+}
+
+/* ---------- 5. KHỞI ĐỘNG ---------- */
+
+function init() {
+  const currentId = location.hash.replace("#", "");
+  if (currentId) renderDetail(currentId);
+  else renderHome();
+}
+
+window.addEventListener("hashchange", init);
+init();
+</script>
+
+</body>
+</html>
