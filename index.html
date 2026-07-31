@@ -348,6 +348,66 @@ table.tkb tbody tr:nth-child(even) td { background: #f7fbff; }
 }
 .print-btn:hover { background: #dde6f0; }
 
+/* ===== Danh sách file trong 1 thư mục tài liệu ===== */
+.file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid #cfe4f5;
+  border-radius: 10px;
+  padding: 12px 14px;
+  text-decoration: none;
+  color: #1b2a41;
+  font: inherit;
+  width: 100%;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+.file-item:hover {
+  border-color: #0b3d91;
+  box-shadow: 0 4px 14px rgba(11, 61, 145, 0.14);
+  transform: translateY(-1px);
+}
+.file-icon { font-size: 20px; flex-shrink: 0; }
+.file-name { flex: 1; font-size: 14px; text-align: left; }
+.file-download {
+  font-size: 12px;
+  font-weight: 600;
+  color: #0b3d91;
+  white-space: nowrap;
+}
+
+/* ===== Màn xem trước 1 file ===== */
+.file-preview-title {
+  color: #0b3d91;
+  font-size: 18px;
+  margin: 0 0 14px;
+}
+.file-preview-frame-wrap {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border: 1px solid #cfe4f5;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+.file-preview-frame { width: 100%; height: 100%; border: 0; }
+
+.folder-block { margin-bottom: 6px; }
+.folder-ten {
+  font-size: 13px;
+  font-weight: 700;
+  color: #3a5a80;
+  margin: 0 0 8px;
+}
+
 /* ===== Khi in trang / lưu thành PDF ===== */
 @media print {
   .back-btn, .print-btn, .pin-btn, .drawer-grid { display: none !important; }
@@ -1256,6 +1316,207 @@ function initPomodoroUI() {
   pomoShowStopAlarmBtn(!!pomoAlarmIntervalId);
 }
 
+/* =========================================================
+   NGĂN TÀI LIỆU DẠNG CÂY: TRƯỜNG -> THƯ MỤC -> FILE
+   Dùng chung cho mọi môn học (không riêng Hóa Đại Cương).
+   - Mỗi môn (school-subject) có thể có tài liệu sưu tầm từ NHIỀU
+     TRƯỜNG khác nhau (HUIT, HCMUS, HCMUT...)
+   - Mỗi trường có 1 hoặc nhiều THƯ MỤC (Bài giảng thầy X, Bài tập,
+     Đề thi, Tài liệu sưu tầm...)
+   - Mỗi thư mục có nhiều FILE
+   - Bấm vào tên file sẽ MỞ XEM TRƯỚC ngay trên web (không tải về
+     ngay), bên trong màn xem trước mới có nút "Tải xuống" — để
+     người xem biết rõ nội dung trước khi quyết định tải.
+   - path: đường dẫn tương đối NGUYÊN VĂN tới file trong repo GitHub
+     (kể cả có dấu / khoảng trắng / ngoặc [] cũng viết y hệt tên file
+     thật đã tải lên GitHub — trình duyệt tự hiểu, KHÔNG cần đổi tên
+     file trên GitHub cho khớp code)
+   - Nếu file quá lớn (>25MB) không kéo-thả lên GitHub được, dùng
+     link ngoài (Google Drive...) bằng cách để thẳng URL đầy đủ
+     (https://...) vào path
+   - LƯU Ý: xem trước PPTX/DOCX/XLSX cần chạy trên web đã đưa lên
+     mạng (GitHub Pages), không xem trước được khi mở file index.html
+     trực tiếp trên máy (do trình xem cần tải file qua internet).
+     Riêng PDF thì mở trực tiếp trên máy vẫn xem trước được bình thường.
+   ========================================================= */
+
+/* Chuyển 1 chuỗi thành dạng an toàn để nhét vào data-* attribute
+   (dùng encodeURIComponent cho chắc, tránh lỗi dấu ngoặc kép/ký tự lạ) */
+function fbEncode(str) {
+  return encodeURIComponent(str);
+}
+
+/* ---- MÀN DANH SÁCH: Trường -> Thư mục -> tên file (bấm để xem trước) ---- */
+
+function renderFbFileButton(f) {
+  return `
+    <button type="button" class="file-item" data-path="${fbEncode(f.path)}" data-name="${fbEncode(f.ten)}">
+      <span class="file-icon">📄</span>
+      <span class="file-name">${f.ten}</span>
+      <span class="file-download">Xem trước 👁</span>
+    </button>
+  `;
+}
+
+function renderFbFolder(folder) {
+  return `
+    <div class="folder-block">
+      <p class="folder-ten">📁 ${folder.ten}</p>
+      <div class="file-list">${folder.files.map(renderFbFileButton).join("")}</div>
+    </div>
+  `;
+}
+
+function renderFbSchool(truong, index) {
+  return `
+    <details class="cn-details" ${index === 0 ? "open" : ""}>
+      <summary><span class="cn-ten">🏫 ${truong.ten}</span></summary>
+      <div class="cn-body">${truong.folders.map(renderFbFolder).join("")}</div>
+    </details>
+  `;
+}
+
+function renderFbList(schools) {
+  return `<div class="cn-list">${schools.map(renderFbSchool).join("")}</div>`;
+}
+
+/* ---- MÀN XEM TRƯỚC 1 FILE ---- */
+
+/* Chọn trình xem phù hợp theo đuôi file: PDF thì trình duyệt tự đọc được,
+   PPTX/DOCX/XLSX thì nhờ Microsoft Office Viewer đọc qua internet */
+function fbBuildViewerSrc(absoluteUrl, path) {
+  const ext = path.split(".").pop().toLowerCase();
+  const officeExts = ["ppt", "pptx", "doc", "docx", "xls", "xlsx"];
+  if (officeExts.includes(ext)) {
+    return "https://view.officeapps.live.com/op/embed.aspx?src=" + encodeURIComponent(absoluteUrl);
+  }
+  return absoluteUrl; // pdf và các loại trình duyệt tự đọc được
+}
+
+function renderFbPreview(path, name) {
+  const absoluteUrl = new URL(path, window.location.href).href;
+  const viewerSrc = fbBuildViewerSrc(absoluteUrl, path);
+
+  return `
+    <div class="file-preview">
+      <div class="detail-toolbar">
+        <button type="button" class="back-btn" id="fbBackBtn">← Quay lại danh sách</button>
+        <a class="print-btn" href="${path}" download target="_blank" rel="noopener">⬇ Tải xuống file gốc</a>
+      </div>
+      <h3 class="file-preview-title">${name}</h3>
+      <div class="file-preview-frame-wrap">
+        <iframe src="${viewerSrc}" class="file-preview-frame" allowfullscreen></iframe>
+      </div>
+      <p class="tkb-note">
+        Không xem được bản xem trước (thường do đang mở file index.html trực tiếp
+        trên máy thay vì bản đã đưa lên mạng)? Bấm "Tải xuống file gốc" ở trên để
+        mở bằng PowerPoint / trình đọc PDF trên máy nhé.
+      </p>
+    </div>
+  `;
+}
+
+/* ---- Gắn tương tác: bấm tên file -> xem trước, bấm "Quay lại" -> về danh sách ---- */
+
+function initFileBrowser(containerId, schools) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  function showList() {
+    container.innerHTML = renderFbList(schools);
+    container.querySelectorAll(".file-item").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        showPreview(decodeURIComponent(btn.dataset.path), decodeURIComponent(btn.dataset.name));
+      });
+    });
+  }
+
+  function showPreview(path, name) {
+    container.innerHTML = renderFbPreview(path, name);
+    document.getElementById("fbBackBtn").addEventListener("click", showList);
+  }
+
+  showList();
+}
+
+function renderFileBrowserContainer(containerId) {
+  return `<div id="${containerId}"></div>`;
+}
+
+const HOADC_SCHOOLS = [
+  {
+    ten: "HUIT - Trường Đại học Công Thương TP.HCM",
+    folders: [
+      {
+        ten: "Bài giảng thầy Hòa",
+        files: [
+          {
+            ten: "Chương 1 - Cấu tạo nguyên tử và hệ thống tuần hoàn các nguyên tố hóa học (2025)",
+            path: "files/hoa-dai-cuong/bai-giang-thay-hoa/Chương 1 - Cấu tạo nguyên tử và hệ thống tuần hoàn các nguyên tố hóa học [2025].pdf",
+          },
+          {
+            ten: "Chương 2 - Liên kết hóa học và cấu tạo phân tử (2025)",
+            path: "files/hoa-dai-cuong/bai-giang-thay-hoa/Chương 2 - Liên kết hóa học và cấu tạo phân tử [2025].pdf",
+          },
+          {
+            ten: "Chương 3 - Nhiệt động lực của các quá trình hóa học (2025)",
+            path: "files/hoa-dai-cuong/bai-giang-thay-hoa/Chương 3 - Nhiệt động lực của các quá trình hóa học [2025].pptx",
+          },
+          {
+            ten: "Chương 4 - Động hóa học (2025)",
+            path: "files/hoa-dai-cuong/bai-giang-thay-hoa/Chương 4 - Động hóa học [2025].pptx",
+          },
+          {
+            ten: "Chương 5 - Dung dịch lỏng (2025)",
+            path: "files/hoa-dai-cuong/bai-giang-thay-hoa/Chương 5 - Dung dịch lỏng [2025].pptx",
+          },
+          {
+            ten: "Chương 6 - Điện hóa học (2025)",
+            path: "files/hoa-dai-cuong/bai-giang-thay-hoa/Chương 6 - Điện hóa học [2025].pptx",
+          },
+        ],
+      },
+      // Thêm thư mục khác của HUIT (Bài tập, Đề thi...) thì thêm object vào đây
+    ],
+  },
+  {
+    ten: "HCMUS - Trường Đại học Khoa học Tự nhiên (ĐHQG-HCM)",
+    folders: [
+      {
+        ten: "Tài liệu sưu tầm",
+        // ⚠️ TẠM THỜI: tên file gốc hơi viết tắt (BTDC1, C2-Ngtu-NTHH-Dongvi...),
+        // mình để tạm tên hiển thị = tên file cho bồ dễ đối chiếu. Bồ xác nhận
+        // lại nội dung từng file rồi mình đổi thành tên đầy đủ dễ đọc hơn nhé.
+        // Đường dẫn dưới đây đang giả định bồ sẽ dời 6 file này vào đúng chỗ
+        // "files/hoa-dai-cuong/hcmus/" (xem hướng dẫn mình nói bên ngoài code).
+        files: [
+          { ten: "BTDC1 (Bài tập Đại cương 1?)", path: "files/hoa-dai-cuong/hcmus/BTDC1.pdf" },
+          { ten: "C2 - Nguyên tử, NTHH, Đồng vị", path: "files/hoa-dai-cuong/hcmus/C2-Ngtu-NTHH-Dongvi.pdf" },
+          { ten: "C3 - Cấu tạo nguyên tử", path: "files/hoa-dai-cuong/hcmus/C3-CTNT.pdf" },
+          { ten: "C4 - Hệ thống tuần hoàn", path: "files/hoa-dai-cuong/hcmus/C4- he thong tuan hoan.pdf" },
+          { ten: "C5 - Liên kết hóa học", path: "files/hoa-dai-cuong/hcmus/C5-LKHH-n.pdf" },
+          { ten: "C6 - Liên kết hóa học - Cấu trúc phân tử (2)", path: "files/hoa-dai-cuong/hcmus/C6-LKHH-CHT(2).pdf" },
+        ],
+      },
+    ],
+  },
+  // Thêm trường mới (HCMUT...) thì thêm 1 object { ten, folders: [...] } vào đây
+];
+
+function renderHoaDaiCuong() {
+  return `
+    <p class="ctdt-meta">
+      Tài liệu môn Hóa Đại Cương, sưu tầm từ nhiều trường. Bấm vào tên trường để mở,
+      rồi bấm tên file để xem trước — có nút tải xuống ngay trong màn xem trước.
+    </p>
+    ${renderFileBrowserContainer("fbHoaDaiCuong")}
+  `;
+}
+
+function initHoaDaiCuong() {
+  initFileBrowser("fbHoaDaiCuong", HOADC_SCHOOLS);
+}
+
 /* ---------- 2. DANH SÁCH CÁC "NGĂN" (môn / mục) ---------- */
 
 const SUBJECTS = [
@@ -1280,6 +1541,14 @@ const SUBJECTS = [
     desc: "Đếm ngược 25 phút tập trung - 5 phút nghỉ, lặp lại",
     render: renderPomodoro,
     afterRender: initPomodoroUI,
+  },
+  {
+    id: "hoa-dai-cuong",
+    icon: "🧪",
+    title: "Hóa Đại Cương",
+    desc: "Bài giảng & tài liệu môn Hóa Đại Cương",
+    render: renderHoaDaiCuong,
+    afterRender: initHoaDaiCuong,
   },
   // Thêm ngăn mới ở đây, ví dụ:
   // {
