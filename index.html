@@ -1696,18 +1696,19 @@ const HOADC_SCHOOLS = [
     folders: [
       {
         ten: "Tài liệu sưu tầm",
-        // ⚠️ TẠM THỜI: tên file gốc hơi viết tắt (BTDC1, C2-Ngtu-NTHH-Dongvi...),
-        // mình để tạm tên hiển thị = tên file cho bồ dễ đối chiếu. Bồ xác nhận
-        // lại nội dung từng file rồi mình đổi thành tên đầy đủ dễ đọc hơn nhé.
-        // Đường dẫn dưới đây đang giả định bồ sẽ dời 6 file này vào đúng chỗ
-        // "files/hoa-dai-cuong/hcmus/" (xem hướng dẫn mình nói bên ngoài code).
+        // ⚠️ Đường dẫn trỏ thẳng vào thư mục "HĐC_US" đang có thật trên GitHub
+        // (repo root), KHÔNG phải "files/hoa-dai-cuong/hcmus/" như bản trước
+        // (thư mục đó chưa từng được tạo nên bị lỗi 404).
+        // Nếu bồ đối chiếu trên GitHub thấy tên file thật khác dù chỉ 1 ký tự
+        // (hoa/thường, dấu cách, số thứ tự...) thì sửa lại đúng tên trong path
+        // bên dưới cho khớp.
         files: [
-          { ten: "BTDC1 (Bài tập Đại cương 1?)", path: "files/hoa-dai-cuong/hcmus/BTDC1.pdf" },
-          { ten: "C2 - Nguyên tử, NTHH, Đồng vị", path: "files/hoa-dai-cuong/hcmus/C2-Ngtu-NTHH-Dongvi.pdf" },
-          { ten: "C3 - Cấu tạo nguyên tử", path: "files/hoa-dai-cuong/hcmus/C3-CTNT.pdf" },
-          { ten: "C4 - Hệ thống tuần hoàn", path: "files/hoa-dai-cuong/hcmus/C4- he thong tuan hoan.pdf" },
-          { ten: "C5 - Liên kết hóa học", path: "files/hoa-dai-cuong/hcmus/C5-LKHH-n.pdf" },
-          { ten: "C6 - Liên kết hóa học - Cấu trúc phân tử (2)", path: "files/hoa-dai-cuong/hcmus/C6-LKHH-CHT(2).pdf" },
+          { ten: "BTDC1 (Bài tập Đại cương 1?)", path: "HĐC_US/BTDC1.pdf" },
+          { ten: "C2 - Nguyên tử, NTHH, Đồng vị", path: "HĐC_US/C2-Ngtu-NTHH-Dongvi.pdf" },
+          { ten: "C3 - Cấu tạo nguyên tử", path: "HĐC_US/C3-CTNT.pdf" },
+          { ten: "C4 - Hệ thống tuần hoàn", path: "HĐC_US/C4- he thong tuan hoan.pdf" },
+          { ten: "C5 - Liên kết hóa học", path: "HĐC_US/C5-LKHH-n.pdf" },
+          { ten: "C6 - Liên kết hóa học - Cấu trúc phân tử (2)", path: "HĐC_US/C6-LKHH-CHT(2).pdf" },
         ],
       },
     ],
