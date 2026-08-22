@@ -1852,6 +1852,67 @@ function quizLetter(i) {
   return String.fromCharCode(65 + i); // 0 -> A, 1 -> B, 2 -> C...
 }
 
+/* ---------- Tự động lưu / khôi phục bài làm dở (localStorage) ----------
+   Không cần bấm nút gì cả — cứ mỗi lần trả lời/chuyển câu là tự lưu lại
+   "questions" (đúng bộ câu + đúng thứ tự đang làm dở), "answers" và đang
+   ở câu số mấy. Lần sau mở lại đúng ngăn đó, nếu còn bài dở sẽ hỏi trước
+   khi vào màn bắt đầu. */
+const QUIZ_SAVE_PREFIX = "bungcavoi_quiz_progress_";
+
+function quizSaveProgress(containerId, state) {
+  try {
+    localStorage.setItem(
+      QUIZ_SAVE_PREFIX + containerId,
+      JSON.stringify({
+        questions: state.questions,
+        answers: state.answers,
+        current: state.current,
+        savedAt: Date.now(),
+      })
+    );
+  } catch (e) {
+    /* localStorage đầy hoặc bị chặn (chế độ ẩn danh...) thì bỏ qua, không lưu được cũng không sao */
+  }
+}
+
+function quizLoadProgress(containerId) {
+  try {
+    const raw = localStorage.getItem(QUIZ_SAVE_PREFIX + containerId);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!data || !Array.isArray(data.questions) || !data.questions.length || !Array.isArray(data.answers)) return null;
+    return data;
+  } catch (e) {
+    return null;
+  }
+}
+
+function quizClearProgress(containerId) {
+  try {
+    localStorage.removeItem(QUIZ_SAVE_PREFIX + containerId);
+  } catch (e) {}
+}
+
+/* Màn hỏi "tiếp tục bài dở hay làm từ đầu", hiện ra khi vào lại ngăn quiz
+   mà phát hiện có bài chưa làm xong lưu từ trước */
+function quizRenderResumePrompt(title, saved) {
+  const daLam = saved.answers.filter((a) => a != null).length;
+  const tong = saved.questions.length;
+  return `
+    <div class="quiz-start">
+      <p class="quiz-start-total">Bộ câu hỏi <strong>${title}</strong></p>
+      <div class="quiz-start-block">
+        <p class="quiz-start-label">📌 Bạn đang làm dở bài này (${daLam}/${tong} câu)</p>
+        <p class="quiz-glossary-hint">Bạn muốn tiếp tục bài làm chưa hoàn thành, hay làm từ đầu?</p>
+        <div class="quiz-start-row">
+          <button type="button" class="pomo-btn pomo-btn-primary" id="quizResumeBtn">▶ Tiếp tục bài dở</button>
+          <button type="button" class="pomo-btn pomo-btn-secondary" id="quizFreshStartBtn">↻ Làm từ đầu</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function quizRenderStart(state) {
   const total = state.allQuestions.length;
   const categories = quizGetCategories(state.allQuestions);
@@ -2049,6 +2110,7 @@ function initQuiz(containerId, allQuestions, title, glossary) {
       started: false,
       finished: false,
       viewGlossary: false,
+      pendingResume: null, // dữ liệu bài dở đọc từ localStorage, chờ người dùng chọn tiếp tục/làm mới
     };
   }
 
@@ -2061,10 +2123,35 @@ function initQuiz(containerId, allQuestions, title, glossary) {
     render();
   }
 
-  if (!QUIZ_STATE_STORE[containerId]) resetState();
+  if (!QUIZ_STATE_STORE[containerId]) {
+    resetState();
+    // Ngay khi mở ngăn này lần đầu (sau khi tải lại trang), kiểm tra xem
+    // có bài làm dở lưu sẵn từ trước không — nếu có, hỏi trước khi vào màn bắt đầu.
+    const saved = quizLoadProgress(containerId);
+    if (saved) QUIZ_STATE_STORE[containerId].pendingResume = saved;
+  }
 
   function render() {
     const state = QUIZ_STATE_STORE[containerId];
+
+    if (state.pendingResume) {
+      container.innerHTML = quizRenderResumePrompt(state.title, state.pendingResume);
+      document.getElementById("quizResumeBtn").addEventListener("click", () => {
+        const saved = state.pendingResume;
+        state.questions = saved.questions;
+        state.answers = saved.answers;
+        state.current = Math.min(saved.current, saved.questions.length - 1);
+        state.started = true;
+        state.pendingResume = null;
+        render();
+      });
+      document.getElementById("quizFreshStartBtn").addEventListener("click", () => {
+        quizClearProgress(containerId);
+        state.pendingResume = null;
+        render();
+      });
+      return;
+    }
 
     if (state.viewGlossary) {
       container.innerHTML = quizRenderGlossary(state.glossary);
@@ -2076,6 +2163,7 @@ function initQuiz(containerId, allQuestions, title, glossary) {
     }
 
     if (state.finished) {
+      quizClearProgress(containerId); // đã nộp bài xong thì xoá bài dở, không cần khôi phục nữa
       container.innerHTML = quizRenderResult(state);
       document.getElementById("quizRetryBtn").addEventListener("click", () => {
         resetState();
@@ -2109,13 +2197,14 @@ function initQuiz(containerId, allQuestions, title, glossary) {
           const idx = parseInt(document.getElementById("quizCategorySelect").value, 10);
           const tenChuong = categories[idx].ten;
           const danhSach = state.allQuestions.filter((q) => (q.chuong || "Tất cả") === tenChuong);
-          batDauLam(danhSach);
+          batDauLam(quizShuffle(danhSach)); // trộn ngẫu nhiên để mỗi lần vào lại không bị đúng 1 thứ tự cố định
         });
       }
       return;
     }
 
     container.innerHTML = quizRenderQuestion(state);
+    quizSaveProgress(containerId, state); // tự lưu bài dở, không cần bấm nút gì
 
     container.querySelectorAll(".quiz-option").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -2137,7 +2226,7 @@ function initQuiz(containerId, allQuestions, title, glossary) {
     if (prevBtn) prevBtn.addEventListener("click", () => { state.current--; render(); });
     if (nextBtn) nextBtn.addEventListener("click", () => { state.current++; render(); });
     if (finishBtn) finishBtn.addEventListener("click", () => { state.finished = true; render(); });
-    if (backToStartBtn) backToStartBtn.addEventListener("click", () => { resetState(); render(); });
+    if (backToStartBtn) backToStartBtn.addEventListener("click", () => { quizClearProgress(containerId); resetState(); render(); });
   }
 
   render();
