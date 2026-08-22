@@ -321,12 +321,17 @@ table.tkb tbody tr:nth-child(even) td { background: #f7fbff; }
   bottom: 10px;
   text-align: center;
   font-size: 12px;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   color: #0b3d91;
-  opacity: 0.32;
+  opacity: 0.62;
   pointer-events: none;
   z-index: 999;
   user-select: none;
+  padding: 0 16px;
+}
+
+@media (max-width: 480px) {
+  .watermark-bar { font-size: 10.5px; line-height: 1.4; bottom: 6px; }
 }
 
 /* ===== Thanh nút trên mỗi trang chi tiết ===== */
@@ -413,7 +418,7 @@ table.tkb tbody tr:nth-child(even) td { background: #f7fbff; }
   .back-btn, .print-btn, .pin-btn, .drawer-grid { display: none !important; }
   body { background: #fff; }
   .watermark-bar {
-    opacity: 0.5;
+    opacity: 0.7;
     position: fixed;
     /* in lặp lại watermark ở cả đầu trang khi in nhiều trang */
   }
@@ -642,7 +647,7 @@ table.tkb tbody tr:nth-child(even) td { background: #f7fbff; }
 
   <main id="app"></main>
 
-  <div class="watermark-bar">PH²M sưu tầm và biên soạn</div>
+  <div class="watermark-bar">PH²M sưu tầm và biên soạn vì mục đích học tập phi lợi nhuận. Nếu tác giả có bất kỳ thắc mắc hoặc yêu cầu về bản quyền, vui lòng liên hệ email huynhminhmanpham@gmail.com để được hỗ trợ xử lý ngay lập tức.</div>
 
 <script>
 /* =========================================================
