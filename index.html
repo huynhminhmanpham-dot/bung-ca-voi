@@ -1847,6 +1847,7 @@ function quizGetCategories(allQuestions) {
 }
 
 const QUIZ_STATE_STORE = {}; // lưu trạng thái làm bài riêng cho từng ngăn quiz
+const QUIZ_KEYDOWN_HANDLERS = {}; // lưu lại handler phím tắt đang gắn cho từng ngăn quiz, để gỡ đúng cái cũ khi vào lại trang
 
 function quizLetter(i) {
   return String.fromCharCode(65 + i); // 0 -> A, 1 -> B, 2 -> C...
@@ -2053,6 +2054,7 @@ function quizRenderQuestion(state) {
           <button type="button" class="pomo-btn pomo-btn-primary" id="quizFinishBtn">Kết thúc</button>
           <button type="button" class="pomo-btn pomo-btn-secondary" id="quizNextBtn" ${current === questions.length - 1 ? "disabled" : ""}>Sau →</button>
         </div>
+        <p class="tkb-note" style="text-align:center; margin-top:10px;">💻 Trên máy tính: bấm phím ← → để chuyển câu, phím 1-4 để chọn đáp án A-D</p>
       </div>
       <div class="quiz-nav-col">
         <p class="folder-ten">Danh sách câu</p>
@@ -2098,6 +2100,47 @@ function quizRenderResult(state) {
 function initQuiz(containerId, allQuestions, title, glossary) {
   const container = document.getElementById(containerId);
   if (!container) return;
+
+  /* ---------- Phím tắt cho máy tính: mũi tên chuyển câu, số 1-4 chọn đáp án ----------
+     Trên điện thoại không có bàn phím vật lý nên phần này không ảnh hưởng gì,
+     chỉ có tác dụng khi bồ gõ trên máy tính. */
+  function handleQuizKeydown(e) {
+    const state = QUIZ_STATE_STORE[containerId];
+    if (!state || !document.body.contains(container)) return; // đã rời khỏi ngăn này thì bỏ qua
+    if (!state.started || state.finished || state.viewGlossary || state.pendingResume) return;
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
+    const tag = (e.target && e.target.tagName) || "";
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      e.preventDefault();
+      if (state.current < state.questions.length - 1) { state.current++; render(); }
+      return;
+    }
+    if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      e.preventDefault();
+      if (state.current > 0) { state.current--; render(); }
+      return;
+    }
+    if (["1", "2", "3", "4"].includes(e.key)) {
+      e.preventDefault();
+      if (state.answers[state.current] != null) return; // câu này đã chọn đáp án rồi thì không đổi được nữa, giống hệt khi bấm chuột
+      const idx = parseInt(e.key, 10) - 1; // 1 -> A (idx 0), 2 -> B (idx 1), 3 -> C, 4 -> D
+      const q = state.questions[state.current];
+      if (q && idx < q.dapAn.length) {
+        state.answers[state.current] = idx;
+        render();
+      }
+    }
+  }
+
+  // Gỡ handler phím tắt cũ (nếu bồ đã từng vào ngăn này trước đó rồi rời đi) trước khi gắn cái mới,
+  // để tránh 1 lần bấm phím bị xử lý lặp nhiều lần.
+  if (QUIZ_KEYDOWN_HANDLERS[containerId]) {
+    document.removeEventListener("keydown", QUIZ_KEYDOWN_HANDLERS[containerId]);
+  }
+  QUIZ_KEYDOWN_HANDLERS[containerId] = handleQuizKeydown;
+  document.addEventListener("keydown", handleQuizKeydown);
 
   function resetState() {
     QUIZ_STATE_STORE[containerId] = {
