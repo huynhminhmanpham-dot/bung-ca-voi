@@ -1841,6 +1841,48 @@ function initAnhVan() {
 }
 
 /* =========================================================
+   NGĂN VẬT LIỆU HỌC — 6 chương bài giảng.
+   Dùng lại đúng khung initFileBrowser, không viết thêm logic mới.
+   Bỏ qua file rác "bài tập" (lỗi thao tác cũ trên GitHub, chưa dọn).
+   ========================================================= */
+
+const VATLIEUHOC_SOURCES = [
+  {
+    ten: "Bài giảng",
+    folders: [
+      {
+        ten: "Các chương",
+        files: [
+          // ⚠️ "Chương 2.pdf" có khoảng trắng, còn Chương1/3/4/5/6 thì KHÔNG —
+          // đúng y hệt tên file thật trên GitHub, đừng tự ý thêm/bớt dấu cách.
+          { ten: "Chương 1", path: "VẬT LIỆU HỌC/Chương1.pdf" },
+          { ten: "Chương 2", path: "VẬT LIỆU HỌC/Chương 2.pdf" },
+          { ten: "Chương 3", path: "VẬT LIỆU HỌC/Chương3.pdf" },
+          { ten: "Chương 4", path: "VẬT LIỆU HỌC/Chương4.pdf" },
+          { ten: "Chương 5", path: "VẬT LIỆU HỌC/Chương5.pdf" },
+          { ten: "Chương 6", path: "VẬT LIỆU HỌC/Chương6.pdf" },
+        ],
+      },
+    ],
+  },
+  // Thêm thư mục khác của Vật Liệu Học (Đề thi, Bài tập...) thì thêm vào folders ở trên,
+  // hoặc thêm nguồn mới { ten, folders: [...] } vào mảng này.
+];
+
+function renderVatLieuHoc() {
+  return `
+    <p class="ctdt-meta">
+      Bài giảng môn Vật Liệu Học — 6 chương. Bấm tên file để xem trước, có nút tải xuống.
+    </p>
+    ${renderFileBrowserContainer("fbVatLieuHoc")}
+  `;
+}
+
+function initVatLieuHoc() {
+  initFileBrowser("fbVatLieuHoc", VATLIEUHOC_SOURCES);
+}
+
+/* =========================================================
    NGĂN TRẮC NGHIỆM (dùng chung cho mọi bộ câu hỏi: từ vựng,
    ôn tập lý thuyết...) — kiểu giao diện giống Azota/NLDK:
    có màn Bắt đầu -> làm bài (chọn đáp án, nhảy câu tự do qua ô
@@ -8892,6 +8934,14 @@ const SUBJECTS = [
     desc: "AVĐV, Speaking 3, ngữ pháp & từ vựng tổng hợp",
     render: renderAnhVan,
     afterRender: initAnhVan,
+  },
+  {
+    id: "vat-lieu-hoc",
+    icon: "🧱",
+    title: "Vật Liệu Học",
+    desc: "Bài giảng 6 chương môn Vật Liệu Học",
+    render: renderVatLieuHoc,
+    afterRender: initVatLieuHoc,
   },
   // Thêm ngăn mới ở đây, ví dụ:
   // {
