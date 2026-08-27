@@ -1762,6 +1762,85 @@ function initHoaDaiCuong() {
 }
 
 /* =========================================================
+   NGĂN ANH VĂN — gộp các bộ tài liệu: AVĐV, Speaking 3,
+   Tổng hợp tiếng Anh A-Z, và tài liệu lẻ (12 thì tiếng Anh).
+   Dùng lại đúng khung initFileBrowser ở trên, không viết thêm
+   logic mới. Bỏ qua 2 file rác "B" và "bài tập" (do lỗi thao tác
+   cũ trên GitHub, chưa dọn) — không đưa vào code.
+   ========================================================= */
+
+const ANHVAN_SOURCES = [
+  {
+    ten: "AVĐV",
+    folders: [
+      {
+        ten: "Ngữ pháp & Từ vựng",
+        files: [
+          { ten: "AVĐV (Form mẫu)", path: "AVDV/AVĐV( FORM MẪU).docx" },
+          { ten: "Ngữ pháp chính", path: "AVDV/NGỮ PHÁP CHÍNH.pdf" },
+          { ten: "Ngữ pháp trọng điểm", path: "AVDV/NGỮ PHÁP TRỌNG ĐIỂM.pdf" },
+          { ten: "Từ vựng ôn tập tiếng Anh", path: "AVDV/TỪ VỰNG ÔN TẬP TIẾNG ANH.pdf" },
+        ],
+      },
+    ],
+  },
+  {
+    ten: "SPEAKING 3",
+    folders: [
+      {
+        ten: "Tài liệu theo Unit",
+        files: [
+          { ten: "Bộ câu hỏi tham khảo (đã giảm tải)", path: "SPEAKING 3/SPEAKING 3 - Bộ câu hỏi tham khảo (đã giảm tải).pdf" },
+          { ten: "Unit 1 - People & relationships", path: "SPEAKING 3/SPEAKING 3 - Unit 1 - People & relationships (2).pdf" },
+          { ten: "Unit 5 - Communication", path: "SPEAKING 3/SPEAKING 3 - Unit 5 - COMMUNICATION (updated 2022) (1).pdf" },
+          { ten: "Unit 6 - Technology", path: "SPEAKING 3/SPEAKING 3 - Unit 6 - TECHNOLOGY (updated 2022) (1).pdf" },
+          { ten: "Unit 7 - Hobbies", path: "SPEAKING 3/SPEAKING 3 - Unit 7 - HOBBIES ( updated 2022 ) (1).pdf" },
+          { ten: "Unit 8 - Youth", path: "SPEAKING 3/SPEAKING 3 - Unit 8 - YOUTH (updated 2022).pdf" },
+          { ten: "Unit 9 - Home", path: "SPEAKING 3/SPEAKING 3 - Unit 9 - HOME (updated 2022).pdf" },
+          { ten: "Unit 11 - On the move", path: "SPEAKING 3/SPEAKING 3 - Unit 11 - On the move (updated 2022).pdf" },
+        ],
+      },
+    ],
+  },
+  {
+    ten: "Tổng Hợp Tiếng Anh A-Z",
+    folders: [
+      {
+        ten: "Ngữ pháp tổng hợp",
+        files: [
+          { ten: "English A to Z - Ngữ pháp tiếng Anh tổng hợp", path: "TỔNG HỢP TIẾNG ANH A-Z/ENglish A to Z_NGỮ PHÁP TIẾNG ANH TỔNG HỢP.pdf" },
+        ],
+      },
+    ],
+  },
+  {
+    ten: "Tài liệu khác",
+    folders: [
+      {
+        ten: "Ngữ pháp thì",
+        // File này nằm ngay gốc repo (không trong thư mục con nào), nên path chỉ có đúng tên file.
+        files: [{ ten: "12 thì tiếng Anh (tổng hợp)", path: "12 thì tiếng anh UP.docx" }],
+      },
+    ],
+  },
+  // Thêm nguồn tài liệu Anh Văn mới thì thêm 1 object { ten, folders: [...] } vào đây
+];
+
+function renderAnhVan() {
+  return `
+    <p class="ctdt-meta">
+      Tài liệu Anh Văn: AVĐV, Speaking 3, ngữ pháp & từ vựng tổng hợp. Bấm vào tên nguồn để mở,
+      rồi bấm tên file để xem trước — có nút tải xuống ngay trong màn xem trước.
+    </p>
+    ${renderFileBrowserContainer("fbAnhVan")}
+  `;
+}
+
+function initAnhVan() {
+  initFileBrowser("fbAnhVan", ANHVAN_SOURCES);
+}
+
+/* =========================================================
    NGĂN TRẮC NGHIỆM (dùng chung cho mọi bộ câu hỏi: từ vựng,
    ôn tập lý thuyết...) — kiểu giao diện giống Azota/NLDK:
    có màn Bắt đầu -> làm bài (chọn đáp án, nhảy câu tự do qua ô
@@ -8805,6 +8884,14 @@ const SUBJECTS = [
     desc: "Bài giảng & tài liệu môn Hóa Đại Cương",
     render: renderHoaDaiCuong,
     afterRender: initHoaDaiCuong,
+  },
+  {
+    id: "anh-van",
+    icon: "🇬🇧",
+    title: "Anh Văn",
+    desc: "AVĐV, Speaking 3, ngữ pháp & từ vựng tổng hợp",
+    render: renderAnhVan,
+    afterRender: initAnhVan,
   },
   // Thêm ngăn mới ở đây, ví dụ:
   // {
