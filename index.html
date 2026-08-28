@@ -1883,6 +1883,61 @@ function initVatLieuHoc() {
 }
 
 /* =========================================================
+   NGĂN VẬT LÍ ĐẠI CƯƠNG.
+   Dùng lại đúng khung initFileBrowser, không viết thêm logic mới.
+   Bỏ qua file rác "a" (lỗi thao tác cũ trên GitHub, chưa dọn).
+   ========================================================= */
+
+const VLDC_SOURCES = [
+  {
+    ten: "Bài giảng theo chương",
+    folders: [
+      {
+        ten: "Slide bài giảng",
+        files: [
+          { ten: "Chương 1", path: "VẬT LÍ ĐẠI CƯƠNG/2. VLDC_Chương 1.pptx" },
+          { ten: "Chương 2", path: "VẬT LÍ ĐẠI CƯƠNG/3. VLDC_Chương 2.pptx" },
+          { ten: "Chương 3", path: "VẬT LÍ ĐẠI CƯƠNG/4. VLDC_Chương 3.ppt" },
+          { ten: "Chương 6 - Các nguyên lý nhiệt động", path: "VẬT LÍ ĐẠI CƯƠNG/7. VLDC_CHƯƠNG 6_Các nguyên lý nhiệt động.ppt.pptx" },
+          { ten: "Chương 8 - Các vấn đề về Điện", path: "VẬT LÍ ĐẠI CƯƠNG/9. VLDC_Chương 8_Các vấn đề về Điện.pptx" },
+          { ten: "Chương 9 - Từ trường", path: "VẬT LÍ ĐẠI CƯƠNG/10. VLDC_Chương 9_Từ trường.pptx" },
+        ],
+      },
+    ],
+  },
+  {
+    ten: "Ôn tập & Đề cương",
+    folders: [
+      {
+        ten: "Tài liệu ôn thi",
+        files: [
+          { ten: "Ôn tập VLDC (Lý thuyết)", path: "VẬT LÍ ĐẠI CƯƠNG/ÔN TẬP VLDC (lý thuyết).pdf" },
+          { ten: "Ôn tập VLDC (Bài tập)", path: "VẬT LÍ ĐẠI CƯƠNG/ÔN TẬP VLDC (Bài tập).pdf" },
+          { ten: "Giải lý thuyết thi", path: "VẬT LÍ ĐẠI CƯƠNG/GIẢI-LT THI.docx" },
+          { ten: "Lý thuyết thi", path: "VẬT LÍ ĐẠI CƯƠNG/LT THI.docx" },
+          { ten: "CK - Nhiệt", path: "VẬT LÍ ĐẠI CƯƠNG/CK - Nhiệt.docx" },
+          { ten: "Phản ứng - Kỹ thuật điện", path: "VẬT LÍ ĐẠI CƯƠNG/phản ứng phản ứng.kĩ thuật điện.docx" },
+        ],
+      },
+    ],
+  },
+  // Thêm thư mục/nguồn khác của Vật Lí Đại Cương thì thêm vào đây
+];
+
+function renderVatLiDaiCuong() {
+  return `
+    <p class="ctdt-meta">
+      Bài giảng & tài liệu ôn tập môn Vật Lí Đại Cương. Bấm tên file để xem trước, có nút tải xuống.
+    </p>
+    ${renderFileBrowserContainer("fbVLDC")}
+  `;
+}
+
+function initVatLiDaiCuong() {
+  initFileBrowser("fbVLDC", VLDC_SOURCES);
+}
+
+/* =========================================================
    NGĂN TRẮC NGHIỆM (dùng chung cho mọi bộ câu hỏi: từ vựng,
    ôn tập lý thuyết...) — kiểu giao diện giống Azota/NLDK:
    có màn Bắt đầu -> làm bài (chọn đáp án, nhảy câu tự do qua ô
@@ -8942,6 +8997,14 @@ const SUBJECTS = [
     desc: "Bài giảng 6 chương môn Vật Liệu Học",
     render: renderVatLieuHoc,
     afterRender: initVatLieuHoc,
+  },
+  {
+    id: "vat-li-dai-cuong",
+    icon: "⚛️",
+    title: "Vật Lí Đại Cương",
+    desc: "Bài giảng theo chương & tài liệu ôn tập",
+    render: renderVatLiDaiCuong,
+    afterRender: initVatLiDaiCuong,
   },
   // Thêm ngăn mới ở đây, ví dụ:
   // {
