@@ -649,6 +649,10 @@ table.tkb tbody tr:nth-child(even) td { background: #f7fbff; }
 
   <div class="watermark-bar">PH²M sưu tầm và biên soạn vì mục đích học tập phi lợi nhuận. Nếu tác giả có bất kỳ thắc mắc hoặc yêu cầu về bản quyền, vui lòng liên hệ email huynhminhmanpham@gmail.com để được hỗ trợ xử lý ngay lập tức.</div>
 
+<!-- Ngân hàng câu hỏi Chủ Nghĩa Xã Hội Khoa Học tách riêng ra file,
+     PHẢI nằm TRƯỚC thẻ script chính bên dưới để window.CNXHKH_QUESTIONS có sẵn -->
+<script src="data/cnxhkh-quiz-data.js"></script>
+
 <script>
 /* =========================================================
    BỤNG CÁ VOI - toàn bộ JS nằm trong thẻ <script> này
@@ -1959,6 +1963,22 @@ function initVatLiDaiCuong() {
    ========================================================= */
 
 /* Tách 1 khối text lớn (dán từ Excel/Azota) thành mảng câu hỏi */
+/* Đọc thẳng dữ liệu dạng JSON (mảng object { chapter, question, options, answer })
+   — không cần đi qua quizParseText. Dùng cho bộ câu hỏi trích từ DOCX theo màu chữ,
+   như Chủ Nghĩa Xã Hội Khoa Học. Trả về đúng shape nội bộ { cau, dapAn, dungIndex, chuong }
+   giống hệt quizParseText, nên phần hiển thị/chấm điểm dùng chung 100%. */
+function quizFromJSON(list) {
+  if (!Array.isArray(list)) return [];
+  return list
+    .filter((q) => q && q.question && Array.isArray(q.options) && q.options.length >= 2)
+    .map((q) => ({
+      cau: q.question,
+      dapAn: q.options,
+      dungIndex: Number.isInteger(q.answer) && q.answer >= 0 && q.answer < q.options.length ? q.answer : 0,
+      chuong: q.chapter || "Tất cả",
+    }));
+}
+
 function quizParseText(raw) {
   const lines = raw.replace(/\r\n/g, "\n").split("\n");
   const questions = [];
@@ -8941,6 +8961,19 @@ function initTuVungChuyenNganh() {
   initQuiz("fbTuVung", TVCN_QUESTIONS, "Từ Vựng Anh Văn Chuyên Ngành", TVCN_GLOSSARY);
 }
 
+/* Trắc nghiệm Chủ Nghĩa Xã Hội Khoa Học — dữ liệu nằm ở data/cnxhkh-quiz-data.js,
+   dùng lại ĐÚNG quiz engine ở trên (không viết thêm logic mới), chỉ khác chỗ
+   đọc dữ liệu qua quizFromJSON() vì nguồn là JSON chứ không phải text "*". */
+const CNXHKH_QUESTIONS_PARSED = quizFromJSON(window.CNXHKH_QUESTIONS || []);
+
+function renderCnxhkh() {
+  return renderQuizContainer("fbCnxhkh");
+}
+
+function initCnxhkh() {
+  initQuiz("fbCnxhkh", CNXHKH_QUESTIONS_PARSED, "Chủ Nghĩa Xã Hội Khoa Học");
+}
+
 /* ---------- 2. DANH SÁCH CÁC "NGĂN" (môn / mục) ---------- */
 
 const SUBJECTS = [
@@ -8973,6 +9006,14 @@ const SUBJECTS = [
     desc: "Trắc nghiệm từ vựng tiếng Anh chuyên ngành Hóa",
     render: renderTuVungChuyenNganh,
     afterRender: initTuVungChuyenNganh,
+  },
+  {
+    id: "cnxhkh",
+    icon: "📕",
+    title: "Chủ Nghĩa Xã Hội Khoa Học",
+    desc: "Trắc nghiệm 349 câu, 7 chương",
+    render: renderCnxhkh,
+    afterRender: initCnxhkh,
   },
   {
     id: "hoa-dai-cuong",
