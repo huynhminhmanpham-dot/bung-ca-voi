@@ -659,6 +659,9 @@ table.tkb tbody tr:nth-child(even) td { background: #f7fbff; }
      PHẢI nằm TRƯỚC thẻ script chính bên dưới để window.LSD_QUESTIONS có sẵn -->
 <script src="data/lsd-quiz-data.js"></script>
 
+<script src="data/triet-quiz-data.js"></script>
+<script src="data/ktct-quiz-data.js"></script>
+
 <script src="data/cnxhkh-quiz-data.js"></script>
 
 <script>
@@ -2542,6 +2545,28 @@ function initTuTuongHCM() {
   initQuiz("fbThcm", THCM_QUESTIONS_PARSED, "Tư Tưởng Hồ Chí Minh");
 }
 
+/* Trắc nghiệm Triết Học — dữ liệu ở data/triet-quiz-data.js */
+const TRIET_QUESTIONS_PARSED = quizFromJSON(window.TRIET_QUESTIONS || []);
+
+function renderTrietHoc() {
+  return renderQuizContainer("fbTriet");
+}
+
+function initTrietHoc() {
+  initQuiz("fbTriet", TRIET_QUESTIONS_PARSED, "Triết Học");
+}
+
+/* Trắc nghiệm Kinh Tế Chính Trị — dữ liệu ở data/ktct-quiz-data.js */
+const KTCT_QUESTIONS_PARSED = quizFromJSON(window.KTCT_QUESTIONS || []);
+
+function renderKtct() {
+  return renderQuizContainer("fbKtct");
+}
+
+function initKtct() {
+  initQuiz("fbKtct", KTCT_QUESTIONS_PARSED, "Kinh Tế Chính Trị");
+}
+
 /* ---------- 2. DANH SÁCH CÁC "NGĂN" (môn / mục) ---------- */
 
 const SUBJECTS = [
@@ -2585,7 +2610,7 @@ const SUBJECTS = [
   },
   {
     id: "lich-su-dang",
-    icon: "🇻🇳",
+    icon: '<svg viewBox="0 0 60 40" width="30" height="20" style="display:block"><rect width="60" height="40" fill="#da251d"/><polygon points="30.0,10.5 32.1,17.1 39.0,17.1 33.4,21.1 35.6,27.7 30.0,23.6 24.4,27.7 26.6,21.1 21.0,17.1 27.9,17.1" fill="#ffcd00"/></svg>',
     title: "Lịch Sử Đảng Cộng Sản Việt Nam",
     desc: "Trắc nghiệm 417 câu, 3 chương",
     render: renderLichSuDang,
@@ -2593,11 +2618,27 @@ const SUBJECTS = [
   },
   {
     id: "tu-tuong-hcm",
-    icon: "⭐",
+    icon: '<svg viewBox="0 0 60 40" width="30" height="20" style="display:block"><rect width="60" height="40" fill="#da251d"/><polygon points="30.0,10.5 32.1,17.1 39.0,17.1 33.4,21.1 35.6,27.7 30.0,23.6 24.4,27.7 26.6,21.1 21.0,17.1 27.9,17.1" fill="#ffcd00"/></svg>',
     title: "Tư Tưởng Hồ Chí Minh",
     desc: "Trắc nghiệm (đang chờ bổ sung câu hỏi)",
     render: renderTuTuongHCM,
     afterRender: initTuTuongHCM,
+  },
+  {
+    id: "triet-hoc",
+    icon: "🦉",
+    title: "Triết Học",
+    desc: "Trắc nghiệm 435 câu, 3 chương",
+    render: renderTrietHoc,
+    afterRender: initTrietHoc,
+  },
+  {
+    id: "ktct",
+    icon: "📈",
+    title: "Kinh Tế Chính Trị",
+    desc: "Trắc nghiệm 327 câu, 6 chương",
+    render: renderKtct,
+    afterRender: initKtct,
   },
   {
     id: "hoa-dai-cuong",
