@@ -655,6 +655,10 @@ table.tkb tbody tr:nth-child(even) td { background: #f7fbff; }
      PHẢI nằm TRƯỚC thẻ script chính bên dưới để TVCN_RAW/TVCN_GLOSSARY có sẵn -->
 <script src="data/tvcn-quiz-data.js"></script>
 
+<!-- Ngân hàng câu hỏi Lịch Sử Đảng tách riêng ra file,
+     PHẢI nằm TRƯỚC thẻ script chính bên dưới để window.LSD_QUESTIONS có sẵn -->
+<script src="data/lsd-quiz-data.js"></script>
+
 <script src="data/cnxhkh-quiz-data.js"></script>
 
 <script>
@@ -2512,6 +2516,32 @@ function initCnxhkh() {
   initQuiz("fbCnxhkh", CNXHKH_QUESTIONS_PARSED, "Chủ Nghĩa Xã Hội Khoa Học");
 }
 
+/* Trắc nghiệm Lịch Sử Đảng — dữ liệu ở data/lsd-quiz-data.js, dùng lại đúng
+   quiz engine ở trên, không viết thêm logic mới. */
+const LSD_QUESTIONS_PARSED = quizFromJSON(window.LSD_QUESTIONS || []);
+
+function renderLichSuDang() {
+  return renderQuizContainer("fbLsd");
+}
+
+function initLichSuDang() {
+  initQuiz("fbLsd", LSD_QUESTIONS_PARSED, "Lịch Sử Đảng Cộng Sản Việt Nam");
+}
+
+/* Trắc nghiệm Tư Tưởng Hồ Chí Minh — CHƯA có dữ liệu, sẽ nhận qua
+   data/thcm-quiz-data.js sau này (chỉ cần upload file đó vào data/,
+   KHÔNG cần sửa lại index.html nữa — window.THCM_QUESTIONS || []
+   đã tự xử lý trường hợp chưa có file, hiện "0 câu" chứ không lỗi). */
+const THCM_QUESTIONS_PARSED = quizFromJSON(window.THCM_QUESTIONS || []);
+
+function renderTuTuongHCM() {
+  return renderQuizContainer("fbThcm");
+}
+
+function initTuTuongHCM() {
+  initQuiz("fbThcm", THCM_QUESTIONS_PARSED, "Tư Tưởng Hồ Chí Minh");
+}
+
 /* ---------- 2. DANH SÁCH CÁC "NGĂN" (môn / mục) ---------- */
 
 const SUBJECTS = [
@@ -2552,6 +2582,22 @@ const SUBJECTS = [
     desc: "Trắc nghiệm 349 câu, 7 chương",
     render: renderCnxhkh,
     afterRender: initCnxhkh,
+  },
+  {
+    id: "lich-su-dang",
+    icon: "🇻🇳",
+    title: "Lịch Sử Đảng Cộng Sản Việt Nam",
+    desc: "Trắc nghiệm 417 câu, 3 chương",
+    render: renderLichSuDang,
+    afterRender: initLichSuDang,
+  },
+  {
+    id: "tu-tuong-hcm",
+    icon: "⭐",
+    title: "Tư Tưởng Hồ Chí Minh",
+    desc: "Trắc nghiệm (đang chờ bổ sung câu hỏi)",
+    render: renderTuTuongHCM,
+    afterRender: initTuTuongHCM,
   },
   {
     id: "hoa-dai-cuong",
