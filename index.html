@@ -2548,11 +2548,51 @@ function initTuTuongHCM() {
 /* Trắc nghiệm Triết Học — dữ liệu ở data/triet-quiz-data.js */
 const TRIET_QUESTIONS_PARSED = quizFromJSON(window.TRIET_QUESTIONS || []);
 
+const TRIET_TAILIEU = [
+  {
+    ten: "Bài giảng",
+    folders: [
+      {
+        ten: "Slide theo chương",
+        files: [
+          { ten: "0. Nhập môn Triết học", path: "TRIẾT HỌC/0)NHẬP MÔN TRIẾT HỌC.ppt" },
+          { ten: "I. Triết học và vấn đề cơ bản của Triết học (PPTX)", path: "TRIẾT HỌC/I.TRIẾT HỌC VÀ VẤN ĐỀ CƠ BẢN CỦA TRIẾT HỌC.pptx" },
+          { ten: "I. Triết học và vấn đề cơ bản của Triết học (Word, ZSC)", path: "TRIẾT HỌC/I.TRIẾT HỌC VÀ VẤN ĐỀ CƠ BẢN CỦA TRIẾT HỌC(ZSC).docx" },
+          { ten: "1. Vật chất và ý thức", path: "TRIẾT HỌC/1 )VẬT CHẤT VÀ Ý THỨC.ppt" },
+          { ten: "2. Phép biện chứng duy vật", path: "TRIẾT HỌC/2)PHÉP BIỆN CHỨNG DUY VẬT.ppt" },
+          { ten: "3. Phạm trù", path: "TRIẾT HỌC/3)PHẠM TRÙ.ppt" },
+          { ten: "4. Quy luật", path: "TRIẾT HỌC/4)QUY LUẬT.ppt" },
+          { ten: "5. Lý luận nhận thức", path: "TRIẾT HỌC/5)LÝ LUẬN NHẬN THỨC.ppt" },
+          { ten: "6. Hình thái kinh tế - xã hội", path: "TRIẾT HỌC/6)HÌNH THÁI KINH TẾ - XÃ HỘI.ppt" },
+          { ten: "7. Giai cấp và dân tộc", path: "TRIẾT HỌC/7)GIAI CẤP VÀ DÂN TỘC.ppt" },
+          { ten: "8. Nhà nước và CMXH", path: "TRIẾT HỌC/8)NHÀ NƯỚC VÀ CMXH.ppt" },
+          { ten: "9. Ý thức xã hội", path: "TRIẾT HỌC/9)Ý THỨC XÃ HỘI.ppt" },
+          { ten: "10. Con người", path: "TRIẾT HỌC/10)CON NGƯỜI.ppt" },
+        ],
+      },
+      {
+        ten: "Tài liệu sưu tầm",
+        files: [{ ten: "Triết Học US", path: "TRIẾT HỌC/TRIẾT HỌC US.pdf" }],
+      },
+    ],
+  },
+  // Thêm thư mục/nguồn khác của Triết Học thì thêm vào đây
+];
+
 function renderTrietHoc() {
-  return renderQuizContainer("fbTriet");
+  return `
+    <p class="ctdt-meta">
+      Bài giảng & tài liệu môn Triết Học. Bấm tên file để xem trước, có nút tải xuống —
+      kéo xuống bên dưới để làm trắc nghiệm.
+    </p>
+    ${renderFileBrowserContainer("fbTrietTailieu")}
+    <h2 style="color:#0b3d91; font-size:18px; margin-top:32px; border-left:5px solid #0b3d91; padding-left:10px;">📝 Trắc nghiệm ôn tập</h2>
+    ${renderQuizContainer("fbTriet")}
+  `;
 }
 
 function initTrietHoc() {
+  initFileBrowser("fbTrietTailieu", TRIET_TAILIEU);
   initQuiz("fbTriet", TRIET_QUESTIONS_PARSED, "Triết Học");
 }
 
