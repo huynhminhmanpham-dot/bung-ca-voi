@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Bụng Cá Voi</title>
+<title>ChemCetus</title>
 <style>
 /* ===== Thiết lập chung ===== */
 * { box-sizing: border-box; }
@@ -731,7 +731,7 @@ table.tkb tbody tr:nth-child(even) td { background: #f7fbff; }
 <body>
 
   <header class="site-header">
-    <h1 class="logo">𝓑𝓾̣𝓷𝓰 𝓒𝓪́ 𝓥𝓸𝓲</h1>
+    <h1 class="logo">𝓒𝓗𝓔𝓜𝓒𝓔𝓣𝓤𝓢</h1>
     <p class="subtitle">Нгок Хюинь · ph</p>
   </header>
 
@@ -3037,12 +3037,9 @@ function renderDetail(id) {
    Chạy ĐỘC LẬP với renderHome/renderDetail — chỉ dựng 1 lần lúc tải trang,
    nằm ngoài #app nên không bị xoá mỗi khi chuyển ngăn. */
 
-/* ---------- Link cho menu "Góp Ý" ----------
-   Muốn đổi link, chỉ cần sửa 2 dòng "url" bên dưới, không cần đụng gì khác. */
-const GOP_Y_LINKS = [
-  { ten: "📄 Tài liệu - Bản quyền", url: "https://www.facebook.com/share/19Wfd29pM2/" },
-  { ten: "🐛 Góp ý lỗi bài tập trắc nghiệm", url: "" }, // TODO: dán link Google Form vào đây khi có
-];
+/* ---------- Link cho nút "Góp Ý" ----------
+   Muốn đổi link, chỉ cần sửa dòng "GOP_Y_URL" bên dưới, không cần đụng gì khác. */
+const GOP_Y_URL = "https://www.facebook.com/share/19Wfd29pM2/";
 
 function topNavGoTo(id) {
   document.querySelectorAll(".top-nav-panel").forEach((el) => el.classList.remove("open"));
@@ -3079,14 +3076,6 @@ function renderTopNav() {
     ten,
     items: SUBJECTS.filter((s) => s.nhomMon === ten),
   }));
-
-  const gopYLinksHtml = GOP_Y_LINKS
-    .map((g) =>
-      g.url
-        ? `<a class="top-nav-link" href="${g.url}" target="_blank" rel="noopener" style="text-decoration:none;">${g.ten}</a>`
-        : `<span class="top-nav-link" style="opacity:0.5; cursor:default;">${g.ten} (sắp có)</span>`
-    )
-    .join("");
 
   nav.innerHTML = `
     <button type="button" class="top-nav-btn" data-panel="tienich">🛠️ Tính Năng, Tiện Ích</button>
@@ -3127,14 +3116,10 @@ function renderTopNav() {
       </div>
     </div>
 
-    <button type="button" class="top-nav-btn" data-panel="gopy">💬 Góp Ý</button>
-    <div class="top-nav-panel" id="topNavPanelGopy">
-      <div class="top-nav-group-title">Gửi góp ý</div>
-      <div class="top-nav-links">${gopYLinksHtml}</div>
-    </div>
+    <a class="top-nav-btn" href="${GOP_Y_URL}" target="_blank" rel="noopener" style="text-decoration:none; display:inline-block;">💬 Góp Ý / Báo Lỗi / Bản Quyền</a>
   `;
 
-  nav.querySelectorAll(".top-nav-btn").forEach((btn) => {
+  nav.querySelectorAll(".top-nav-btn[data-panel]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const panelId = "topNavPanel" + btn.dataset.panel[0].toUpperCase() + btn.dataset.panel.slice(1);
       const panel = document.getElementById(panelId);
