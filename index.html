@@ -2607,6 +2607,101 @@ function initKtct() {
   initQuiz("fbKtct", KTCT_QUESTIONS_PARSED, "Kinh Tế Chính Trị");
 }
 
+/* =========================================================
+   NGĂN HÓA VÔ CƠ — 3 nguồn tài liệu: Thầy Hòa, Cô Ngọc-Cô Quỳnh, Đề thi tham khảo.
+   Dùng lại đúng khung initFileBrowser, không viết thêm logic mới.
+   Bỏ qua file rác "a" ở 2 thư mục (lỗi thao tác cũ trên GitHub, chưa dọn).
+   ========================================================= */
+
+const HOAVOCO_SOURCES = [
+  {
+    ten: "Thầy Hòa",
+    folders: [
+      {
+        ten: "Slide theo chương",
+        files: [
+          { ten: "1. Giới thiệu", path: "VÔ CƠ THẦY HÒA/1. Giới thiệu.pdf" },
+          { ten: "2. Ôn tập", path: "VÔ CƠ THẦY HÒA/2. Ôn tập.pdf" },
+          { ten: "Chương 1 - Hydro", path: "VÔ CƠ THẦY HÒA/Chương 1 - Hydro.pdf" },
+          { ten: "Chương 2 - IA", path: "VÔ CƠ THẦY HÒA/Chương 2 - IA.pdf" },
+          { ten: "Chương 3 - IIA", path: "VÔ CƠ THẦY HÒA/Chương 3 - IIA.pdf" },
+          { ten: "Chương 4 - IIIA", path: "VÔ CƠ THẦY HÒA/Chương 4 - IIIA.pdf" },
+          { ten: "Chương 5 - IVA", path: "VÔ CƠ THẦY HÒA/Chương 5 - IVA.pdf" },
+          { ten: "Chương 6 - VA", path: "VÔ CƠ THẦY HÒA/Chương 6 - VA.pdf" },
+          { ten: "Chương 7 - VIA", path: "VÔ CƠ THẦY HÒA/Chương 7 - VIA.pdf" },
+          { ten: "Chương 8 - VIIA", path: "VÔ CƠ THẦY HÒA/Chương 8 - VIIA.pdf" },
+          { ten: "Chương 9 - Phức chất", path: "VÔ CƠ THẦY HÒA/Chương 9 - Phúc chất.pdf" },
+          { ten: "Chương 10 - VIIIB", path: "VÔ CƠ THẦY HÒA/Chương 10 - VIIIB.pdf" },
+          { ten: "Chương 11 - VIIB", path: "VÔ CƠ THẦY HÒA/Chương 11 - VIIB.pdf" },
+          { ten: "Chương 12 - VIB", path: "VÔ CƠ THẦY HÒA/Chương 12 - VIB.pdf" },
+          { ten: "Chương 13 - IIB", path: "VÔ CƠ THẦY HÒA/Chương 13 - IIB.pdf" },
+          { ten: "Chương 14 - IB", path: "VÔ CƠ THẦY HÒA/Chương 14 - IB.pdf" },
+        ],
+      },
+    ],
+  },
+  {
+    ten: "Cô Ngọc, Cô Quỳnh",
+    folders: [
+      {
+        ten: "Slide & bài tập",
+        files: [
+          { ten: "BT TL chương 2", path: "VÔ CƠ CÔ NGỌC, CÔ QUỲNH/BT TL chương 2.pdf" },
+          { ten: "Chương 1 - Hidro", path: "VÔ CƠ CÔ NGỌC, CÔ QUỲNH/Chương 1- Hidro.pdf" },
+          { ten: "Chương 2 - IA", path: "VÔ CƠ CÔ NGỌC, CÔ QUỲNH/Chương 2- IA.pdf" },
+          { ten: "Chương 3 - IIA", path: "VÔ CƠ CÔ NGỌC, CÔ QUỲNH/Chương 3- IIA.pdf" },
+          { ten: "Chương 4 - IIIA", path: "VÔ CƠ CÔ NGỌC, CÔ QUỲNH/Chương 4 - IIIA.pdf" },
+          { ten: "Chương 5 - IVA", path: "VÔ CƠ CÔ NGỌC, CÔ QUỲNH/Chương 5- IVA.pdf" },
+          { ten: "Chương 6 - VA", path: "VÔ CƠ CÔ NGỌC, CÔ QUỲNH/Chương 6- VA.pdf" },
+          { ten: "Chương 7 - VIA", path: "VÔ CƠ CÔ NGỌC, CÔ QUỲNH/Chương 7- VIA.pdf" },
+          { ten: "Chương 8 - VIIA", path: "VÔ CƠ CÔ NGỌC, CÔ QUỲNH/chương 8-VIIA.pdf" },
+          { ten: "Chương 9 - Phức chất (SV)", path: "VÔ CƠ CÔ NGỌC, CÔ QUỲNH/Chương 9 - Phúc chất - SV.pdf" },
+          { ten: "Chương 10 - VIIIB", path: "VÔ CƠ CÔ NGỌC, CÔ QUỲNH/chương 10 -VIIIB.pdf" },
+          { ten: "Chương 11 - VIIB", path: "VÔ CƠ CÔ NGỌC, CÔ QUỲNH/chương 11-VIIB.pdf" },
+          { ten: "Chương 11 - VIB", path: "VÔ CƠ CÔ NGỌC, CÔ QUỲNH/Chương 11-VIB.pdf" },
+          { ten: "Chương 12 - IB", path: "VÔ CƠ CÔ NGỌC, CÔ QUỲNH/chương 12-IB.pdf" },
+          { ten: "Chương 12 - IIB", path: "VÔ CƠ CÔ NGỌC, CÔ QUỲNH/Chương 12-IIB.pdf" },
+        ],
+      },
+    ],
+  },
+  {
+    ten: "Đề Thi Tham Khảo",
+    folders: [
+      {
+        ten: "Đề & tài liệu ôn thi",
+        files: [
+          { ten: "Chương 2", path: "VÔ CƠ ĐỀ THI THAM KHẢO/CHUONG2.docx" },
+          { ten: "Chương 11", path: "VÔ CƠ ĐỀ THI THAM KHẢO/Chương11 (1).docx" },
+          { ten: "Hydro", path: "VÔ CƠ ĐỀ THI THAM KHẢO/HYDRO.docx" },
+          { ten: "IA", path: "VÔ CƠ ĐỀ THI THAM KHẢO/IA.docx" },
+          { ten: "IIA - IIIA", path: "VÔ CƠ ĐỀ THI THAM KHẢO/IIA IIIA.docx" },
+          { ten: "IIIA", path: "VÔ CƠ ĐỀ THI THAM KHẢO/IIIA.docx" },
+          { ten: "VIA", path: "VÔ CƠ ĐỀ THI THAM KHẢO/VIA.docx" },
+          { ten: "VIB + VIIB", path: "VÔ CƠ ĐỀ THI THAM KHẢO/VIB+VIIB.docx" },
+          { ten: "VIIA", path: "VÔ CƠ ĐỀ THI THAM KHẢO/VIIA.docx" },
+          { ten: "VIIIB", path: "VÔ CƠ ĐỀ THI THAM KHẢO/VIIIB.docx" },
+        ],
+      },
+    ],
+  },
+  // Thêm nguồn tài liệu Hóa Vô Cơ mới thì thêm 1 object { ten, folders: [...] } vào đây
+];
+
+function renderHoaVoCo() {
+  return `
+    <p class="ctdt-meta">
+      Tài liệu Hóa Vô Cơ: bài giảng thầy Hòa, cô Ngọc - cô Quỳnh, và đề thi tham khảo.
+      Bấm vào tên nguồn để mở, rồi bấm tên file để xem trước — có nút tải xuống.
+    </p>
+    ${renderFileBrowserContainer("fbHoaVoCo")}
+  `;
+}
+
+function initHoaVoCo() {
+  initFileBrowser("fbHoaVoCo", HOAVOCO_SOURCES);
+}
+
 /* ---------- 2. DANH SÁCH CÁC "NGĂN" (môn / mục) ---------- */
 
 const SUBJECTS = [
@@ -2679,6 +2774,14 @@ const SUBJECTS = [
     desc: "Trắc nghiệm 328 câu, 6 chương",
     render: renderKtct,
     afterRender: initKtct,
+  },
+  {
+    id: "hoa-vo-co",
+    icon: "⚗️",
+    title: "Hóa Vô Cơ",
+    desc: "Tài liệu Thầy Hòa, Cô Ngọc - Cô Quỳnh, đề thi tham khảo",
+    render: renderHoaVoCo,
+    afterRender: initHoaVoCo,
   },
   {
     id: "hoa-dai-cuong",
