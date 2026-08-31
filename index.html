@@ -2602,38 +2602,86 @@ function initTuVungChuyenNganh() {
    dùng lại ĐÚNG quiz engine ở trên (không viết thêm logic mới), chỉ khác chỗ
    đọc dữ liệu qua quizFromJSON() vì nguồn là JSON chứ không phải text "*". */
 const CNXHKH_QUESTIONS_PARSED = quizFromJSON(window.CNXHKH_QUESTIONS || []);
+const CNXHKH_TAILIEU = [
+  {
+    ten: "Tài liệu tổng hợp",
+    folders: [
+      {
+        ten: "Tài liệu",
+        files: [{ ten: "Chủ Nghĩa Xã Hội Khoa Học (Word)", path: "5 môn poly+ quốc phòng/Chủ Nghĩa Xã Hội Khoa Học.docx" }],
+      },
+    ],
+  },
+];
 
 function renderCnxhkh() {
-  return renderQuizContainer("fbCnxhkh");
+  return `
+    <p class="ctdt-meta">Tài liệu tham khảo — kéo xuống bên dưới để làm trắc nghiệm.</p>
+    ${renderFileBrowserContainer("fbCnxhkhTailieu")}
+    <h2 style="color:#0b3d91; font-size:18px; margin-top:32px; border-left:5px solid #0b3d91; padding-left:10px;">📝 Trắc nghiệm ôn tập</h2>
+    ${renderQuizContainer("fbCnxhkh")}
+  `;
 }
 
 function initCnxhkh() {
+  initFileBrowser("fbCnxhkhTailieu", CNXHKH_TAILIEU);
   initQuiz("fbCnxhkh", CNXHKH_QUESTIONS_PARSED, "Chủ Nghĩa Xã Hội Khoa Học");
 }
 
 /* Trắc nghiệm Lịch Sử Đảng — dữ liệu ở data/lsd-quiz-data.js, dùng lại đúng
    quiz engine ở trên, không viết thêm logic mới. */
 const LSD_QUESTIONS_PARSED = quizFromJSON(window.LSD_QUESTIONS || []);
+const LSD_TAILIEU = [
+  {
+    ten: "Tài liệu tổng hợp",
+    folders: [
+      {
+        ten: "Tài liệu",
+        files: [{ ten: "Lịch Sử Đảng (Word)", path: "5 môn poly+ quốc phòng/Lịch Sử Đảng.docx" }],
+      },
+    ],
+  },
+];
 
 function renderLichSuDang() {
-  return renderQuizContainer("fbLsd");
+  return `
+    <p class="ctdt-meta">Tài liệu tham khảo — kéo xuống bên dưới để làm trắc nghiệm.</p>
+    ${renderFileBrowserContainer("fbLsdTailieu")}
+    <h2 style="color:#0b3d91; font-size:18px; margin-top:32px; border-left:5px solid #0b3d91; padding-left:10px;">📝 Trắc nghiệm ôn tập</h2>
+    ${renderQuizContainer("fbLsd")}
+  `;
 }
 
 function initLichSuDang() {
+  initFileBrowser("fbLsdTailieu", LSD_TAILIEU);
   initQuiz("fbLsd", LSD_QUESTIONS_PARSED, "Lịch Sử Đảng Cộng Sản Việt Nam");
 }
 
-/* Trắc nghiệm Tư Tưởng Hồ Chí Minh — CHƯA có dữ liệu, sẽ nhận qua
-   data/thcm-quiz-data.js sau này (chỉ cần upload file đó vào data/,
-   KHÔNG cần sửa lại index.html nữa — window.THCM_QUESTIONS || []
-   đã tự xử lý trường hợp chưa có file, hiện "0 câu" chứ không lỗi). */
+/* Trắc nghiệm Tư Tưởng Hồ Chí Minh */
 const THCM_QUESTIONS_PARSED = quizFromJSON(window.THCM_QUESTIONS || []);
+const THCM_TAILIEU = [
+  {
+    ten: "Tài liệu tổng hợp",
+    folders: [
+      {
+        ten: "Tài liệu",
+        files: [{ ten: "Tư Tưởng Hồ Chí Minh (Word)", path: "5 môn poly+ quốc phòng/Tư tưởng Hồ Chí Minh.docx" }],
+      },
+    ],
+  },
+];
 
 function renderTuTuongHCM() {
-  return renderQuizContainer("fbThcm");
+  return `
+    <p class="ctdt-meta">Tài liệu tham khảo — kéo xuống bên dưới để làm trắc nghiệm.</p>
+    ${renderFileBrowserContainer("fbThcmTailieu")}
+    <h2 style="color:#0b3d91; font-size:18px; margin-top:32px; border-left:5px solid #0b3d91; padding-left:10px;">📝 Trắc nghiệm ôn tập</h2>
+    ${renderQuizContainer("fbThcm")}
+  `;
 }
 
 function initTuTuongHCM() {
+  initFileBrowser("fbThcmTailieu", THCM_TAILIEU);
   initQuiz("fbThcm", THCM_QUESTIONS_PARSED, "Tư Tưởng Hồ Chí Minh");
 }
 
@@ -2664,7 +2712,10 @@ const TRIET_TAILIEU = [
       },
       {
         ten: "Tài liệu sưu tầm",
-        files: [{ ten: "Triết Học US", path: "TRIẾT HỌC/TRIẾT HỌC US.pdf" }],
+        files: [
+          { ten: "Triết Học US", path: "TRIẾT HỌC/TRIẾT HỌC US.pdf" },
+          { ten: "Triết Học (Word)", path: "5 môn poly+ quốc phòng/Triết Học.docx" },
+        ],
       },
     ],
   },
@@ -2690,13 +2741,62 @@ function initTrietHoc() {
 
 /* Trắc nghiệm Kinh Tế Chính Trị — dữ liệu ở data/ktct-quiz-data.js */
 const KTCT_QUESTIONS_PARSED = quizFromJSON(window.KTCT_QUESTIONS || []);
+const KTCT_TAILIEU = [
+  {
+    ten: "Tài liệu tổng hợp",
+    folders: [
+      {
+        ten: "Tài liệu",
+        files: [{ ten: "Kinh Tế Chính Trị (Word)", path: "5 môn poly+ quốc phòng/Kinh Tế Chính Trị.docx" }],
+      },
+    ],
+  },
+];
 
 function renderKtct() {
-  return renderQuizContainer("fbKtct");
+  return `
+    <p class="ctdt-meta">Tài liệu tham khảo — kéo xuống bên dưới để làm trắc nghiệm.</p>
+    ${renderFileBrowserContainer("fbKtctTailieu")}
+    <h2 style="color:#0b3d91; font-size:18px; margin-top:32px; border-left:5px solid #0b3d91; padding-left:10px;">📝 Trắc nghiệm ôn tập</h2>
+    ${renderQuizContainer("fbKtct")}
+  `;
 }
 
 function initKtct() {
+  initFileBrowser("fbKtctTailieu", KTCT_TAILIEU);
   initQuiz("fbKtct", KTCT_QUESTIONS_PARSED, "Kinh Tế Chính Trị");
+}
+
+/* =========================================================
+   NGĂN QUỐC PHÒNG AN NINH — chỉ tài liệu, không có trắc nghiệm.
+   Dùng lại đúng khung initFileBrowser, không viết thêm logic mới.
+   ========================================================= */
+
+const QPAN_SOURCES = [
+  {
+    ten: "Tài liệu",
+    folders: [
+      {
+        ten: "Tài liệu tổng hợp",
+        files: [
+          { ten: "Full TN QPAN 2 (HUIT)", path: "5 môn poly+ quốc phòng/FULL TN QPAN2 HUIT.docx" },
+          { ten: "Quốc Phòng 1 - Năm 2023-2024", path: "5 môn poly+ quốc phòng/QUỐC PHÒNG 1 NĂM 2023-2024.docx" },
+        ],
+      },
+    ],
+  },
+  // Thêm nguồn tài liệu QPAN mới thì thêm vào đây
+];
+
+function renderQpan() {
+  return `
+    <p class="ctdt-meta">Tài liệu môn Quốc Phòng An Ninh. Bấm tên file để xem trước, có nút tải xuống.</p>
+    ${renderFileBrowserContainer("fbQpan")}
+  `;
+}
+
+function initQpan() {
+  initFileBrowser("fbQpan", QPAN_SOURCES);
 }
 
 /* =========================================================
@@ -2884,6 +2984,15 @@ const SUBJECTS = [
     desc: "Trắc nghiệm 328 câu, 6 chương",
     render: renderKtct,
     afterRender: initKtct,
+  },
+  {
+    id: "qpan",
+    hocKy: 1,
+    icon: "🎖️",
+    title: "Quốc Phòng An Ninh",
+    desc: "Tài liệu ôn tập Quốc Phòng An Ninh",
+    render: renderQpan,
+    afterRender: initQpan,
   },
   {
     id: "hoa-vo-co",
