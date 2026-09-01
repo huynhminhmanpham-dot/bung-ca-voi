@@ -2800,6 +2800,130 @@ function initQpan() {
 }
 
 /* =========================================================
+   NGĂN HÓA HỮU CƠ — 5 nguồn tài liệu.
+   Dùng lại đúng khung initFileBrowser, không viết thêm logic mới.
+   Bỏ qua file rác "a"/"c" ở các thư mục (lỗi thao tác cũ trên GitHub, chưa dọn).
+   ========================================================= */
+
+const HOAHUUCO_SOURCES = [
+  {
+    ten: "Trợ giảng hữu cơ gửi",
+    folders: [
+      {
+        ten: "Tài liệu",
+        files: [
+          { ten: "Chương 1 - HHC", path: "Trợ giảng hữu cơ gửi/chương 1 HHC.pdf" },
+          { ten: "HHC Chương 2-6", path: "Trợ giảng hữu cơ gửi/HHC CHƯƠNG 2-6.pdf" },
+          { ten: "Chương 5 - Alkene", path: "Trợ giảng hữu cơ gửi/chương 5 alkene.pdf" },
+          { ten: "Chương 6 - Alkyne", path: "Trợ giảng hữu cơ gửi/chương 6 alkyne.pdf" },
+          { ten: "Chương 7", path: "Trợ giảng hữu cơ gửi/Chương 7.docx" },
+          { ten: "Chương 8", path: "Trợ giảng hữu cơ gửi/CHƯƠNG 8.docx" },
+          { ten: "Chương 9 - Rượu, Phenol và Ether", path: "Trợ giảng hữu cơ gửi/Chương 9 RƯỢU, PHENOL VÀ ETHER.pdf" },
+          { ten: "Chương 10 - Carboxylic acid, Ketone", path: "Trợ giảng hữu cơ gửi/chương 10 Carboxylic acid, ketone.pdf" },
+          { ten: "Chương 11", path: "Trợ giảng hữu cơ gửi/CHƯƠNG 11.docx" },
+          { ten: "Câu hỏi chương 4", path: "Trợ giảng hữu cơ gửi/Câu hỏi chương 4.docx" },
+          { ten: "Cơ chế phản ứng", path: "Trợ giảng hữu cơ gửi/Cơ chế phản ứng.docx" },
+        ],
+      },
+    ],
+  },
+  {
+    ten: "Hữu Cơ Hồng Anh",
+    folders: [
+      {
+        ten: "Tài liệu",
+        files: [
+          { ten: "C2 - 45", path: "Hữu cơ Hồng Anh/C2-45.pdf" },
+          { ten: "C3", path: "Hữu cơ Hồng Anh/C3.pdf" },
+          { ten: "C6", path: "Hữu cơ Hồng Anh/C6.pdf" },
+          { ten: "C7", path: "Hữu cơ Hồng Anh/C7.pdf" },
+          { ten: "C8", path: "Hữu cơ Hồng Anh/C8.pdf" },
+          { ten: "C9", path: "Hữu cơ Hồng Anh/C9.pdf" },
+          { ten: "C10 - Andehit, Ceton, Axit", path: "Hữu cơ Hồng Anh/C10-ANDEHIT-CETON-AXIT.pdf" },
+          { ten: "C11 - Amin", path: "Hữu cơ Hồng Anh/C11-AMIN.pdf" },
+        ],
+      },
+    ],
+  },
+  {
+    ten: "Hữu Cơ Thầy Hà",
+    folders: [
+      {
+        ten: "Tài liệu",
+        files: [
+          { ten: "Chapter 2 - Hiệu ứng điện tử", path: "Hữu cơ thầy Hà/Chapter 2- hieu ung dien tu.pdf" },
+          { ten: "Chapter 3 - Cơ chế phản ứng", path: "Hữu cơ thầy Hà/Chapter 3 - co che phan ung.pdf" },
+          { ten: "Chapter 4 - Alkane", path: "Hữu cơ thầy Hà/Chapter 4 - alkane.pdf" },
+          { ten: "Chapter 5 - Alkene", path: "Hữu cơ thầy Hà/Chapter 5 - alkene.pdf" },
+          { ten: "Chapter 6 - Alkyne", path: "Hữu cơ thầy Hà/Chapter 6 - alkyne.pdf" },
+          { ten: "Chapter 7 - Arene", path: "Hữu cơ thầy Hà/Chapter 7 - arene.pdf" },
+          { ten: "Chapter 8 - Halogen-Cơ kim", path: "Hữu cơ thầy Hà/Chapter 8 - halogen-co kim.pdf" },
+          { ten: "Chapter 9 - Phenol, Alcohol", path: "Hữu cơ thầy Hà/Chapter 9 - phenol alcohol .pdf" },
+          { ten: "Chapter 10 - Aldehyde, Ketone", path: "Hữu cơ thầy Hà/Chapter 10 - aldehyde-ketone.pdf" },
+          { ten: "Chapter 11 - Carboxylic acid", path: "Hữu cơ thầy Hà/Chapter 11 - carboxylic acid.pdf" },
+          { ten: "Chapter 12 - Amine, Diazonium", path: "Hữu cơ thầy Hà/Chapter 12 - amine diazonium.pdf" },
+          { ten: "HHC Chương 2-6", path: "Hữu cơ thầy Hà/HHC CHƯƠNG 2-6.pdf" },
+        ],
+      },
+    ],
+  },
+  {
+    ten: "Hữu Cơ Thầy Nam",
+    folders: [
+      {
+        ten: "Tài liệu (VN)",
+        files: [
+          { ten: "Chapter 1", path: "Hữu cơ thầy Nam/chapter 1-full-VN.pdf" },
+          { ten: "Chapter 2", path: "Hữu cơ thầy Nam/chapter 2-full-VN.pdf" },
+          { ten: "Chapter 3", path: "Hữu cơ thầy Nam/chapter 3-full-VN.pdf" },
+          { ten: "Chapter 4", path: "Hữu cơ thầy Nam/chapter 4-full VN.pdf" },
+          { ten: "Chapter 5", path: "Hữu cơ thầy Nam/chapter 5-full VN.pdf" },
+          { ten: "Chapter 6", path: "Hữu cơ thầy Nam/chapter 6-full-VN.pdf" },
+          { ten: "Chapter 7", path: "Hữu cơ thầy Nam/chapter 7-full-VN.pdf" },
+          { ten: "Chapter 8", path: "Hữu cơ thầy Nam/chapter 8-full-VN.pdf" },
+          { ten: "Chapter 9", path: "Hữu cơ thầy Nam/chapter 9-full-VN.pdf" },
+          { ten: "Chapter 10", path: "Hữu cơ thầy Nam/chapter 10-full-VN.pdf" },
+          { ten: "Chapter 11", path: "Hữu cơ thầy Nam/chapter 11-full-VN.pdf" },
+          { ten: "Chapter 12", path: "Hữu cơ thầy Nam/chapter 12-full-VN.pdf" },
+          { ten: "Chapter 13", path: "Hữu cơ thầy Nam/chapter 13-full-VN.pdf" },
+        ],
+      },
+    ],
+  },
+  {
+    ten: "Hữu Cơ Đề Mẫu",
+    folders: [
+      {
+        ten: "Bài tập",
+        files: [
+          { ten: "Bài tập 1", path: "Hữu cơ đề mẫu/bai tap 1-hoa huu co.pdf" },
+          { ten: "Bài tập 3", path: "Hữu cơ đề mẫu/bai tap 3-hoa huu co.pdf" },
+          { ten: "Bài tập 4", path: "Hữu cơ đề mẫu/bai tap 4-hoa huu co.pdf" },
+          { ten: "Bài tập 8", path: "Hữu cơ đề mẫu/bai tap 8-hoa huu co.pdf" },
+          { ten: "Bài tập 9", path: "Hữu cơ đề mẫu/bai tap 9-hoa huu co.pdf" },
+          { ten: "Bài tập 10", path: "Hữu cơ đề mẫu/bai tap 10-hoa huu co.pdf" },
+        ],
+      },
+    ],
+  },
+  // Thêm nguồn tài liệu Hóa Hữu Cơ mới thì thêm vào đây
+];
+
+function renderHoaHuuCo() {
+  return `
+    <p class="ctdt-meta">
+      Tài liệu Hóa Hữu Cơ từ nhiều nguồn: Trợ giảng, Hồng Anh, Thầy Hà, Thầy Nam, Đề mẫu.
+      Bấm vào tên nguồn để mở, rồi bấm tên file để xem trước — có nút tải xuống.
+    </p>
+    ${renderFileBrowserContainer("fbHoaHuuCo")}
+  `;
+}
+
+function initHoaHuuCo() {
+  initFileBrowser("fbHoaHuuCo", HOAHUUCO_SOURCES);
+}
+
+/* =========================================================
    NGĂN HÓA VÔ CƠ — 3 nguồn tài liệu: Thầy Hòa, Cô Ngọc-Cô Quỳnh, Đề thi tham khảo.
    Dùng lại đúng khung initFileBrowser, không viết thêm logic mới.
    Bỏ qua file rác "a" ở 2 thư mục (lỗi thao tác cũ trên GitHub, chưa dọn).
@@ -2993,6 +3117,16 @@ const SUBJECTS = [
     desc: "Tài liệu ôn tập Quốc Phòng An Ninh",
     render: renderQpan,
     afterRender: initQpan,
+  },
+  {
+    id: "hoa-huu-co",
+    hocKy: 2,
+    nhomMon: "Hóa Học",
+    icon: "🌿",
+    title: "Hóa Hữu Cơ",
+    desc: "Tài liệu 5 nguồn: Trợ giảng, Hồng Anh, Thầy Hà, Thầy Nam, Đề mẫu",
+    render: renderHoaHuuCo,
+    afterRender: initHoaHuuCo,
   },
   {
     id: "hoa-vo-co",
