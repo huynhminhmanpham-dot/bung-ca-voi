@@ -741,6 +741,25 @@ table.tkb tbody tr:nth-child(even) td { background: #f7fbff; }
 
   <div class="watermark-bar">Tài liệu sưu tầm và biên soạn vì mục đích học tập phi lợi nhuận. Nếu có yêu cầu về bản quyền hay góp ý lỗi sai, vui lòng liên hệ PH²M để được hỗ trợ xử lý.</div>
 
+  <footer style="text-align:center; padding:10px 8px 16px; font-size:0.78rem; color:#7d8b98;">
+    Lượt truy cập:
+    <!-- Default Statcounter code for chemcetus
+    https://huynhminhmanpham-dot.github.io/bung-ca-voi/ -->
+    <script type="text/javascript">
+    var sc_project=13353224;
+    var sc_invisible=0;
+    var sc_security="2c68b07f";
+    var scJsHost = "https://";
+    document.write("<sc"+"ript type='text/javascript' src='" + scJsHost+
+    "statcounter.com/counter/counter.js'></"+"script>");
+    </script>
+    <noscript><div class="statcounter"><a title="Web Analytics"
+    href="https://statcounter.com/" target="_blank"><img class="statcounter"
+    src="https://c.statcounter.com/13353224/0/2c68b07f/0/" alt="Web Analytics"
+    referrerPolicy="no-referrer-when-downgrade"></a></div></noscript>
+    <!-- End of Statcounter Code -->
+  </footer>
+
 <!-- Ngân hàng câu hỏi Chủ Nghĩa Xã Hội Khoa Học tách riêng ra file,
      PHẢI nằm TRƯỚC thẻ script chính bên dưới để window.CNXHKH_QUESTIONS có sẵn -->
 <!-- Ngân hàng câu hỏi Trắc Nghiệm Từ Vựng Anh Văn Chuyên Ngành tách riêng ra file,
@@ -3018,6 +3037,472 @@ function initHoaVoCo() {
   initFileBrowser("fbHoaVoCo", HOAVOCO_SOURCES);
 }
 
+/* =========================================================
+   NGĂN "ĐỀ XUẤT LỊCH HỌC"
+   - Đính màu (Lý thuyết/Thực hành/Trực tuyến/Đi thi/Tạm hoãn) vào từng
+     ca trong tuần bằng cách bấm-chọn hoặc kéo-thả, gõ tên môn vào ô.
+   - Công thức giờ tự học: 2×tiết − 1, mỗi ca cố định 3 tiết -> 5 giờ
+     tự học/tuần cho mỗi buổi học (không tính buổi "Đi thi"/"Tạm hoãn").
+   - "Đề xuất giờ tự học" xếp số giờ đó vào các ô còn trống trong tuần
+     (kể cả Thứ 7, Chủ nhật), ưu tiên ô cùng ngày với buổi học của môn.
+     Ô đề xuất (tím) có thể kéo-thả đổi chỗ cho nhau sau khi xếp.
+   - Lịch học thật (5 màu chính + tên môn) tự lưu vào localStorage,
+     đề xuất thì không lưu (bấm lại nút để tính lại mỗi lần).
+   ========================================================= */
+
+const DXLH_STORAGE_KEY = "bungcavoi_lich_tu_hoc_v1";
+const DXLH_DAYS = 7;
+const DXLH_SESSION_TIET = 3;
+function dxlhSelfStudyFormula(x) { return 2 * x - 1; }
+const DXLH_SELF_STUDY_PER_SESSION = dxlhSelfStudyFormula(DXLH_SESSION_TIET); // 5
+const DXLH_CA_CAP = 2.5;
+const DXLH_TOI_CAP = 4;
+
+const DXLH_TIMETABLE = [
+  { kind: "group", name: "Sáng", slots: [
+    { label: "Tiết 1 - 3", order: 0, cap: DXLH_CA_CAP },
+    { kind: "break", minutes: 30 },
+    { label: "Tiết 4 - 6", order: 1, cap: DXLH_CA_CAP },
+  ]},
+  { kind: "break", label: "Nghỉ trưa", minutes: 30, lunch: true },
+  { kind: "group", name: "Chiều", slots: [
+    { label: "Tiết 7 - 9", order: 2, cap: DXLH_CA_CAP },
+    { kind: "break", minutes: 30 },
+    { label: "Tiết 10 - 12", order: 3, cap: DXLH_CA_CAP },
+  ]},
+  { kind: "group", name: "Tối", slots: [
+    { label: "Tự chọn", order: 4, cap: DXLH_TOI_CAP },
+  ]},
+];
+
+const DXLH_TYPE_NAMES = {
+  lythuyet: "Lý thuyết",
+  thuchanh: "Thực hành",
+  tructuyen: "Trực tuyến",
+  thi: "Đi thi",
+  tamhoan: "Tạm hoãn",
+  "": ""
+};
+
+function dxlhEscapeHtml(str) {
+  return str.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function dxlhRound1(n) { return Math.round(n * 10) / 10; }
+
+function renderDeXuatLichHoc() {
+  return `
+    <style>
+      .dxlh-wrap{
+        --dxlh-navy:#1f3a5f; --dxlh-navy-deep:#16283e; --dxlh-line:#d8dee5;
+        --dxlh-ink:#1c2b3a; --dxlh-ink-soft:#5b6b7a; --dxlh-panel:#ffffff;
+        --dxlh-lythuyet:#eef1f4; --dxlh-lythuyet-line:#9fb0bf;
+        --dxlh-thuchanh:#4caf7d; --dxlh-tructuyen:#4a8fe0;
+        --dxlh-thi:#f0c33c; --dxlh-tamhoan:#e2604f;
+        --dxlh-suggest:#efe8fb; --dxlh-suggest-line:#9b7fd1;
+      }
+      .dxlh-hint{ font-size:0.85rem; color:var(--dxlh-ink-soft); margin:0 0 6px; }
+      .dxlh-save-status{ font-size:0.76rem; color:#7d8b98; margin:0 0 14px; min-height:1em; }
+      .dxlh-palette{ display:flex; flex-wrap:wrap; gap:10px; background:var(--dxlh-panel);
+        border:1px solid var(--dxlh-line); border-radius:10px; padding:14px; margin-bottom:14px; }
+      .dxlh-swatch{ display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:8px;
+        border:2px solid transparent; background:#f7f8fa; cursor:pointer; font-size:0.85rem; user-select:none; }
+      .dxlh-swatch .dxlh-dot{ width:16px; height:16px; border-radius:4px; flex:none; border:1px solid rgba(0,0,0,.15); }
+      .dxlh-swatch.dxlh-selected{ border-color:var(--dxlh-navy); box-shadow:0 0 0 2px rgba(31,58,95,.15); background:#eaf0f7; }
+      .dxlh-swatch.dxlh-eraser .dxlh-dot{ background:repeating-linear-gradient(45deg,#fff,#fff 3px,#e2e6ea 3px,#e2e6ea 6px); }
+      .dxlh-hint2{ font-size:0.82rem; color:var(--dxlh-ink-soft); margin:0 0 16px; }
+      .dxlh-table-scroll{ background:var(--dxlh-panel); border:1px solid var(--dxlh-line); border-radius:10px; overflow-x:auto; }
+      .dxlh-table{ border-collapse:collapse; width:100%; min-width:800px; }
+      .dxlh-table th, .dxlh-table td{ border:1px solid var(--dxlh-line); padding:0; text-align:center; }
+      .dxlh-table thead th{ background:var(--dxlh-navy); color:#fff; font-weight:600; font-size:0.85rem; padding:10px 6px; }
+      .dxlh-buoi-col{ background:#fbf6e3; color:#7a6a2a; font-weight:700; font-size:0.85rem; width:60px;
+        writing-mode:vertical-rl; text-orientation:mixed; }
+      .dxlh-tiet-label{ font-size:0.72rem; color:var(--dxlh-ink-soft); padding:4px 2px 0; width:58px; }
+      .dxlh-cell{ height:74px; min-width:100px; cursor:pointer; position:relative; vertical-align:middle; }
+      .dxlh-cell:hover{ outline:2px solid var(--dxlh-navy); outline-offset:-2px; }
+      .dxlh-cell-inner{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; height:100%; padding:4px; }
+      .dxlh-type-label{ font-size:0.7rem; font-weight:700; opacity:.9; }
+      .dxlh-subj-input{ width:92%; border:none; border-radius:4px; background:rgba(255,255,255,.72);
+        color:var(--dxlh-ink); font-size:0.72rem; padding:3px 4px; text-align:center; outline:none; }
+      .dxlh-subj-input:focus{ background:#fff; box-shadow:0 0 0 2px var(--dxlh-navy-deep); }
+      .dxlh-cell[data-type="lythuyet"]{ background:var(--dxlh-lythuyet); }
+      .dxlh-cell[data-type="thuchanh"]{ background:var(--dxlh-thuchanh); color:#fff; }
+      .dxlh-cell[data-type="tructuyen"]{ background:var(--dxlh-tructuyen); color:#fff; }
+      .dxlh-cell[data-type="thi"]{ background:var(--dxlh-thi); }
+      .dxlh-cell[data-type="tamhoan"]{ background:var(--dxlh-tamhoan); color:#fff; }
+      .dxlh-cell.dxlh-drag-over{ outline:2px dashed var(--dxlh-navy); outline-offset:-2px; }
+      .dxlh-cell.dxlh-suggested{ background:var(--dxlh-suggest); border:1px dashed var(--dxlh-suggest-line); cursor:grab; }
+      .dxlh-sugg-line{ font-size:0.66rem; font-weight:600; color:#5b3f96; line-height:1.2; }
+      .dxlh-break-row td{ height:22px; background:repeating-linear-gradient(135deg,#f6f4ee,#f6f4ee 6px,#efece3 6px,#efece3 12px);
+        color:#9a8f70; font-size:0.66rem; font-weight:600; letter-spacing:.02em; }
+      .dxlh-break-row.dxlh-lunch td{ background:repeating-linear-gradient(135deg,#f7f0ec,#f7f0ec 6px,#f0e2da 6px,#f0e2da 12px);
+        color:#9a7550; height:26px; }
+      .dxlh-actions{ display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px; margin-top:14px; }
+      .dxlh-legend-note{ font-size:0.78rem; color:var(--dxlh-ink-soft); }
+      .dxlh-btn-row{ display:flex; gap:10px; flex-wrap:wrap; }
+      .dxlh-btn{ border:1px solid var(--dxlh-navy); background:var(--dxlh-navy); color:#fff; font-size:0.82rem;
+        font-weight:600; padding:8px 14px; border-radius:7px; cursor:pointer; }
+      .dxlh-btn.dxlh-secondary{ background:#fff; color:var(--dxlh-navy); }
+      .dxlh-clear-btn{ border:none; background:transparent; color:var(--dxlh-ink-soft); font-size:0.82rem;
+        cursor:pointer; text-decoration:underline; padding:4px; }
+      .dxlh-summary-panel{ margin-top:18px; background:var(--dxlh-panel); border:1px solid var(--dxlh-line);
+        border-radius:10px; padding:14px 16px; font-size:0.85rem; }
+      .dxlh-summary-title{ margin:0 0 8px; font-weight:700; color:var(--dxlh-navy-deep); }
+      .dxlh-summary-list{ margin:0; padding-left:18px; }
+      .dxlh-summary-list li{ margin-bottom:4px; }
+      .dxlh-summary-empty{ margin:0; color:var(--dxlh-ink-soft); }
+      @media print{
+        .dxlh-no-print{ display:none !important; }
+        .dxlh-table-scroll{ border:none; }
+        .dxlh-cell{ height:56px; }
+      }
+    </style>
+    <div class="dxlh-wrap">
+      <p class="dxlh-hint dxlh-no-print">Chọn 1 màu, bấm (hoặc kéo-thả) vào ô, gõ tên môn — bấm "Đề xuất giờ tự học" để xếp tự động, rồi có thể kéo các ô tím (đề xuất) đổi chỗ cho nhau.</p>
+      <p class="dxlh-save-status dxlh-no-print" id="dxlhSaveStatus">&nbsp;</p>
+
+      <div class="dxlh-palette dxlh-no-print" id="dxlhPalette">
+        <div class="dxlh-swatch" data-type="lythuyet" draggable="true"><span class="dxlh-dot" style="background:var(--dxlh-lythuyet); border-color:var(--dxlh-lythuyet-line);"></span>Lý thuyết</div>
+        <div class="dxlh-swatch" data-type="thuchanh" draggable="true"><span class="dxlh-dot" style="background:var(--dxlh-thuchanh);"></span>Thực hành</div>
+        <div class="dxlh-swatch" data-type="tructuyen" draggable="true"><span class="dxlh-dot" style="background:var(--dxlh-tructuyen);"></span>Trực tuyến</div>
+        <div class="dxlh-swatch" data-type="thi" draggable="true"><span class="dxlh-dot" style="background:var(--dxlh-thi);"></span>Đi thi</div>
+        <div class="dxlh-swatch" data-type="tamhoan" draggable="true"><span class="dxlh-dot" style="background:var(--dxlh-tamhoan);"></span>Tạm hoãn</div>
+        <div class="dxlh-swatch dxlh-eraser" data-type="" draggable="true"><span class="dxlh-dot"></span>Xóa ô</div>
+      </div>
+
+      <p class="dxlh-hint2 dxlh-no-print">Đang chọn: <b id="dxlhSelectedLabel">chưa chọn màu nào</b></p>
+
+      <div class="dxlh-table-scroll">
+        <table class="dxlh-table">
+          <thead>
+            <tr>
+              <th style="width:60px;"></th><th style="width:58px;"></th>
+              <th>Thứ 2</th><th>Thứ 3</th><th>Thứ 4</th><th>Thứ 5</th><th>Thứ 6</th><th>Thứ 7</th><th>Chủ nhật</th>
+            </tr>
+          </thead>
+          <tbody id="dxlhScheduleBody"></tbody>
+        </table>
+      </div>
+
+      <div class="dxlh-actions dxlh-no-print">
+        <span class="dxlh-legend-note">Gạch chéo mỏng = nghỉ 30p giữa 2 ca; gạch chéo đậm = nghỉ trưa 30p giữa ca 2 và ca 3 (áp dụng cả 7 ngày).</span>
+        <div class="dxlh-btn-row">
+          <button class="dxlh-btn" id="dxlhSuggestBtn">Đề xuất giờ tự học</button>
+          <button class="dxlh-btn dxlh-secondary" id="dxlhClearSuggestBtn">Xóa đề xuất</button>
+        </div>
+      </div>
+      <div class="dxlh-actions dxlh-no-print">
+        <span></span>
+        <button class="dxlh-clear-btn" id="dxlhResetAll">Xóa toàn bộ bảng</button>
+      </div>
+
+      <div class="dxlh-summary-panel dxlh-no-print" id="dxlhSummaryPanel">
+        <p class="dxlh-summary-empty">Điền tên môn vào các ô lý thuyết/thực hành/trực tuyến, rồi bấm "Đề xuất giờ tự học" để xem nhu cầu từng môn.</p>
+      </div>
+    </div>
+  `;
+}
+
+function initDeXuatLichHocUI() {
+  const tbody = document.getElementById("dxlhScheduleBody");
+  let selectedType = null;
+  let draggedSuggestFrom = null;
+  const allCells = [];
+
+  function renderTopBreakRow(entry) {
+    const tr = document.createElement("tr");
+    tr.className = "dxlh-break-row" + (entry.lunch ? " dxlh-lunch" : "");
+    tr.appendChild(document.createElement("td"));
+    const labelTd = document.createElement("td");
+    labelTd.className = "dxlh-tiet-label";
+    tr.appendChild(labelTd);
+    const breakTd = document.createElement("td");
+    breakTd.colSpan = DXLH_DAYS;
+    breakTd.textContent = entry.lunch ? `${entry.label} (${entry.minutes} phút)` : `Nghỉ ${entry.minutes} phút`;
+    tr.appendChild(breakTd);
+    tbody.appendChild(tr);
+  }
+
+  DXLH_TIMETABLE.forEach(entry => {
+    if (entry.kind === "break") { renderTopBreakRow(entry); return; }
+
+    let firstSlotDone = false;
+    entry.slots.forEach(row => {
+      const tr = document.createElement("tr");
+
+      if (row.kind === "break") {
+        tr.className = "dxlh-break-row";
+        const labelTd = document.createElement("td");
+        labelTd.className = "dxlh-tiet-label";
+        tr.appendChild(labelTd);
+        const breakTd = document.createElement("td");
+        breakTd.colSpan = DXLH_DAYS;
+        breakTd.textContent = `Nghỉ ${row.minutes} phút`;
+        tr.appendChild(breakTd);
+        tbody.appendChild(tr);
+        return;
+      }
+
+      if (!firstSlotDone) {
+        const buoiTh = document.createElement("th");
+        buoiTh.className = "dxlh-buoi-col";
+        buoiTh.rowSpan = entry.slots.length;
+        buoiTh.textContent = entry.name;
+        tr.appendChild(buoiTh);
+        firstSlotDone = true;
+      }
+
+      const labelTd = document.createElement("td");
+      labelTd.className = "dxlh-tiet-label";
+      labelTd.textContent = row.label;
+      tr.appendChild(labelTd);
+
+      for (let d = 0; d < DXLH_DAYS; d++) {
+        const td = document.createElement("td");
+        td.className = "dxlh-cell";
+        td.dataset.type = "";
+        td.dataset.subj = "";
+        td.dataset.day = d;
+        td.dataset.order = row.order;
+        td.dataset.cap = row.cap;
+        attachCellEvents(td);
+        allCells.push({ el: td, day: d, order: row.order, cap: row.cap });
+        tr.appendChild(td);
+      }
+
+      tbody.appendChild(tr);
+    });
+  });
+
+  function attachCellEvents(cell) {
+    cell.addEventListener("click", () => {
+      if (selectedType === null) {
+        const input = cell.querySelector(".dxlh-subj-input");
+        if (input) input.focus();
+        return;
+      }
+      applyType(cell, selectedType);
+      const input = cell.querySelector(".dxlh-subj-input");
+      if (input) input.focus();
+    });
+
+    cell.addEventListener("dragstart", (e) => {
+      if (!cell.classList.contains("dxlh-suggested")) { e.preventDefault(); return; }
+      e.dataTransfer.setData("text/x-suggestion-swap", "1");
+      draggedSuggestFrom = cell;
+    });
+
+    cell.addEventListener("dragover", (e) => { e.preventDefault(); cell.classList.add("dxlh-drag-over"); });
+    cell.addEventListener("dragleave", () => cell.classList.remove("dxlh-drag-over"));
+    cell.addEventListener("drop", (e) => {
+      e.preventDefault();
+      cell.classList.remove("dxlh-drag-over");
+
+      const isSwap = e.dataTransfer.getData("text/x-suggestion-swap");
+      if (isSwap) {
+        if (draggedSuggestFrom && draggedSuggestFrom !== cell && cell.dataset.type === "") {
+          swapSuggestions(draggedSuggestFrom, cell);
+        }
+        draggedSuggestFrom = null;
+        return;
+      }
+
+      const type = e.dataTransfer.getData("text/plain");
+      applyType(cell, type);
+    });
+  }
+
+  function swapSuggestions(a, b) {
+    const aHTML = a.innerHTML, bHTML = b.innerHTML;
+    const aSug = a.classList.contains("dxlh-suggested");
+    const bSug = b.classList.contains("dxlh-suggested");
+    a.innerHTML = bHTML; b.innerHTML = aHTML;
+    a.classList.toggle("dxlh-suggested", bSug);
+    b.classList.toggle("dxlh-suggested", aSug);
+    a.draggable = bSug; b.draggable = aSug;
+  }
+
+  function applyType(cell, type) {
+    cell.classList.remove("dxlh-suggested");
+    cell.draggable = false;
+    cell.dataset.type = type;
+
+    if (!type) {
+      cell.dataset.subj = "";
+      cell.innerHTML = "";
+      saveState();
+      return;
+    }
+
+    const subjValue = cell.dataset.subj || "";
+    cell.innerHTML = `
+      <div class="dxlh-cell-inner">
+        <span class="dxlh-type-label">${DXLH_TYPE_NAMES[type]}</span>
+        <input class="dxlh-subj-input" type="text" placeholder="Tên môn" value="${dxlhEscapeHtml(subjValue)}">
+      </div>
+    `;
+
+    const input = cell.querySelector(".dxlh-subj-input");
+    input.addEventListener("click", (e) => e.stopPropagation());
+    input.addEventListener("mousedown", (e) => e.stopPropagation());
+    input.addEventListener("input", (e) => { cell.dataset.subj = e.target.value; saveState(); });
+
+    saveState();
+  }
+
+  // Palette
+  const swatches = document.querySelectorAll("#dxlhPalette .dxlh-swatch");
+  const selectedLabel = document.getElementById("dxlhSelectedLabel");
+  swatches.forEach(sw => {
+    sw.addEventListener("click", () => {
+      swatches.forEach(s => s.classList.remove("dxlh-selected"));
+      sw.classList.add("dxlh-selected");
+      selectedType = sw.dataset.type;
+      selectedLabel.textContent = sw.classList.contains("dxlh-eraser")
+        ? "Xóa ô (bấm vào ô muốn xóa)"
+        : sw.textContent.trim();
+    });
+    sw.addEventListener("dragstart", (e) => { e.dataTransfer.setData("text/plain", sw.dataset.type); });
+  });
+
+  document.getElementById("dxlhResetAll").addEventListener("click", () => {
+    allCells.forEach(c => applyType(c.el, ""));
+    resetSummary();
+  });
+
+  // ---- Lưu / nạp lại (localStorage) ----
+  const saveStatusEl = document.getElementById("dxlhSaveStatus");
+  let saveTimer = null;
+
+  function saveState() {
+    const data = allCells.map(c => ({ type: c.el.dataset.type, subj: c.el.dataset.subj }));
+    try { localStorage.setItem(DXLH_STORAGE_KEY, JSON.stringify(data)); } catch (e) { /* bỏ qua nếu bị chặn */ }
+    if (saveStatusEl) {
+      saveStatusEl.textContent = "Đã tự lưu " + new Date().toLocaleTimeString("vi-VN");
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => { saveStatusEl.textContent = "\u00a0"; }, 2500);
+    }
+  }
+
+  function loadState() {
+    let raw;
+    try { raw = localStorage.getItem(DXLH_STORAGE_KEY); } catch (e) { return; }
+    if (!raw) return;
+    let data;
+    try { data = JSON.parse(raw); } catch (e) { return; }
+    data.forEach((entry, i) => {
+      if (!allCells[i] || !entry) return;
+      const cell = allCells[i].el;
+      cell.dataset.subj = entry.subj || "";
+      if (entry.type) applyType(cell, entry.type);
+    });
+  }
+  loadState();
+
+  // ---- Đề xuất giờ tự học ----
+  function computeNeeds() {
+    const needs = {};
+    const classCells = [];
+    allCells.forEach(c => {
+      const type = c.el.dataset.type;
+      const subj = (c.el.dataset.subj || "").trim();
+      if (type && type !== "thi" && type !== "tamhoan" && subj) {
+        needs[subj] = (needs[subj] || 0) + DXLH_SELF_STUDY_PER_SESSION;
+        classCells.push({ subject: subj, day: c.day, order: c.order });
+      }
+    });
+    return { needs, classCells };
+  }
+
+  function clearSuggestions() {
+    allCells.forEach(c => {
+      if (c.el.classList.contains("dxlh-suggested")) {
+        c.el.classList.remove("dxlh-suggested");
+        c.el.draggable = false;
+        c.el.innerHTML = "";
+      }
+    });
+  }
+
+  function resetSummary() {
+    document.getElementById("dxlhSummaryPanel").innerHTML =
+      '<p class="dxlh-summary-empty">Điền tên môn vào các ô lý thuyết/thực hành/trực tuyến, rồi bấm "Đề xuất giờ tự học" để xem nhu cầu từng môn.</p>';
+  }
+
+  function suggestSchedule() {
+    clearSuggestions();
+    const { needs, classCells } = computeNeeds();
+    const subjects = Object.keys(needs);
+    if (subjects.length === 0) { resetSummary(); return; }
+
+    const emptySlots = allCells
+      .filter(c => c.el.dataset.type === "")
+      .map(c => ({ el: c.el, day: c.day, order: c.order, cap: c.cap, used: 0, allocations: [] }));
+
+    function allocate(subj, remaining, pool) {
+      for (const slot of pool) {
+        if (remaining <= 0.001) break;
+        const avail = slot.cap - slot.used;
+        if (avail <= 0.001) continue;
+        const take = Math.min(avail, remaining);
+        slot.used += take;
+        slot.allocations.push({ subject: subj, hours: take });
+        remaining -= take;
+      }
+      return remaining;
+    }
+
+    const shortfall = {};
+    subjects.sort((a, b) => needs[b] - needs[a]);
+
+    subjects.forEach(subj => {
+      let remaining = needs[subj];
+      const subjDays = new Set(classCells.filter(c => c.subject === subj).map(c => c.day));
+
+      const sameDay = emptySlots.filter(s => subjDays.has(s.day) && s.cap - s.used > 0.001).sort((a, b) => a.order - b.order);
+      remaining = allocate(subj, remaining, sameDay);
+
+      if (remaining > 0.001) {
+        const rest = emptySlots.filter(s => s.cap - s.used > 0.001).sort((a, b) => a.day - b.day || a.order - b.order);
+        remaining = allocate(subj, remaining, rest);
+      }
+
+      if (remaining > 0.001) shortfall[subj] = dxlhRound1(remaining);
+    });
+
+    emptySlots.forEach(slot => {
+      if (slot.allocations.length === 0) return;
+      slot.el.classList.add("dxlh-suggested");
+      slot.el.draggable = true;
+      const lines = slot.allocations.map(a => `<div class="dxlh-sugg-line">${dxlhEscapeHtml(a.subject)} · ${dxlhRound1(a.hours)}h</div>`).join("");
+      slot.el.innerHTML = `<div class="dxlh-cell-inner dxlh-sugg-inner">${lines}</div>`;
+    });
+
+    renderSummary(needs, shortfall);
+  }
+
+  function renderSummary(needs, shortfall) {
+    const subjects = Object.keys(needs);
+    const rows = subjects.map(s => {
+      const need = needs[s];
+      const missing = shortfall[s] || 0;
+      const done = dxlhRound1(need - missing);
+      const status = missing > 0
+        ? `xếp được ${done}h / cần ${need}h — <b>còn thiếu ${missing}h</b> (lịch trống không đủ chỗ)`
+        : `xếp đủ ${need}h tự học`;
+      return `<li><b>${dxlhEscapeHtml(s)}</b>: ${status}</li>`;
+    }).join("");
+
+    document.getElementById("dxlhSummaryPanel").innerHTML = `
+      <p class="dxlh-summary-title">Nhu cầu tự học mỗi tuần (công thức 2×tiết − 1, 1 buổi = 3 tiết → ${DXLH_SELF_STUDY_PER_SESSION}h):</p>
+      <ul class="dxlh-summary-list">${rows}</ul>
+      <p class="dxlh-summary-empty" style="margin-top:8px;">Kéo các ô tím (đề xuất) thả sang ô trống/tím khác để đổi lại cho hợp ý bạn.</p>
+    `;
+  }
+
+  document.getElementById("dxlhSuggestBtn").addEventListener("click", suggestSchedule);
+  document.getElementById("dxlhClearSuggestBtn").addEventListener("click", () => { clearSuggestions(); resetSummary(); });
+}
+
 /* ---------- 2. DANH SÁCH CÁC "NGĂN" (môn / mục) ---------- */
 
 const SUBJECTS = [
@@ -3048,6 +3533,16 @@ const SUBJECTS = [
     desc: "Đếm ngược 25 phút tập trung - 5 phút nghỉ, lặp lại",
     render: renderPomodoro,
     afterRender: initPomodoroUI,
+  },
+  {
+    id: "de-xuat-lich-hoc",
+    hocKy: null,
+    nhomMon: "Tiện ích",
+    icon: "🧩",
+    title: "Đề Xuất Lịch Học",
+    desc: "Đính loại buổi học vào tuần, tự động xếp giờ tự học vào ô trống",
+    render: renderDeXuatLichHoc,
+    afterRender: initDeXuatLichHocUI,
   },
   {
     id: "tu-vung-chuyen-nganh",
