@@ -3038,6 +3038,46 @@ function initHoaVoCo() {
 }
 
 /* =========================================================
+   NGĂN "QTVTB CƠ HỌC" (Quá Trình và Thiết Bị Cơ Học)
+   ========================================================= */
+
+const QTVTB_COHOC_SOURCES = [
+  {
+    ten: "Tài liệu các chương",
+    folders: [
+      {
+        ten: "Bài giảng",
+        files: [
+          { ten: "Chương 1 - Quá trình và thiết bị cơ học", path: "QTVTB Cơ Học/C1-Quá trình và thiết bị cơ học.pdf" },
+          { ten: "Chương 1 - Quá trình và thiết bị cơ học (P2)", path: "QTVTB Cơ Học/C1-Quá trình và thiết bị cơ học -P2.pdf" },
+          { ten: "Chương 2 - Các quá trình và thiết bị cơ học", path: "QTVTB Cơ Học/C2-Các Quá trình và thiết bị cơ học.pdf" },
+          { ten: "Chương 3 - Quá trình và thiết bị cơ học (P1)", path: "QTVTB Cơ Học/C3-Quá trình và thiết bị cơ học -P1.pdf" },
+          { ten: "Chương 3 - Quá trình và thiết bị cơ học (P2)", path: "QTVTB Cơ Học/C3-Quá trình và thiết bị cơ học -P2.pdf" },
+          { ten: "Chương 4 - Quá trình và thiết bị cơ học", path: "QTVTB Cơ Học/C4-Quá trình và thiết bị cơ học.pdf" },
+          { ten: "Chương 5 - Quá trình và thiết bị cơ học", path: "QTVTB Cơ Học/C5-Quá trình và thiết bị cơ học.pdf" },
+          { ten: "Chương 6 - Quá trình và thiết bị cơ học (P1)", path: "QTVTB Cơ Học/C6-Quá trình và thiết bị cơ học -P1.pdf" },
+        ],
+      },
+    ],
+  },
+  // Thêm nguồn tài liệu QTVTB Cơ Học mới thì thêm 1 object { ten, folders: [...] } vào đây
+];
+
+function renderQtvtbCoHoc() {
+  return `
+    <p class="ctdt-meta">
+      Tài liệu Quá Trình và Thiết Bị Cơ Học: bài giảng theo từng chương.
+      Bấm vào tên nguồn để mở, rồi bấm tên file để xem trước — có nút tải xuống.
+    </p>
+    ${renderFileBrowserContainer("fbQtvtbCoHoc")}
+  `;
+}
+
+function initQtvtbCoHoc() {
+  initFileBrowser("fbQtvtbCoHoc", QTVTB_COHOC_SOURCES);
+}
+
+/* =========================================================
    NGĂN "ĐỀ XUẤT LỊCH HỌC"
    - Đính màu (Lý thuyết/Thực hành/Trực tuyến/Đi thi/Tạm hoãn) vào từng
      ca trong tuần bằng cách bấm-chọn hoặc kéo-thả, gõ tên môn vào ô.
@@ -3672,6 +3712,16 @@ const SUBJECTS = [
     desc: "Bài giảng theo chương & tài liệu ôn tập",
     render: renderVatLiDaiCuong,
     afterRender: initVatLiDaiCuong,
+  },
+  {
+    id: "qtvtb-co-hoc",
+    hocKy: null,
+    nhomMon: "Hóa Học",
+    icon: "⚙️",
+    title: "QTVTB Cơ Học",
+    desc: "Tài liệu Quá Trình và Thiết Bị Cơ Học theo từng chương",
+    render: renderQtvtbCoHoc,
+    afterRender: initQtvtbCoHoc,
   },
   // Thêm ngăn mới ở đây, ví dụ:
   // {
