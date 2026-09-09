@@ -779,6 +779,10 @@ table.tkb tbody tr:nth-child(even) td { background: #f7fbff; }
      PHẢI nằm TRƯỚC thẻ script chính bên dưới để window.THCM_QUESTIONS có sẵn -->
 <script src="data/thcm-quiz-data.js"></script>
 
+<!-- Ngân hàng câu hỏi THCN&NC (Chứng chỉ Ứng dụng CNTT Nâng cao) tách riêng ra file,
+     PHẢI nằm TRƯỚC thẻ script chính bên dưới để window.THCNNC_QUESTIONS có sẵn -->
+<script src="data/thcnnc-quiz-data.js"></script>
+
 <script>
 /* =========================================================
    BỤNG CÁ VOI - toàn bộ JS nằm trong thẻ <script> này
@@ -1839,7 +1843,7 @@ function fbShowLockedNotice(onUnlock) {
       <p class="fb-lock-code">Mã lỗi: DOC_PREVIEW_UNAVAILABLE</p>
       <button type="button" class="fb-lock-fixlink" id="fbLockFixLink">Sửa lỗi</button>
       <div class="fb-lock-input-row" id="fbLockInputRow">
-        <input type="password" inputmode="numeric" class="fb-lock-input" id="fbLockInput" placeholder="Nhập mã" />
+        <input type="password" inputmode="numeric" class="fb-lock-input" id="fbLockInput" />
         <button type="button" class="fb-lock-confirm" id="fbLockConfirm">Xác nhận</button>
       </div>
       <p class="fb-lock-err" id="fbLockErr">Mã không đúng, thử lại nhé.</p>
@@ -2801,6 +2805,34 @@ function renderTuTuongHCM() {
 function initTuTuongHCM() {
   initFileBrowser("fbThcmTailieu", THCM_TAILIEU);
   initQuiz("fbThcm", THCM_QUESTIONS_PARSED, "Tư Tưởng Hồ Chí Minh");
+}
+
+/* =========================================================
+   NGĂN "THCN&NC" — Trắc nghiệm ôn thi Chứng chỉ Ứng dụng CNTT
+   Nâng cao (Word/PowerPoint/Excel/Project). Ngăn này bị khoá:
+   mỗi lần mở ra đều phải nhập đúng mã mới thấy được trắc nghiệm
+   (không lưu trạng thái mở khoá, không tự nhớ giữa các lần vào).
+   ========================================================= */
+
+const THCNNC_QUESTIONS_PARSED = quizFromJSON(window.THCNNC_QUESTIONS || []);
+
+function renderThcnNc() {
+  return `
+    <p class="ctdt-meta">
+      Trắc nghiệm ôn thi lý thuyết Chứng chỉ Ứng dụng CNTT Nâng cao —
+      gồm 4 phần: Word, PowerPoint, Excel, Project.
+    </p>
+    ${renderQuizContainer("fbThcnNc")}
+  `;
+}
+
+function initThcnNc() {
+  const container = document.getElementById("fbThcnNc");
+  if (!container) return;
+  container.innerHTML = ""; // để trống cho tới khi mở khoá đúng mã
+  fbShowLockedNotice(() => {
+    initQuiz("fbThcnNc", THCNNC_QUESTIONS_PARSED, "Chứng Chỉ Ứng Dụng CNTT Nâng Cao");
+  });
 }
 
 /* Trắc nghiệm Triết Học — dữ liệu ở data/triet-quiz-data.js */
@@ -3821,6 +3853,16 @@ const SUBJECTS = [
     desc: "Tài liệu Quá Trình và Thiết Bị Cơ Học theo từng chương",
     render: renderQtvtbCoHoc,
     afterRender: initQtvtbCoHoc,
+  },
+  {
+    id: "thcn-nc",
+    hocKy: null,
+    nhomMon: null,
+    icon: "🔐",
+    title: "THCN&NC",
+    desc: "Trắc nghiệm ôn thi Chứng chỉ Ứng dụng CNTT Nâng cao",
+    render: renderThcnNc,
+    afterRender: initThcnNc,
   },
   // Thêm ngăn mới ở đây, ví dụ:
   // {
