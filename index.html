@@ -775,6 +775,10 @@ table.tkb tbody tr:nth-child(even) td { background: #f7fbff; }
 
 <script src="data/cnxhkh-quiz-data.js"></script>
 
+<!-- Ngân hàng câu hỏi Tư Tưởng Hồ Chí Minh tách riêng ra file,
+     PHẢI nằm TRƯỚC thẻ script chính bên dưới để window.THCM_QUESTIONS có sẵn -->
+<script src="data/thcm-quiz-data.js"></script>
+
 <script>
 /* =========================================================
    BỤNG CÁ VOI - toàn bộ JS nằm trong thẻ <script> này
@@ -1692,11 +1696,12 @@ function fbEncode(str) {
 /* ---- MÀN DANH SÁCH: Trường -> Thư mục -> tên file (bấm để xem trước) ---- */
 
 function renderFbFileButton(f) {
+  const locked = !!f.khoa;
   return `
-    <button type="button" class="file-item" data-path="${fbEncode(f.path)}" data-name="${fbEncode(f.ten)}">
+    <button type="button" class="file-item" data-path="${fbEncode(f.path)}" data-name="${fbEncode(f.ten)}" data-khoa="${locked ? "1" : "0"}">
       <span class="file-icon">📄</span>
       <span class="file-name">${f.ten}</span>
-      <span class="file-download">Xem trước 👁</span>
+      <span class="file-download">${locked ? "Xem trước 👁" : "Xem trước 👁"}</span>
     </button>
   `;
 }
@@ -1769,7 +1774,13 @@ function initFileBrowser(containerId, schools) {
     container.innerHTML = renderFbList(schools);
     container.querySelectorAll(".file-item").forEach((btn) => {
       btn.addEventListener("click", () => {
-        showPreview(decodeURIComponent(btn.dataset.path), decodeURIComponent(btn.dataset.name));
+        const path = decodeURIComponent(btn.dataset.path);
+        const name = decodeURIComponent(btn.dataset.name);
+        if (btn.dataset.khoa === "1") {
+          fbShowLockedNotice(() => showPreview(path, name));
+        } else {
+          showPreview(path, name);
+        }
       });
     });
   }
@@ -1780,6 +1791,94 @@ function initFileBrowser(containerId, schools) {
   }
 
   showList();
+}
+
+/* ---- "Thông báo lỗi" giả che tài liệu bị khoá (khoa: true) ----
+   Trông y hệt 1 lỗi tải xem trước thông thường. Bấm nút đỏ X thì
+   đóng lại (thoát về danh sách như chưa có gì xảy ra). Bấm "Sửa lỗi"
+   mới lộ ra ô nhập mã — nhập đúng mã thì mở xem trước file thật.
+   LƯU Ý: đây chỉ là rào chắn ở giao diện, không phải bảo mật thật sự
+   (mã và đường link file vẫn nằm trong mã nguồn trang), chỉ đủ để
+   người thường không cố ý bấm sai vào phá đám thôi. */
+const FB_UNLOCK_CODE = "1111";
+
+function fbShowLockedNotice(onUnlock) {
+  const overlay = document.createElement("div");
+  overlay.className = "fb-lock-overlay";
+  overlay.innerHTML = `
+    <style>
+      .fb-lock-overlay{ position:fixed; inset:0; background:rgba(20,24,30,.55); z-index:9999;
+        display:flex; align-items:center; justify-content:center; padding:16px; }
+      .fb-lock-box{ background:#fff; border-radius:12px; max-width:380px; width:100%;
+        padding:22px 20px 18px; position:relative; box-shadow:0 12px 32px rgba(0,0,0,.25);
+        font-family:inherit; text-align:left; }
+      .fb-lock-close{ position:absolute; top:10px; right:10px; width:28px; height:28px;
+        border-radius:50%; border:none; background:#e74c3c; color:#fff; font-size:15px;
+        font-weight:700; cursor:pointer; line-height:1; }
+      .fb-lock-close:hover{ background:#c0392b; }
+      .fb-lock-title{ font-weight:700; font-size:0.98rem; margin:0 0 8px; color:#2c2c2c; }
+      .fb-lock-msg{ font-size:0.86rem; color:#555; line-height:1.5; margin:0 0 14px; }
+      .fb-lock-code{ font-size:0.74rem; color:#999; margin:0 0 14px; font-family:monospace; }
+      .fb-lock-fixlink{ font-size:0.78rem; color:#8a8f98; background:none; border:none;
+        cursor:pointer; text-decoration:underline; padding:0; }
+      .fb-lock-input-row{ display:none; margin-top:12px; gap:8px; }
+      .fb-lock-input-row.fb-show{ display:flex; }
+      .fb-lock-input{ flex:1; border:1px solid #d7d7d7; border-radius:7px; padding:7px 10px;
+        font-size:0.86rem; }
+      .fb-lock-confirm{ border:none; background:#1f3a5f; color:#fff; border-radius:7px;
+        padding:7px 14px; font-size:0.84rem; font-weight:600; cursor:pointer; }
+      .fb-lock-err{ font-size:0.78rem; color:#c0392b; margin:6px 0 0; display:none; }
+    </style>
+    <div class="fb-lock-box">
+      <button type="button" class="fb-lock-close" id="fbLockClose">✕</button>
+      <p class="fb-lock-title">⚠️ Không thể tải bản xem trước</p>
+      <p class="fb-lock-msg">
+        Đã xảy ra lỗi khi tải nội dung tài liệu này. Vui lòng thử lại sau,
+        hoặc chọn tài liệu khác trong danh sách.
+      </p>
+      <p class="fb-lock-code">Mã lỗi: DOC_PREVIEW_UNAVAILABLE</p>
+      <button type="button" class="fb-lock-fixlink" id="fbLockFixLink">Sửa lỗi</button>
+      <div class="fb-lock-input-row" id="fbLockInputRow">
+        <input type="password" inputmode="numeric" class="fb-lock-input" id="fbLockInput" placeholder="Nhập mã" />
+        <button type="button" class="fb-lock-confirm" id="fbLockConfirm">Xác nhận</button>
+      </div>
+      <p class="fb-lock-err" id="fbLockErr">Mã không đúng, thử lại nhé.</p>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const close = () => overlay.remove();
+  overlay.querySelector("#fbLockClose").addEventListener("click", close);
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) close(); // bấm ra ngoài hộp cũng đóng lại
+  });
+
+  const fixLink = overlay.querySelector("#fbLockFixLink");
+  const inputRow = overlay.querySelector("#fbLockInputRow");
+  const input = overlay.querySelector("#fbLockInput");
+  const errMsg = overlay.querySelector("#fbLockErr");
+  const confirmBtn = overlay.querySelector("#fbLockConfirm");
+
+  fixLink.addEventListener("click", () => {
+    inputRow.classList.add("fb-show");
+    fixLink.style.display = "none";
+    input.focus();
+  });
+
+  function tryUnlock() {
+    if (input.value.trim() === FB_UNLOCK_CODE) {
+      close();
+      onUnlock();
+    } else {
+      errMsg.style.display = "block";
+      input.value = "";
+      input.focus();
+    }
+  }
+  confirmBtn.addEventListener("click", tryUnlock);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") tryUnlock();
+  });
 }
 
 function renderFileBrowserContainer(containerId) {
