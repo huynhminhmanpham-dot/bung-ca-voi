@@ -1701,11 +1701,12 @@ function fbEncode(str) {
 
 function renderFbFileButton(f) {
   const locked = !!f.khoa;
+  const isLink = !!f.link;
   return `
-    <button type="button" class="file-item" data-path="${fbEncode(f.path)}" data-name="${fbEncode(f.ten)}" data-khoa="${locked ? "1" : "0"}">
-      <span class="file-icon">📄</span>
+    <button type="button" class="file-item" data-path="${fbEncode(f.path)}" data-name="${fbEncode(f.ten)}" data-khoa="${locked ? "1" : "0"}" data-link="${isLink ? "1" : "0"}">
+      <span class="file-icon">${isLink ? "🌐" : "📄"}</span>
       <span class="file-name">${f.ten}</span>
-      <span class="file-download">${locked ? "Xem trước 👁" : "Xem trước 👁"}</span>
+      <span class="file-download">${isLink ? "Mở web ↗" : "Xem trước 👁"}</span>
     </button>
   `;
 }
@@ -1780,6 +1781,10 @@ function initFileBrowser(containerId, schools) {
       btn.addEventListener("click", () => {
         const path = decodeURIComponent(btn.dataset.path);
         const name = decodeURIComponent(btn.dataset.name);
+        if (btn.dataset.link === "1") {
+          window.open(path, "_blank", "noopener");
+          return;
+        }
         if (btn.dataset.khoa === "1") {
           fbShowLockedNotice(() => showPreview(path, name));
         } else {
@@ -2090,6 +2095,7 @@ const VATLIEUHOC_SOURCES = [
           { ten: "Chương 4", path: "VẬT LIỆU HỌC/Chương4.pdf" },
           { ten: "Chương 5", path: "VẬT LIỆU HỌC/Chương5.pdf" },
           { ten: "Chương 6", path: "VẬT LIỆU HỌC/Chương6.pdf" },
+          { ten: "Web mô phỏng hình 3D", path: "https://drbuc2jl8158i.cloudfront.net/VMSE/index.html#1/#1/#9", link: true },
         ],
       },
     ],
