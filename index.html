@@ -726,6 +726,31 @@ table.tkb tbody tr:nth-child(even) td { background: #f7fbff; }
 .quiz-result-item.correct { border-color: #8fc98f; background: #f3faf3; }
 .quiz-result-item.wrong { border-color: #e39b93; background: #fdf3f3; }
 .quiz-result-item p { margin: 3px 0; }
+
+/* ===== Nhạc nền ===== */
+.nhac-panel {
+  position: absolute; top: 100%; right: 0;
+  background: #fff; border: 1px solid #cfe4f5; border-radius: 12px;
+  box-shadow: 0 12px 24px rgba(11,61,145,0.25);
+  padding: 14px 16px; min-width: 240px; display: none; z-index: 90;
+}
+.nhac-panel.open { display: block; }
+.nhac-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.nhac-playpause {
+  width: 38px; height: 38px; border-radius: 50%; border: none;
+  background: #0b3d91; color: #fff; font-size: 16px; cursor: pointer; flex-shrink: 0;
+}
+.nhac-playpause:hover { background: #092e6e; }
+.nhac-nowplaying { font-size: 12.5px; color: #3a5a80; flex: 1; }
+.nhac-volume-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.nhac-volume-row input[type="range"] { flex: 1; }
+.nhac-tracklist { display: flex; flex-direction: column; gap: 4px; }
+.nhac-track-btn {
+  text-align: left; background: #f7fbff; border: 1px solid #e2eef8; border-radius: 8px;
+  padding: 6px 10px; font-size: 12.5px; color: #1b2a41; cursor: pointer;
+}
+.nhac-track-btn:hover { border-color: #0b3d91; }
+.nhac-track-btn.playing { background: #eef6ff; border-color: #0b3d91; color: #0b3d91; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -4051,6 +4076,19 @@ function renderTopNav() {
       </div>
     </div>
 
+    <button type="button" class="top-nav-btn" id="nhacToggleBtn">🎵 Nhạc Nền</button>
+    <div class="nhac-panel" id="nhacPanel">
+      <div class="nhac-row">
+        <button type="button" class="nhac-playpause" id="nhacPlayPauseBtn">▶</button>
+        <span class="nhac-nowplaying" id="nhacNowPlaying">Đang tắt nhạc</span>
+      </div>
+      <div class="nhac-volume-row">
+        <span style="font-size:13px;">🔉</span>
+        <input type="range" id="nhacVolumeSlider" min="0" max="100" value="25">
+      </div>
+      <div class="nhac-tracklist" id="nhacTrackList"></div>
+    </div>
+
     <a class="top-nav-btn" href="${GOP_Y_URL}" target="_blank" rel="noopener" style="text-decoration:none; display:inline-block;">💬 Góp Ý / Báo Lỗi / Bản Quyền</a>
   `;
 
@@ -4087,7 +4125,142 @@ function init() {
   else renderHome();
 }
 
+/* =========================================================
+   NHẠC NỀN — phát nhạc nhẹ nền, tắt/bật, đổi bài, chỉnh âm
+   lượng. Trạng thái tự lưu localStorage (giống các phần khác
+   của trang). Tự phát bị trình duyệt chặn tới khi có tương
+   tác đầu tiên — code tự thử lại ngay khi đó xảy ra.
+   ========================================================= */
+
+const NHAC_PLAYLIST = [
+  { ten: "Dream Aria", path: "NHẠC/Dream Aria.mp4" },
+  { ten: "My Eden", path: "NHẠC/My Eden.mp4" },
+  { ten: "Nod-Krai Main Theme", path: "NHẠC/Nod-Krai Main Theme.mp4" },
+];
+
+const NHAC_STORAGE_KEY = "bungcavoi_nhac_state_v1";
+const nhacState = { on: false, volume: 0.25, trackIndex: 0 };
+
+function nhacLoadState() {
+  try {
+    const raw = localStorage.getItem(NHAC_STORAGE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (typeof data.on === "boolean") nhacState.on = data.on;
+    if (typeof data.volume === "number") nhacState.volume = data.volume;
+    if (Number.isInteger(data.trackIndex) && data.trackIndex >= 0 && data.trackIndex < NHAC_PLAYLIST.length) {
+      nhacState.trackIndex = data.trackIndex;
+    }
+  } catch (e) {}
+}
+function nhacSaveState() {
+  try { localStorage.setItem(NHAC_STORAGE_KEY, JSON.stringify(nhacState)); } catch (e) {}
+}
+
+let nhacAudioEl = null;
+function nhacCreateAudioElement() {
+  if (nhacAudioEl) return nhacAudioEl;
+  nhacAudioEl = document.createElement("audio");
+  nhacAudioEl.id = "nhacAudioEl";
+  nhacAudioEl.preload = "none";
+  nhacAudioEl.addEventListener("ended", nhacPlayNextTrack);
+  document.body.appendChild(nhacAudioEl);
+  return nhacAudioEl;
+}
+
+function nhacUpdateUI() {
+  const btn = document.getElementById("nhacToggleBtn");
+  const playPauseBtn = document.getElementById("nhacPlayPauseBtn");
+  const nowPlaying = document.getElementById("nhacNowPlaying");
+  const volumeSlider = document.getElementById("nhacVolumeSlider");
+  const trackListEl = document.getElementById("nhacTrackList");
+  if (!btn) return;
+
+  const track = NHAC_PLAYLIST[nhacState.trackIndex];
+  btn.textContent = nhacState.on ? "🎵 Nhạc Nền (Đang bật)" : "🎵 Nhạc Nền";
+  playPauseBtn.textContent = nhacState.on ? "⏸" : "▶";
+  nowPlaying.textContent = nhacState.on ? `Đang phát: ${track.ten}` : "Đang tắt nhạc";
+  volumeSlider.value = Math.round(nhacState.volume * 100);
+
+  trackListEl.innerHTML = NHAC_PLAYLIST
+    .map((t, i) => `<button type="button" class="nhac-track-btn ${i === nhacState.trackIndex ? "playing" : ""}" data-track="${i}">${i === nhacState.trackIndex ? "▶ " : ""}${t.ten}</button>`)
+    .join("");
+  trackListEl.querySelectorAll(".nhac-track-btn").forEach((b) => {
+    b.addEventListener("click", () => nhacSwitchTrack(parseInt(b.dataset.track, 10)));
+  });
+}
+
+function nhacLoadCurrentTrack() {
+  const audio = nhacCreateAudioElement();
+  audio.src = NHAC_PLAYLIST[nhacState.trackIndex].path;
+  audio.volume = nhacState.volume;
+}
+
+function nhacPlay() {
+  const audio = nhacCreateAudioElement();
+  if (!audio.src) nhacLoadCurrentTrack();
+  audio.volume = nhacState.volume;
+  audio.play().catch(() => {});
+  nhacState.on = true;
+  nhacSaveState();
+  nhacUpdateUI();
+}
+function nhacPause() {
+  if (nhacAudioEl) nhacAudioEl.pause();
+  nhacState.on = false;
+  nhacSaveState();
+  nhacUpdateUI();
+}
+function nhacToggle() { nhacState.on ? nhacPause() : nhacPlay(); }
+
+function nhacSwitchTrack(index) {
+  nhacState.trackIndex = index;
+  nhacSaveState();
+  nhacLoadCurrentTrack();
+  if (nhacState.on) nhacCreateAudioElement().play().catch(() => {});
+  nhacUpdateUI();
+}
+function nhacPlayNextTrack() {
+  nhacSwitchTrack((nhacState.trackIndex + 1) % NHAC_PLAYLIST.length);
+}
+function nhacSetVolume(v) {
+  nhacState.volume = v;
+  if (nhacAudioEl) nhacAudioEl.volume = v;
+  nhacSaveState();
+}
+
+function initNhacNen() {
+  nhacLoadState();
+  nhacCreateAudioElement();
+  nhacLoadCurrentTrack();
+
+  const toggleBtn = document.getElementById("nhacToggleBtn");
+  const panel = document.getElementById("nhacPanel");
+  const playPauseBtn = document.getElementById("nhacPlayPauseBtn");
+  const volumeSlider = document.getElementById("nhacVolumeSlider");
+
+  toggleBtn.addEventListener("click", (e) => { e.stopPropagation(); panel.classList.toggle("open"); });
+  document.addEventListener("click", (e) => {
+    if (!panel.contains(e.target) && e.target !== toggleBtn) panel.classList.remove("open");
+  });
+  playPauseBtn.addEventListener("click", nhacToggle);
+  volumeSlider.addEventListener("input", (e) => nhacSetVolume(parseInt(e.target.value, 10) / 100));
+
+  nhacUpdateUI();
+
+  if (nhacState.on) {
+    nhacCreateAudioElement().play().catch(() => {
+      const resumeOnInteract = () => {
+        if (nhacState.on) nhacCreateAudioElement().play().catch(() => {});
+      };
+      document.addEventListener("click", resumeOnInteract, { once: true });
+      document.addEventListener("keydown", resumeOnInteract, { once: true });
+    });
+  }
+}
+
 renderTopNav();
+initNhacNen();
 window.addEventListener("hashchange", init);
 init();
 </script>
