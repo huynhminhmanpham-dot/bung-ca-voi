@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-YRG4NLSJLN"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-YRG4NLSJLN');
+</script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>ChemCetus</title>
@@ -1796,7 +1804,7 @@ function renderFbPreview(path, name) {
 
 /* ---- Gắn tương tác: bấm tên file -> xem trước, bấm "Quay lại" -> về danh sách ---- */
 
-function initFileBrowser(containerId, schools) {
+function initFileBrowser(containerId, schools, nganTen) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
@@ -1806,6 +1814,9 @@ function initFileBrowser(containerId, schools) {
       btn.addEventListener("click", () => {
         const path = decodeURIComponent(btn.dataset.path);
         const name = decodeURIComponent(btn.dataset.name);
+        if (window.gtag) {
+          gtag("event", "xem_file", { file_ten: name, ngan_ten: nganTen || "" });
+        }
         if (btn.dataset.link === "1") {
           window.open(path, "_blank", "noopener");
           return;
@@ -2017,7 +2028,7 @@ function renderHoaDaiCuong() {
 }
 
 function initHoaDaiCuong() {
-  initFileBrowser("fbHoaDaiCuong", HOADC_SCHOOLS);
+  initFileBrowser("fbHoaDaiCuong", HOADC_SCHOOLS, "Hóa Đại Cương");
 }
 
 /* =========================================================
@@ -2096,7 +2107,7 @@ function renderAnhVan() {
 }
 
 function initAnhVan() {
-  initFileBrowser("fbAnhVan", ANHVAN_SOURCES);
+  initFileBrowser("fbAnhVan", ANHVAN_SOURCES, "Anh Văn");
 }
 
 /* =========================================================
@@ -2139,7 +2150,7 @@ function renderVatLieuHoc() {
 }
 
 function initVatLieuHoc() {
-  initFileBrowser("fbVatLieuHoc", VATLIEUHOC_SOURCES);
+  initFileBrowser("fbVatLieuHoc", VATLIEUHOC_SOURCES, "Vật Liệu Học");
 }
 
 /* =========================================================
@@ -2194,7 +2205,7 @@ function renderVatLiDaiCuong() {
 }
 
 function initVatLiDaiCuong() {
-  initFileBrowser("fbVLDC", VLDC_SOURCES);
+  initFileBrowser("fbVLDC", VLDC_SOURCES, "Vật Lí Đại Cương");
 }
 
 /* =========================================================
@@ -2777,7 +2788,7 @@ function renderCnxhkh() {
 }
 
 function initCnxhkh() {
-  initFileBrowser("fbCnxhkhTailieu", CNXHKH_TAILIEU);
+  initFileBrowser("fbCnxhkhTailieu", CNXHKH_TAILIEU, "Chủ Nghĩa Xã Hội Khoa Học");
   initQuiz("fbCnxhkh", CNXHKH_QUESTIONS_PARSED, "Chủ Nghĩa Xã Hội Khoa Học");
 }
 
@@ -2806,7 +2817,7 @@ function renderLichSuDang() {
 }
 
 function initLichSuDang() {
-  initFileBrowser("fbLsdTailieu", LSD_TAILIEU);
+  initFileBrowser("fbLsdTailieu", LSD_TAILIEU, "Lịch Sử Đảng");
   initQuiz("fbLsd", LSD_QUESTIONS_PARSED, "Lịch Sử Đảng Cộng Sản Việt Nam");
 }
 
@@ -2834,7 +2845,7 @@ function renderTuTuongHCM() {
 }
 
 function initTuTuongHCM() {
-  initFileBrowser("fbThcmTailieu", THCM_TAILIEU);
+  initFileBrowser("fbThcmTailieu", THCM_TAILIEU, "Tư Tưởng Hồ Chí Minh");
   initQuiz("fbThcm", THCM_QUESTIONS_PARSED, "Tư Tưởng Hồ Chí Minh");
 }
 
@@ -2916,7 +2927,7 @@ function renderTrietHoc() {
 }
 
 function initTrietHoc() {
-  initFileBrowser("fbTrietTailieu", TRIET_TAILIEU);
+  initFileBrowser("fbTrietTailieu", TRIET_TAILIEU, "Triết Học");
   initQuiz("fbTriet", TRIET_QUESTIONS_PARSED, "Triết Học");
 }
 
@@ -2944,7 +2955,7 @@ function renderKtct() {
 }
 
 function initKtct() {
-  initFileBrowser("fbKtctTailieu", KTCT_TAILIEU);
+  initFileBrowser("fbKtctTailieu", KTCT_TAILIEU, "Kinh Tế Chính Trị");
   initQuiz("fbKtct", KTCT_QUESTIONS_PARSED, "Kinh Tế Chính Trị");
 }
 
@@ -2977,7 +2988,7 @@ function renderQpan() {
 }
 
 function initQpan() {
-  initFileBrowser("fbQpan", QPAN_SOURCES);
+  initFileBrowser("fbQpan", QPAN_SOURCES, "Quốc Phòng An Ninh");
 }
 
 /* =========================================================
@@ -3101,7 +3112,7 @@ function renderHoaHuuCo() {
 }
 
 function initHoaHuuCo() {
-  initFileBrowser("fbHoaHuuCo", HOAHUUCO_SOURCES);
+  initFileBrowser("fbHoaHuuCo", HOAHUUCO_SOURCES, "Hóa Hữu Cơ");
 }
 
 /* =========================================================
@@ -3196,7 +3207,7 @@ function renderHoaVoCo() {
 }
 
 function initHoaVoCo() {
-  initFileBrowser("fbHoaVoCo", HOAVOCO_SOURCES);
+  initFileBrowser("fbHoaVoCo", HOAVOCO_SOURCES, "Hóa Vô Cơ");
 }
 
 /* =========================================================
@@ -3236,7 +3247,7 @@ function renderQtvtbCoHoc() {
 }
 
 function initQtvtbCoHoc() {
-  initFileBrowser("fbQtvtbCoHoc", QTVTB_COHOC_SOURCES);
+  initFileBrowser("fbQtvtbCoHoc", QTVTB_COHOC_SOURCES, "QTVTB Cơ Học");
 }
 
 /* =========================================================
@@ -3971,6 +3982,10 @@ function renderHome() {
 function renderDetail(id) {
   const subject = SUBJECTS.find((s) => s.id === id);
   if (!subject) { goHome(); return; }
+
+  if (window.gtag) {
+    gtag("event", "xem_ngan", { ngan_ten: subject.title });
+  }
 
   app.innerHTML = `
     <div class="detail-view">
