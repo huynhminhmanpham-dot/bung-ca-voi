@@ -4259,58 +4259,74 @@ function initNhacNen() {
 
 /* =========================================================
    BỘ ĐẾM LƯỢT TRUY CẬP RIÊNG - gọi tới server tự triển khai
-   trên Render + database Supabase. Có cơ chế "chờ" 5 phút:
-   trong 5 phút kể từ lần tính lượt gần nhất trên cùng máy này,
-   F5 lại không cộng thêm lượt mới, chỉ xem lại số hiện tại.
-   Qua khỏi 5 phút mới tính là 1 lượt truy cập mới.
+   trên Render + database Supabase.
+
+   Cách hoạt động:
+   - Số THẬT trên server luôn được cộng thêm ở MỌI lần mở trang
+     (kể cả F5 liên tục) - không giới hạn, ghi nhận đầy đủ ngầm.
+   - Số HIỂN THỊ trên màn hình thì "để dành" - chỉ cập nhật lại
+     mỗi 5 phút/lần. Trong 5 phút đó dù F5 bao nhiêu lần, số hiện
+     ra vẫn đứng yên; qua khỏi 5 phút, số mới "bùng" lên đúng bằng
+     số thật đã tích lũy được lúc đó.
    Lưu ý: server Render gói miễn phí sẽ "ngủ" sau 15 phút không
    ai gọi, nên lần đầu tiên sau khi ngủ có thể mất tới ~50
    giây mới trả về kết quả (bình thường, không phải lỗi).
    ========================================================= */
 
 const CHEMCETUS_COUNTER_API = "https://chemcetus-counter.onrender.com";
-const CHEMCETUS_HIT_COOLDOWN_MS = 5 * 60 * 1000; // 5 phút
-const CHEMCETUS_LAST_HIT_KEY = "bungcavoi_last_hit_time";
+const CHEMCETUS_DISPLAY_REFRESH_MS = 5 * 60 * 1000; // 5 phút - chu kỳ "bùng" số hiển thị
+const CHEMCETUS_DISPLAY_CACHE_KEY = "bungcavoi_display_cache";
 
 function chemcetusDisplayCount(count) {
   const el = document.getElementById("chemcetusVisitCount");
   if (el) el.textContent = Number(count).toLocaleString("vi-VN");
 }
 
+function chemcetusReadDisplayCache() {
+  try {
+    const raw = localStorage.getItem(CHEMCETUS_DISPLAY_CACHE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (typeof data.value !== "number" || typeof data.time !== "number") return null;
+    return data;
+  } catch (e) {
+    return null;
+  }
+}
+
+function chemcetusSaveDisplayCache(value) {
+  try {
+    localStorage.setItem(CHEMCETUS_DISPLAY_CACHE_KEY, JSON.stringify({ value: value, time: Date.now() }));
+  } catch (e) {}
+}
+
 function chemcetusInitVisitCounter() {
   const el = document.getElementById("chemcetusVisitCount");
   if (!el) return;
 
-  let lastHitTime = 0;
-  try {
-    lastHitTime = parseInt(localStorage.getItem(CHEMCETUS_LAST_HIT_KEY), 10) || 0;
-  } catch (e) {}
+  // Hiện tạm số đã lưu từ lần trước ngay lập tức (đỡ trống/giật trong lúc chờ mạng)
+  const cache = chemcetusReadDisplayCache();
+  if (cache) chemcetusDisplayCount(cache.value);
 
-  const now = Date.now();
-  const daQuaThoiGianCho = now - lastHitTime >= CHEMCETUS_HIT_COOLDOWN_MS;
+  // Luôn âm thầm cộng thêm 1 lượt thật vào server, bất kể có hiện số mới hay không
+  fetch(CHEMCETUS_COUNTER_API + "/api/hit", { method: "POST" })
+    .then((res) => res.json())
+    .then((data) => {
+      const realCount = Number(data.count);
+      const now = Date.now();
+      const daDuThoiGianCho = !cache || now - cache.time >= CHEMCETUS_DISPLAY_REFRESH_MS;
 
-  if (daQuaThoiGianCho) {
-    // Đã cách lần trước đủ 5 phút -> tính là 1 lượt truy cập mới, cộng thêm
-    fetch(CHEMCETUS_COUNTER_API + "/api/hit", { method: "POST" })
-      .then((res) => res.json())
-      .then((data) => {
-        chemcetusDisplayCount(data.count);
-        try { localStorage.setItem(CHEMCETUS_LAST_HIT_KEY, String(now)); } catch (e) {}
-      })
-      .catch((err) => {
-        console.error("Không gọi được bộ đếm lượt truy cập:", err);
-        el.textContent = "?";
-      });
-  } else {
-    // Còn trong 5 phút chờ (vừa F5 lại gần đây) -> chỉ xem số hiện tại, không cộng thêm
-    fetch(CHEMCETUS_COUNTER_API + "/api/count")
-      .then((res) => res.json())
-      .then((data) => chemcetusDisplayCount(data.count))
-      .catch((err) => {
-        console.error("Không lấy được số lượt truy cập:", err);
-        el.textContent = "?";
-      });
-  }
+      if (daDuThoiGianCho) {
+        // Đủ 5 phút -> cho số hiển thị "bùng" lên khớp đúng số thật
+        chemcetusDisplayCount(realCount);
+        chemcetusSaveDisplayCache(realCount);
+      }
+      // Chưa đủ 5 phút -> giữ nguyên số cũ đang hiện, dù số thật trên server đã tăng ngầm rồi
+    })
+    .catch((err) => {
+      console.error("Không gọi được bộ đếm lượt truy cập:", err);
+      if (!cache) el.textContent = "?";
+    });
 }
 
 renderTopNav();
