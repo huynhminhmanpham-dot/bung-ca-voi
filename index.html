@@ -330,8 +330,8 @@ table.tkb tbody tr:nth-child(even) td { background: #f7fbff; }
   text-align: center;
   font-size: 12px;
   letter-spacing: 0.5px;
-  color: #0b3d91;
-  opacity: 0.62;
+  color: #1b2a41;
+  opacity: 0.75;
   pointer-events: none;
   z-index: 999;
   user-select: none;
@@ -773,25 +773,7 @@ table.tkb tbody tr:nth-child(even) td { background: #f7fbff; }
   <main id="app"></main>
 
   <div class="watermark-bar">Tài liệu sưu tầm và biên soạn vì mục đích học tập phi lợi nhuận. Nếu có yêu cầu về bản quyền hay góp ý lỗi sai, vui lòng liên hệ PH²M để được hỗ trợ xử lý.
-    · Lượt truy cập:
-    <!-- Default Statcounter code for chemcetus
-    https://huynhminhmanpham-dot.github.io/bung-ca-voi/ -->
-    <span style="pointer-events:auto; display:inline-block; vertical-align:middle;">
-      <script type="text/javascript">
-      var sc_project=13353224;
-      var sc_invisible=0;
-      var sc_security="2c68b07f";
-      var scJsHost = "https://";
-      document.write("<sc"+"ript type='text/javascript' src='" + scJsHost+
-      "statcounter.com/counter/counter.js'></"+"script>");
-      </script>
-      <noscript><a title="Web Analytics"
-      href="https://statcounter.com/" target="_blank"><img class="statcounter"
-      src="https://c.statcounter.com/13353224/0/2c68b07f/0/" alt="Web Analytics"
-      referrerPolicy="no-referrer-when-downgrade" style="vertical-align:middle;"></a></noscript>
-    </span>
-    <!-- End of Statcounter Code -->
-    · Tổng lượt truy cập: <span id="chemcetusVisitCount">...</span>
+    · Lượt truy cập: <span id="chemcetusVisitCount">...</span>
   </div>
 
 <!-- Ngân hàng câu hỏi Chủ Nghĩa Xã Hội Khoa Học tách riêng ra file,
@@ -4276,30 +4258,59 @@ function initNhacNen() {
 }
 
 /* =========================================================
-   B\u1ed8 \u0110\u1ebeM L\u01af\u1ee2T TRUY C\u1eacP RI\u00caNG - g\u1ecdi t\u1edbi server t\u1ef1 tri\u1ec3n khai
-   tr\u00ean Render + database Supabase. M\u1ed7i l\u1ea7n web n\u00e0y \u0111\u01b0\u1ee3c m\u1edf,
-   g\u1eedi 1 y\u00eau c\u1ea7u c\u1ed9ng th\u00eam 1 l\u01b0\u1ee3t, r\u1ed3i hi\u1ec7n s\u1ed1 m\u1edbi nh\u1ea5t l\u00ean
-   thanh watermark cu\u1ed1i trang.
-   L\u01b0u \u00fd: server Render g\u00f3i mi\u1ec5n ph\u00ed s\u1ebd "ng\u1ee7" sau 15 ph\u00fat kh\u00f4ng
-   ai g\u1ecdi, n\u00ean l\u1ea7n \u0111\u1ea7u ti\u00ean sau khi ng\u1ee7 c\u00f3 th\u1ec3 m\u1ea5t t\u1edbi ~50
-   gi\u00e2y m\u1edbi tr\u1ea3 v\u1ec1 k\u1ebft qu\u1ea3 (b\u00ecnh th\u01b0\u1eddng, kh\u00f4ng ph\u1ea3i l\u1ed7i).
+   BỘ ĐẾM LƯỢT TRUY CẬP RIÊNG - gọi tới server tự triển khai
+   trên Render + database Supabase. Có cơ chế "chờ" 5 phút:
+   trong 5 phút kể từ lần tính lượt gần nhất trên cùng máy này,
+   F5 lại không cộng thêm lượt mới, chỉ xem lại số hiện tại.
+   Qua khỏi 5 phút mới tính là 1 lượt truy cập mới.
+   Lưu ý: server Render gói miễn phí sẽ "ngủ" sau 15 phút không
+   ai gọi, nên lần đầu tiên sau khi ngủ có thể mất tới ~50
+   giây mới trả về kết quả (bình thường, không phải lỗi).
    ========================================================= */
 
 const CHEMCETUS_COUNTER_API = "https://chemcetus-counter.onrender.com";
+const CHEMCETUS_HIT_COOLDOWN_MS = 5 * 60 * 1000; // 5 phút
+const CHEMCETUS_LAST_HIT_KEY = "bungcavoi_last_hit_time";
+
+function chemcetusDisplayCount(count) {
+  const el = document.getElementById("chemcetusVisitCount");
+  if (el) el.textContent = Number(count).toLocaleString("vi-VN");
+}
 
 function chemcetusInitVisitCounter() {
   const el = document.getElementById("chemcetusVisitCount");
   if (!el) return;
 
-  fetch(CHEMCETUS_COUNTER_API + "/api/hit", { method: "POST" })
-    .then((res) => res.json())
-    .then((data) => {
-      el.textContent = Number(data.count).toLocaleString("vi-VN");
-    })
-    .catch((err) => {
-      console.error("Kh\u00f4ng g\u1ecdi \u0111\u01b0\u1ee3c b\u1ed9 \u0111\u1ebfm l\u01b0\u1ee3t truy c\u1eadp:", err);
-      el.textContent = "?";
-    });
+  let lastHitTime = 0;
+  try {
+    lastHitTime = parseInt(localStorage.getItem(CHEMCETUS_LAST_HIT_KEY), 10) || 0;
+  } catch (e) {}
+
+  const now = Date.now();
+  const daQuaThoiGianCho = now - lastHitTime >= CHEMCETUS_HIT_COOLDOWN_MS;
+
+  if (daQuaThoiGianCho) {
+    // Đã cách lần trước đủ 5 phút -> tính là 1 lượt truy cập mới, cộng thêm
+    fetch(CHEMCETUS_COUNTER_API + "/api/hit", { method: "POST" })
+      .then((res) => res.json())
+      .then((data) => {
+        chemcetusDisplayCount(data.count);
+        try { localStorage.setItem(CHEMCETUS_LAST_HIT_KEY, String(now)); } catch (e) {}
+      })
+      .catch((err) => {
+        console.error("Không gọi được bộ đếm lượt truy cập:", err);
+        el.textContent = "?";
+      });
+  } else {
+    // Còn trong 5 phút chờ (vừa F5 lại gần đây) -> chỉ xem số hiện tại, không cộng thêm
+    fetch(CHEMCETUS_COUNTER_API + "/api/count")
+      .then((res) => res.json())
+      .then((data) => chemcetusDisplayCount(data.count))
+      .catch((err) => {
+        console.error("Không lấy được số lượt truy cập:", err);
+        el.textContent = "?";
+      });
+  }
 }
 
 renderTopNav();
