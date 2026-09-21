@@ -2094,6 +2094,60 @@ function initAnhVan() {
 }
 
 /* =========================================================
+   NGĂN AVĐV RIÊNG — copy nguyên dữ liệu nguồn "AVĐV" đang có
+   trong ngăn "Anh Văn" (ANHVAN_SOURCES[0]) để làm 1 ngăn độc
+   lập trên trang chủ. Ngăn "Anh Văn" phía trên vẫn giữ nguyên,
+   không bị ảnh hưởng gì — đây chỉ là bản sao thêm ra.
+   ========================================================= */
+
+const AVDV_SOURCES = [
+  {
+    ten: "AVĐV",
+    folders: [
+      {
+        ten: "Ngữ pháp & Từ vựng",
+        files: [
+          { ten: "AVĐV (Form mẫu)", path: "AVDV/AVĐV( FORM MẪU).docx" },
+          { ten: "Ngữ pháp chính", path: "AVDV/NGỮ PHÁP CHÍNH.pdf" },
+          { ten: "Ngữ pháp trọng điểm", path: "AVDV/NGỮ PHÁP TRỌNG ĐIỂM.pdf" },
+          { ten: "Từ vựng ôn tập tiếng Anh", path: "AVDV/TỪ VỰNG ÔN TẬP TIẾNG ANH.pdf" },
+        ],
+      },
+    ],
+  },
+  {
+    ten: "Cô Trinh AGENA",
+    folders: [
+      {
+        ten: "Tài liệu theo buổi",
+        files: [
+          { ten: "DAY 1", path: "https://drive.google.com/drive/folders/1PEnRoPLHnwPXHY3622V2Wnk7b0b-4FlS?fbclid=IwY2xjawUen2NwZG9mBWV4dG4DYWVtAjEwAGJyaWQRMUR4SHZaUXExZ1hna2hWeWtzcnRjBmFwcF9pZBAyMjIwMzkxNzg4MjAwODkyAAEe3NilLIOW6KQcKy4Fc6quuCTwnt_KmwGGpY0gIt4KPHBNccera3EyDiyi8fA_aem_OAtoKxH_HnifrKqX2gHlJg", link: true },
+          { ten: "DAY 2", path: "https://drive.google.com/drive/folders/1ffkjxnV-GAZaeKTVax-QyrZGEYiAV_Dv?fbclid=IwY2xjawUen2VwZG9mBWV4dG4DYWVtAjEwAGJyaWQRMUR4SHZaUXExZ1hna2hWeWtzcnRjBmFwcF9pZBAyMjIwMzkxNzg4MjAwODkyAAEesHTwLvdJN8AMCfmDmy2U8wrUHhTOl-mbnQlJiGFVp0WtftmFjUXBOYNsYEU_aem_xvabSMsgwbLaxxag_NCYlw", link: true },
+          { ten: "DAY 3", path: "https://drive.google.com/drive/folders/1as-iy8fB4l7VO5yapr_D58SF5UqIja9A?fbclid=IwY2xjawUen2dwZG9mBWV4dG4DYWVtAjEwAGJyaWQRMUR4SHZaUXExZ1hna2hWeWtzcnRjBmFwcF9pZBAyMjIwMzkxNzg4MjAwODkyAAEesHTwLvdJN8AMCfmDmy2U8wrUHhTOl-mbnQlJiGFVp0WtftmFjUXBOYNsYEU_aem_xvabSMsgwbLaxxag_NCYlw", link: true },
+          { ten: "DAY 4", path: "https://drive.google.com/drive/folders/1ZByurfIcv1-KFs1S4bPD2znnQu8_ly5s?fbclid=IwY2xjawUen2hwZG9mBWV4dG4DYWVtAjEwAGJyaWQRMUR4SHZaUXExZ1hna2hWeWtzcnRjBmFwcF9pZBAyMjIwMzkxNzg4MjAwODkyAAEebxfQXg8VbYnKJfN0U9jTP-w135VcaFtu380XtkoFIWGuy9i5p4YAdPUM0M8_aem_NPTMBlF-RgwksQYB5ufDyQ", link: true },
+          { ten: "Bài giảng Online", path: "https://docs.google.com/document/d/14kBhDBhIQ4K5Nj-jYeU_S-JWIJJ-dgu_msH1Soqujc8/edit?tab=t.0", link: true },
+          { ten: "Đề thi Online", path: "https://docs.google.com/document/d/1hLVsTWS_1iNjwjAzH4ANICdPOwButOnUi7S65o3vYLs/edit?tab=t.0", link: true },
+        ],
+      },
+    ],
+  },
+  // Thêm tài liệu AVĐV mới thì thêm file vào folders ở trên, hoặc thêm nguồn mới vào đây
+];
+
+function renderAvdv() {
+  return `
+    <p class="ctdt-meta">
+      Tài liệu AVĐV: ngữ pháp & từ vựng. Bấm tên file để xem trước — có nút tải xuống ngay trong màn xem trước.
+    </p>
+    ${renderFileBrowserContainer("fbAvdv")}
+  `;
+}
+
+function initAvdv() {
+  initFileBrowser("fbAvdv", AVDV_SOURCES, "AVĐV");
+}
+
+/* =========================================================
    NGĂN VẬT LIỆU HỌC — 6 chương bài giảng.
    Dùng lại đúng khung initFileBrowser, không viết thêm logic mới.
    Bỏ qua file rác "bài tập" (lỗi thao tác cũ trên GitHub, chưa dọn).
@@ -3848,6 +3902,16 @@ const SUBJECTS = [
     desc: "AVĐV, Speaking 3, ngữ pháp & từ vựng tổng hợp",
     render: renderAnhVan,
     afterRender: initAnhVan,
+  },
+  {
+    id: "avdv",
+    hocKy: null,
+    nhomMon: "Anh Văn Tổng Hợp",
+    icon: "🅰️",
+    title: "AVĐV",
+    desc: "Ngữ pháp & từ vựng AVĐV",
+    render: renderAvdv,
+    afterRender: initAvdv,
   },
   {
     id: "vat-lieu-hoc",
