@@ -3288,6 +3288,44 @@ function initQtvtbCoHoc() {
 }
 
 /* =========================================================
+   NGĂN "ĐẠI SỐ TUYẾN TÍNH"
+   ========================================================= */
+
+const DSTT_SOURCES = [
+  {
+    ten: "Tài liệu",
+    folders: [
+      {
+        ten: "Bài giảng & ôn tập",
+        files: [
+          { ten: "Chương 1 + Chương 2", path: "ĐSTT/C1+C2.pdf" },
+          { ten: "Chương 3", path: "ĐSTT/C3.pdf" },
+          { ten: "Chương 4", path: "ĐSTT/C4.pdf" },
+          { ten: "Slide BKU", path: "ĐSTT/slide BKU.pdf" },
+          { ten: "Trắc nghiệm mẫu", path: "ĐSTT/trắc nghiệm mẫu.pdf" },
+          { ten: "Ôn tập ĐSTT", path: "ĐSTT/ÔN TẬP ĐSTT.pdf" },
+        ],
+      },
+    ],
+  },
+  // Thêm nguồn tài liệu Đại Số Tuyến Tính mới thì thêm 1 object { ten, folders: [...] } vào đây
+];
+
+function renderDstt() {
+  return `
+    <p class="ctdt-meta">
+      Tài liệu Đại Số Tuyến Tính: bài giảng theo chương, slide, trắc nghiệm mẫu & ôn tập.
+      Bấm vào tên nguồn để mở, rồi bấm tên file để xem trước — có nút tải xuống.
+    </p>
+    ${renderFileBrowserContainer("fbDstt")}
+  `;
+}
+
+function initDstt() {
+  initFileBrowser("fbDstt", DSTT_SOURCES, "Đại Số Tuyến Tính");
+}
+
+/* =========================================================
    NGĂN "ĐỀ XUẤT LỊCH HỌC"
    - Đính màu (Lý thuyết/Thực hành/Trực tuyến/Đi thi/Tạm hoãn) vào từng
      ca trong tuần bằng cách bấm-chọn hoặc kéo-thả, gõ tên môn vào ô.
@@ -3942,6 +3980,16 @@ const SUBJECTS = [
     desc: "Tài liệu Quá Trình và Thiết Bị Cơ Học theo từng chương",
     render: renderQtvtbCoHoc,
     afterRender: initQtvtbCoHoc,
+  },
+  {
+    id: "dstt",
+    hocKy: null,
+    nhomMon: "Toán Cao Cấp",
+    icon: "🧮",
+    title: "Đại Số Tuyến Tính",
+    desc: "Bài giảng theo chương, slide, trắc nghiệm mẫu & ôn tập",
+    render: renderDstt,
+    afterRender: initDstt,
   },
   {
     id: "thcn-nc",
