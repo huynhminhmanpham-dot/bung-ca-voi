@@ -1416,12 +1416,6 @@ function renderChuongTrinhKhung() {
       </p>
       <div class="cn-list">${chuyenNganhHtml}</div>
     </section>
-
-    <p class="source-note">
-      Dữ liệu số hóa lại từ file PDF "Chương trình khung" bạn cung cấp. Sơ đồ gốc có nhiều mũi tên
-      học phần trước / song hành khá phức tạp, nên nếu cần độ chính xác tuyệt đối (đăng ký học phần,
-      xét tốt nghiệp...) bạn nên đối chiếu lại với bản gốc hoặc phòng đào tạo nhé.
-    </p>
   `;
 }
 
@@ -2158,7 +2152,7 @@ const VATLIEUHOC_SOURCES = [
     ten: "Bài giảng",
     folders: [
       {
-        ten: "Các chương",
+        ten: "Thầy Hà",
         files: [
           // ⚠️ "Chương 2.pdf" có khoảng trắng, còn Chương1/3/4/5/6 thì KHÔNG —
           // đúng y hệt tên file thật trên GitHub, đừng tự ý thêm/bớt dấu cách.
@@ -2198,10 +2192,10 @@ function initVatLieuHoc() {
 
 const VLDC_SOURCES = [
   {
-    ten: "Bài giảng theo chương",
+    ten: "Thầy Trung",
     folders: [
       {
-        ten: "Slide bài giảng",
+        ten: "Bài giảng theo chương",
         files: [
           { ten: "Chương 1", path: "VẬT LÍ ĐẠI CƯƠNG/2. VLDC_Chương 1.pptx" },
           { ten: "Chương 2", path: "VẬT LÍ ĐẠI CƯƠNG/3. VLDC_Chương 2.pptx" },
@@ -2211,13 +2205,8 @@ const VLDC_SOURCES = [
           { ten: "Chương 9 - Từ trường", path: "VẬT LÍ ĐẠI CƯƠNG/10. VLDC_Chương 9_Từ trường.pptx" },
         ],
       },
-    ],
-  },
-  {
-    ten: "Ôn tập & Đề cương",
-    folders: [
       {
-        ten: "Tài liệu ôn thi",
+        ten: "Ôn tập & Đề cương",
         files: [
           { ten: "Ôn tập VLDC (Lý thuyết)", path: "VẬT LÍ ĐẠI CƯƠNG/ÔN TẬP VLDC (lý thuyết).pdf" },
           { ten: "Ôn tập VLDC (Bài tập)", path: "VẬT LÍ ĐẠI CƯƠNG/ÔN TẬP VLDC (Bài tập).pdf" },
@@ -2925,8 +2914,6 @@ const TRIET_TAILIEU = [
         ten: "Slide theo chương",
         files: [
           { ten: "0. Nhập môn Triết học", path: "TRIẾT HỌC/0)NHẬP MÔN TRIẾT HỌC.ppt" },
-          { ten: "I. Triết học và vấn đề cơ bản của Triết học (PPTX)", path: "TRIẾT HỌC/I.TRIẾT HỌC VÀ VẤN ĐỀ CƠ BẢN CỦA TRIẾT HỌC.pptx" },
-          { ten: "I. Triết học và vấn đề cơ bản của Triết học (Word, ZSC)", path: "TRIẾT HỌC/I.TRIẾT HỌC VÀ VẤN ĐỀ CƠ BẢN CỦA TRIẾT HỌC(ZSC).docx" },
           { ten: "1. Vật chất và ý thức", path: "TRIẾT HỌC/1 )VẬT CHẤT VÀ Ý THỨC.ppt" },
           { ten: "2. Phép biện chứng duy vật", path: "TRIẾT HỌC/2)PHÉP BIỆN CHỨNG DUY VẬT.ppt" },
           { ten: "3. Phạm trù", path: "TRIẾT HỌC/3)PHẠM TRÙ.ppt" },
@@ -2937,6 +2924,13 @@ const TRIET_TAILIEU = [
           { ten: "8. Nhà nước và CMXH", path: "TRIẾT HỌC/8)NHÀ NƯỚC VÀ CMXH.ppt" },
           { ten: "9. Ý thức xã hội", path: "TRIẾT HỌC/9)Ý THỨC XÃ HỘI.ppt" },
           { ten: "10. Con người", path: "TRIẾT HỌC/10)CON NGƯỜI.ppt" },
+        ],
+      },
+      {
+        ten: "Phạm Huỳnh Minh Mẫn",
+        files: [
+          { ten: "I. Triết học và vấn đề cơ bản của Triết học (PPTX)", path: "TRIẾT HỌC/I.TRIẾT HỌC VÀ VẤN ĐỀ CƠ BẢN CỦA TRIẾT HỌC.pptx" },
+          { ten: "I. Triết học và vấn đề cơ bản của Triết học (Word, ZSC)", path: "TRIẾT HỌC/I.TRIẾT HỌC VÀ VẤN ĐỀ CƠ BẢN CỦA TRIẾT HỌC(ZSC).docx" },
         ],
       },
       {
@@ -3011,7 +3005,7 @@ const QPAN_SOURCES = [
     ten: "Tài liệu",
     folders: [
       {
-        ten: "Tài liệu tổng hợp",
+        ten: "ad LHP",
         files: [
           { ten: "Full TN QPAN 2 (HUIT)", path: "5 môn poly+ quốc phòng/FULL TN QPAN2 HUIT.docx" },
           { ten: "Quốc Phòng 1 - Năm 2023-2024", path: "5 môn poly+ quốc phòng/QUỐC PHÒNG 1 NĂM 2023-2024.docx" },
@@ -3261,7 +3255,7 @@ const QTVTB_COHOC_SOURCES = [
     ten: "Tài liệu các chương",
     folders: [
       {
-        ten: "Bài giảng",
+        ten: "Cô Thanh Hiền",
         files: [
           { ten: "Chương 1 - Quá trình và thiết bị cơ học", path: "QTVTB Cơ Học/C1-Quá trình và thiết bị cơ học.pdf" },
           { ten: "Chương 1 - Quá trình và thiết bị cơ học (P2)", path: "QTVTB Cơ Học/C1-Quá trình và thiết bị cơ học -P2.pdf" },
