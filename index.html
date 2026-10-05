@@ -4448,9 +4448,9 @@ function chemcetusInitVisitCounter() {
    viên, các ngăn dưới đây không hiện trên trang chủ và menu
    "Tài Liệu Môn Học" theo mặc định. Bấm vào dòng chữ phụ đề
    ở đầu trang (Нгок Хюинь · ph) rồi nhập đúng mật khẩu sẽ hiện
-   lại đầy đủ như trước. Trạng thái đã mở khóa được ghi nhớ
-   trong trình duyệt (localStorage), không cần nhập lại mỗi lần
-   vào web.
+   lại đầy đủ như trước. Trạng thái mở khóa chỉ tồn tại trong
+   PHIÊN TRUY CẬP hiện tại (sessionStorage) - đóng tab/trình
+   duyệt hoặc mở lại web lần sau sẽ phải nhập mật khẩu lại từ đầu.
    Lưu ý: đây chỉ là ẩn ở giao diện, không khóa truy cập thật -
    ai biết đúng id ngăn (qua URL #...) vẫn mở được bình thường.
    ========================================================= */
@@ -4469,7 +4469,7 @@ const HIDDEN_UNLOCK_KEY = "bungcavoi_hidden_unlocked";
 
 function hiddenSubjectsIsUnlocked() {
   try {
-    return localStorage.getItem(HIDDEN_UNLOCK_KEY) === "1";
+    return sessionStorage.getItem(HIDDEN_UNLOCK_KEY) === "1";
   } catch (e) {
     return false;
   }
@@ -4477,7 +4477,7 @@ function hiddenSubjectsIsUnlocked() {
 
 function hiddenSubjectsSetUnlocked() {
   try {
-    localStorage.setItem(HIDDEN_UNLOCK_KEY, "1");
+    sessionStorage.setItem(HIDDEN_UNLOCK_KEY, "1");
   } catch (e) {}
 }
 
@@ -4506,8 +4506,8 @@ function hiddenSubjectsShowPrompt(onSuccess) {
     </style>
     <div class="hsp-box">
       <button type="button" class="hsp-close" id="hspClose">✕</button>
-      <p class="hsp-title">🔒 Xem đầy đủ các ngăn</p>
-      <p class="hsp-msg">Nhập mật khẩu để hiện lại các ngăn đang được ẩn bớt.</p>
+      <p class="hsp-title">🔒 Câu hỏi kì cục</p>
+      <p class="hsp-msg">1 quyển sách dày là quyển sách có bao nhiêu trang?</p>
       <input type="password" inputmode="numeric" class="hsp-input" id="hspInput" />
       <button type="button" class="hsp-confirm" id="hspConfirm">Xác nhận</button>
       <p class="hsp-err" id="hspErr">Mật khẩu không đúng, thử lại nhé.</p>
