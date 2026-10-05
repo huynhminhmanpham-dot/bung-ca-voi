@@ -765,7 +765,7 @@ table.tkb tbody tr:nth-child(even) td { background: #f7fbff; }
 
   <header class="site-header">
     <h1 class="logo">𝓒𝓗𝓔𝓜𝓒𝓔𝓣𝓤𝓢</h1>
-    <p class="subtitle">Нгок Хюинь · ph</p>
+    <p class="subtitle" id="appSubtitle">Нгок Хюинь · ph</p>
   </header>
 
   <nav id="topNav" class="top-nav"></nav>
@@ -4034,7 +4034,8 @@ function goToSubject(id) { location.hash = id; renderDetail(id); }
 
 function renderHome() {
   const pinned = getPinned();
-  const sorted = [...SUBJECTS].sort((a, b) => {
+  const visibleSubjects = SUBJECTS.filter((s) => hiddenSubjectsIsUnlocked() || !HIDDEN_SUBJECT_IDS.includes(s.id));
+  const sorted = [...visibleSubjects].sort((a, b) => {
     const aPinned = pinned.includes(a.id);
     const bPinned = pinned.includes(b.id);
     return aPinned === bPinned ? 0 : aPinned ? -1 : 1;
@@ -4127,10 +4128,12 @@ function renderTopNav() {
   const nav = document.getElementById("topNav");
   if (!nav) return;
 
-  const tienIch = SUBJECTS.filter((s) => s.nhomMon === "Tiện ích");
+  const navVisibleSubjects = SUBJECTS.filter((s) => hiddenSubjectsIsUnlocked() || !HIDDEN_SUBJECT_IDS.includes(s.id));
+
+  const tienIch = navVisibleSubjects.filter((s) => s.nhomMon === "Tiện ích");
 
   const hocKyGroups = [1, 2, 3, 4, 5, 6, 7, 8]
-    .map((hk) => ({ hk, items: SUBJECTS.filter((s) => s.hocKy === hk) }))
+    .map((hk) => ({ hk, items: navVisibleSubjects.filter((s) => s.hocKy === hk) }))
     .filter((g) => g.items.length);
 
   const nhomThuTu = [
@@ -4143,7 +4146,7 @@ function renderTopNav() {
   ];
   const nhomGroups = nhomThuTu.map((ten) => ({
     ten,
-    items: SUBJECTS.filter((s) => s.nhomMon === ten),
+    items: navVisibleSubjects.filter((s) => s.nhomMon === ten),
   }));
 
   nav.innerHTML = `
@@ -4440,9 +4443,123 @@ function chemcetusInitVisitCounter() {
     });
 }
 
+/* =========================================================
+   ẨN BỚT MỘT SỐ NGĂN - để tôn trọng bản quyền slide của giảng
+   viên, các ngăn dưới đây không hiện trên trang chủ và menu
+   "Tài Liệu Môn Học" theo mặc định. Bấm vào dòng chữ phụ đề
+   ở đầu trang (Нгок Хюинь · ph) rồi nhập đúng mật khẩu sẽ hiện
+   lại đầy đủ như trước. Trạng thái đã mở khóa được ghi nhớ
+   trong trình duyệt (localStorage), không cần nhập lại mỗi lần
+   vào web.
+   Lưu ý: đây chỉ là ẩn ở giao diện, không khóa truy cập thật -
+   ai biết đúng id ngăn (qua URL #...) vẫn mở được bình thường.
+   ========================================================= */
+
+const HIDDEN_SUBJECT_IDS = [
+  "dstt",
+  "hoa-huu-co",
+  "hoa-vo-co",
+  "hoa-dai-cuong",
+  "vat-lieu-hoc",
+  "vat-li-dai-cuong",
+  "qtvtb-co-hoc",
+];
+const HIDDEN_UNLOCK_CODE = "1111";
+const HIDDEN_UNLOCK_KEY = "bungcavoi_hidden_unlocked";
+
+function hiddenSubjectsIsUnlocked() {
+  try {
+    return localStorage.getItem(HIDDEN_UNLOCK_KEY) === "1";
+  } catch (e) {
+    return false;
+  }
+}
+
+function hiddenSubjectsSetUnlocked() {
+  try {
+    localStorage.setItem(HIDDEN_UNLOCK_KEY, "1");
+  } catch (e) {}
+}
+
+function hiddenSubjectsShowPrompt(onSuccess) {
+  const overlay = document.createElement("div");
+  overlay.className = "hsp-overlay";
+  overlay.innerHTML = `
+    <style>
+      .hsp-overlay{ position:fixed; inset:0; background:rgba(11,61,145,.35); z-index:9999;
+        display:flex; align-items:center; justify-content:center; padding:16px; }
+      .hsp-box{ background:#fff; border-radius:16px; max-width:360px; width:100%;
+        padding:26px 22px 20px; position:relative; box-shadow:0 12px 32px rgba(0,0,0,.25);
+        font-family:inherit; text-align:center; }
+      .hsp-close{ position:absolute; top:10px; right:10px; width:28px; height:28px;
+        border-radius:50%; border:none; background:#eef2f7; color:#5b7590; font-size:15px;
+        font-weight:700; cursor:pointer; line-height:1; }
+      .hsp-close:hover{ background:#dde6f0; }
+      .hsp-title{ font-weight:700; font-size:1.05rem; margin:0 0 8px; color:#0b3d91; }
+      .hsp-msg{ font-size:0.86rem; color:#5b7590; line-height:1.5; margin:0 0 16px; }
+      .hsp-input{ width:100%; border:1px solid #cfe4f5; border-radius:10px; padding:10px 12px;
+        font-size:1rem; text-align:center; margin-bottom:10px; box-sizing:border-box; }
+      .hsp-confirm{ border:none; background:#0b3d91; color:#fff; border-radius:10px; width:100%;
+        padding:10px 14px; font-size:0.9rem; font-weight:600; cursor:pointer; }
+      .hsp-confirm:hover{ background:#092e6e; }
+      .hsp-err{ font-size:0.78rem; color:#c0392b; margin:8px 0 0; display:none; }
+    </style>
+    <div class="hsp-box">
+      <button type="button" class="hsp-close" id="hspClose">✕</button>
+      <p class="hsp-title">🔒 Xem đầy đủ các ngăn</p>
+      <p class="hsp-msg">Nhập mật khẩu để hiện lại các ngăn đang được ẩn bớt.</p>
+      <input type="password" inputmode="numeric" class="hsp-input" id="hspInput" />
+      <button type="button" class="hsp-confirm" id="hspConfirm">Xác nhận</button>
+      <p class="hsp-err" id="hspErr">Mật khẩu không đúng, thử lại nhé.</p>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const close = () => overlay.remove();
+  overlay.querySelector("#hspClose").addEventListener("click", close);
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) close();
+  });
+
+  const input = overlay.querySelector("#hspInput");
+  const errMsg = overlay.querySelector("#hspErr");
+  const confirmBtn = overlay.querySelector("#hspConfirm");
+  input.focus();
+
+  function tryUnlock() {
+    if (input.value.trim() === HIDDEN_UNLOCK_CODE) {
+      hiddenSubjectsSetUnlocked();
+      close();
+      if (typeof onSuccess === "function") onSuccess();
+    } else {
+      errMsg.style.display = "block";
+      input.value = "";
+      input.focus();
+    }
+  }
+  confirmBtn.addEventListener("click", tryUnlock);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") tryUnlock();
+  });
+}
+
+function initHiddenSubjectsToggle() {
+  const subtitleEl = document.getElementById("appSubtitle");
+  if (!subtitleEl) return;
+  subtitleEl.style.cursor = "pointer";
+  subtitleEl.addEventListener("click", () => {
+    if (hiddenSubjectsIsUnlocked()) return; // đã mở khóa rồi thì thôi, khỏi hỏi lại
+    hiddenSubjectsShowPrompt(() => {
+      renderTopNav(); // vẽ lại menu trên cho đủ ngăn
+      if (!location.hash) renderHome(); // nếu đang ở trang chủ thì vẽ lại luôn
+    });
+  });
+}
+
 renderTopNav();
 initNhacNen();
 chemcetusInitVisitCounter();
+initHiddenSubjectsToggle();
 window.addEventListener("hashchange", init);
 init();
 </script>
