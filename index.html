@@ -3790,6 +3790,491 @@ function initDeXuatLichHocUI() {
   document.getElementById("dxlhClearSuggestBtn").addEventListener("click", () => { clearSuggestions(); resetSummary(); });
 }
 
+/* =========================================================
+   NGĂN "TẠO TRẮC NGHIỆM TỪ FILE" — người dùng tự tải file câu hỏi
+   lên, web đọc NGAY TRÊN TRÌNH DUYỆT của họ và dựng bài trắc nghiệm
+   bằng đúng Quiz Engine có sẵn. Web không tự gửi file đi đâu.
+
+   Hỗ trợ: .docx (đáp án đúng tô chữ đỏ hoặc tô nền vàng, hoặc gõ
+   dấu * trước đáp án) và .txt / dán chữ (đáp án đúng có dấu *).
+   Câu nào thiếu đáp án đúng, có nhiều đáp án được đánh dấu hoặc
+   dưới 2 đáp án thì bị LOẠI RA và báo rõ lý do (không tự đoán).
+   ========================================================= */
+
+const UGC_ANS_RE = /^([A-Fa-f])\s*[\.\)]\s*(.+)$/;
+const UGC_CHAPTER_RE = /^(CHƯƠNG|CHUONG|PHẦN|PHAN)\s*[0-9IVXivx]+/i;
+const UGC_NEWQ_RE = /^(?:Câu|Cau|Question)\s*\d+\s*[:\.\)]?\s*/i;
+const UGC_NUMQ_RE = /^\d+\s*[\.\)]\s+/;
+
+/* Chống chèn mã HTML từ file người khác (nội dung được in thẳng vào trang) */
+function ugcEsc(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/* Run (đoạn chữ) trong Word có được "đánh dấu" là đáp án đúng không:
+   chữ màu đỏ (FF0000, C00000...) hoặc tô nền (trừ xám/đen/trắng) */
+function ugcRunMarked(run) {
+  const rPr = run.getElementsByTagName("w:rPr")[0];
+  if (!rPr) return false;
+
+  const hl = rPr.getElementsByTagName("w:highlight")[0];
+  const hlVal = hl && hl.getAttribute("w:val");
+  if (hlVal && !/^(none|lightGray|darkGray|black|white)$/i.test(hlVal)) return true;
+
+  const c = rPr.getElementsByTagName("w:color")[0];
+  const v = c && c.getAttribute("w:val");
+  if (v && /^[0-9a-f]{6}$/i.test(v)) {
+    const r = parseInt(v.slice(0, 2), 16);
+    const g = parseInt(v.slice(2, 4), 16);
+    const b = parseInt(v.slice(4, 6), 16);
+    return r >= 0xb0 && g <= 0x70 && b <= 0x70;
+  }
+  return false;
+}
+
+/* word/document.xml -> danh sách dòng { text, marked }.
+   Shift+Enter (xuống dòng mềm) cũng được tách thành dòng riêng. */
+function ugcDocxXmlToLines(xml) {
+  const doc = new DOMParser().parseFromString(xml, "application/xml");
+  const paras = doc.getElementsByTagName("w:p");
+  const out = [];
+  for (let i = 0; i < paras.length; i++) {
+    const runs = paras[i].getElementsByTagName("w:r");
+    let line = { text: "", marked: false };
+    const lines = [line];
+    for (let j = 0; j < runs.length; j++) {
+      const run = runs[j];
+      const marked = ugcRunMarked(run);
+      for (let k = 0; k < run.childNodes.length; k++) {
+        const n = run.childNodes[k];
+        if (n.nodeName === "w:t") {
+          line.text += n.textContent;
+          if (marked && n.textContent.trim()) line.marked = true;
+        } else if (n.nodeName === "w:br" || n.nodeName === "w:cr") {
+          line = { text: "", marked: false };
+          lines.push(line);
+        } else if (n.nodeName === "w:tab") {
+          line.text += " ";
+        }
+      }
+    }
+    lines.forEach((l) => out.push(l));
+  }
+  return out;
+}
+
+/* Danh sách dòng -> câu hỏi hợp lệ + danh sách câu bị loại (kèm lý do) */
+function ugcBuildQuestions(lines) {
+  const questions = [];
+  const errors = [];
+  let chuong = "Tất cả";
+  let cur = null;
+
+  function newQ(text) {
+    cur = { cau: text, dapAn: [], marks: [], chuong: chuong };
+  }
+  function flush() {
+    if (!cur) return;
+    const marked = [];
+    cur.marks.forEach((m, i) => { if (m) marked.push(i); });
+    let ly = "";
+    if (cur.dapAn.length < 2) ly = "Có ít hơn 2 đáp án";
+    else if (marked.length === 0) ly = "Không thấy đáp án đúng (chưa tô đỏ / tô vàng / đánh dấu *)";
+    else if (marked.length > 1) ly = "Có hơn 1 đáp án được đánh dấu là đúng";
+    if (ly) {
+      errors.push({ cau: ugcEsc(cur.cau), ly: ly });
+    } else {
+      questions.push({
+        cau: ugcEsc(cur.cau),
+        dapAn: cur.dapAn.map(ugcEsc),
+        dungIndex: marked[0],
+        chuong: ugcEsc(cur.chuong),
+      });
+    }
+    cur = null;
+  }
+
+  lines.forEach((ln) => {
+    let t = String(ln.text).replace(/\s+/g, " ").trim();
+    if (!t) return;
+    let marked = !!ln.marked;
+    if (t.startsWith("*")) {
+      marked = true;
+      t = t.replace(/^\*+\s*/, "");
+      if (!t) return;
+    }
+
+    if (UGC_CHAPTER_RE.test(t) && !t.endsWith("?") && t.length < 120) {
+      flush();
+      chuong = t;
+      return;
+    }
+
+    if (UGC_NEWQ_RE.test(t) || UGC_NUMQ_RE.test(t) || t.endsWith("?")) {
+      flush();
+      const cleaned = t.replace(UGC_NEWQ_RE, "").replace(UGC_NUMQ_RE, "").trim();
+      newQ(cleaned || t);
+      return;
+    }
+
+    const m = t.match(UGC_ANS_RE);
+    if (m && cur) {
+      let ansText = m[2].trim();
+      if (ansText.startsWith("*")) {
+        marked = true;
+        ansText = ansText.replace(/^\*+\s*/, "");
+      }
+      cur.dapAn.push(ansText);
+      cur.marks.push(marked);
+      return;
+    }
+
+    // Không khớp mẫu nào: nối vào đáp án / câu hỏi đang dang dở
+    if (cur && cur.dapAn.length > 0) {
+      if (cur.dapAn.length >= 4) {
+        flush();
+        newQ(t);
+      } else {
+        const last = cur.dapAn.length - 1;
+        cur.dapAn[last] += " " + t;
+        if (marked) cur.marks[last] = true;
+      }
+    } else if (cur) {
+      cur.cau += " " + t;
+    } else {
+      newQ(t);
+    }
+  });
+  flush();
+
+  return { questions: questions, errors: errors };
+}
+
+/* Dự phòng cho file .txt kiểu cũ của web: không có A./B., mỗi câu 1 khối cách
+   nhau dòng trống, dòng đầu là câu hỏi, đáp án đúng có dấu * ngay trước. */
+function ugcParseStarBlocks(raw) {
+  const questions = [];
+  const errors = [];
+  let chuong = "Tất cả";
+  raw.replace(/\r\n/g, "\n").split(/\n\s*\n/).forEach((block) => {
+    const ls = block.split("\n").map((s) => s.trim()).filter(Boolean);
+    while (ls.length && ls[0].startsWith("##")) chuong = ls.shift().replace(/^##\s*/, "");
+    if (!ls.length) return;
+    const cau = ls[0];
+    const opts = ls.slice(1);
+    const stars = [];
+    opts.forEach((o, i) => { if (o.startsWith("*")) stars.push(i); });
+    let ly = "";
+    if (opts.length < 2) ly = "Có ít hơn 2 đáp án";
+    else if (stars.length === 0) ly = "Không thấy đáp án đúng (thiếu dấu *)";
+    else if (stars.length > 1) ly = "Có hơn 1 đáp án được đánh dấu *";
+    if (ly) {
+      errors.push({ cau: ugcEsc(cau), ly: ly });
+    } else {
+      questions.push({
+        cau: ugcEsc(cau),
+        dapAn: opts.map((o) => ugcEsc(o.replace(/^\*+\s*/, ""))),
+        dungIndex: stars[0],
+        chuong: ugcEsc(chuong),
+      });
+    }
+  });
+  return { questions: questions, errors: errors };
+}
+
+/* Gộp: thử đọc kiểu A./B./C./D. trước; nếu không ra câu nào mà là chữ thuần
+   thì thử kiểu khối có dấu * */
+function ugcParseAll(src) {
+  let r = ugcBuildQuestions(src.lines);
+  if (!r.questions.length && src.rawText) {
+    const alt = ugcParseStarBlocks(src.rawText);
+    if (alt.questions.length) r = alt;
+  }
+  return r;
+}
+
+/* ---- Giao diện ngăn "Tạo Trắc Nghiệm Từ File" ---- */
+
+/* ✏️ CHỦ WEB ĐIỀN VÀO ĐÂY: nơi nhận tài liệu người dùng đồng ý chia sẻ.
+   Để trống cả 2 thì web tự hiện link tới mục "Góp Ý / Báo Lỗi / Bản Quyền".
+   Gợi ý: dùng Gmail/Zalo riêng cho web, đừng dùng tài khoản mang tên thật. */
+const UGC_CONTACT_GMAIL = "";
+const UGC_CONTACT_ZALO = "";
+
+const UGC_BANK_KEY = "bungcavoi_ugc_bank";
+const UGC_MAX_FILE_BYTES = 10 * 1024 * 1024;
+
+function ugcTrack(name, params) {
+  if (window.gtag) gtag("event", name, params || {});
+}
+
+function ugcContactHtml() {
+  const parts = [];
+  if (UGC_CONTACT_GMAIL) parts.push(`Gmail: <b>${UGC_CONTACT_GMAIL}</b>`);
+  if (UGC_CONTACT_ZALO) parts.push(`Zalo: <b>${UGC_CONTACT_ZALO}</b>`);
+  if (!parts.length) {
+    return `mục <a href="${GOP_Y_URL}" target="_blank" rel="noopener">💬 Góp Ý / Báo Lỗi / Bản Quyền</a> trên thanh menu`;
+  }
+  return parts.join(" &nbsp;•&nbsp; ");
+}
+
+function ugcLoadJSZip() {
+  if (window.JSZip) return Promise.resolve(window.JSZip);
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+    s.onload = () => resolve(window.JSZip);
+    s.onerror = () => reject(new Error("Không tải được thư viện đọc file Word. Bạn kiểm tra kết nối mạng rồi thử lại nhé."));
+    document.head.appendChild(s);
+  });
+}
+
+async function ugcReadFile(file) {
+  const name = (file.name || "").toLowerCase();
+  if (file.size > UGC_MAX_FILE_BYTES) throw new Error("File quá lớn (tối đa 10MB).");
+  if (name.endsWith(".docx")) {
+    const JSZip = await ugcLoadJSZip();
+    const zip = await JSZip.loadAsync(await file.arrayBuffer());
+    const entry = zip.file("word/document.xml");
+    if (!entry) throw new Error("File .docx này không đúng cấu trúc (không tìm thấy nội dung).");
+    return { lines: ugcDocxXmlToLines(await entry.async("string")), rawText: "" };
+  }
+  if (name.endsWith(".txt")) {
+    const text = await file.text();
+    return { lines: text.split(/\r?\n/).map((t) => ({ text: t, marked: false })), rawText: text };
+  }
+  if (name.endsWith(".doc")) {
+    throw new Error("File .doc (Word đời cũ) chưa đọc được. Bạn mở bằng Word → Lưu thành (Save As) → chọn .docx rồi tải lên lại nhé.");
+  }
+  if (name.endsWith(".pdf")) {
+    throw new Error("Hiện web chưa đọc được PDF. Bạn chuyển sang Word (.docx) hoặc dán nội dung vào ô bên dưới nhé.");
+  }
+  throw new Error("Định dạng này chưa được hỗ trợ. Hãy dùng file .docx hoặc .txt (hoặc dán chữ vào ô bên dưới).");
+}
+
+function renderUgc() {
+  return `<div id="ugcRoot"></div>`;
+}
+
+function initUgc() {
+  const root = document.getElementById("ugcRoot");
+  if (!root) return;
+  let choice = null; // "donate" | "personal"
+
+  function loadBank() {
+    try {
+      const raw = localStorage.getItem(UGC_BANK_KEY);
+      if (!raw) return null;
+      const d = JSON.parse(raw);
+      return Array.isArray(d) && d.length ? d : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function saveBank(q) {
+    try {
+      localStorage.setItem(UGC_BANK_KEY, JSON.stringify(q));
+    } catch (e) {
+      try { localStorage.removeItem(UGC_BANK_KEY); } catch (e2) {}
+    }
+  }
+  function clearBank() {
+    try { localStorage.removeItem(UGC_BANK_KEY); } catch (e) {}
+    quizClearProgress("ugcQuiz");
+  }
+
+  /* ---- Màn 1: 2 lựa chọn chia sẻ / không chia sẻ ---- */
+  function showChoice() {
+    const bank = loadBank();
+    const bankHtml = bank
+      ? `<div class="quiz-start-block quiz-start-block-glossary">
+           <p class="quiz-start-label">📂 Bộ câu hỏi bạn dùng lần trước (${bank.length} câu) còn lưu trên máy này</p>
+           <div class="quiz-start-row">
+             <button type="button" class="pomo-btn pomo-btn-primary" id="ugcReuseBtn">▶ Dùng lại bộ này</button>
+             <button type="button" class="pomo-btn pomo-btn-danger" id="ugcDeleteBtn">🗑 Xoá khỏi máy</button>
+           </div>
+         </div>`
+      : "";
+
+    root.innerHTML = `
+      <p class="ctdt-meta">
+        Tải file câu hỏi (Word <b>.docx</b> hoặc <b>.txt</b>) lên, web tự dựng bài trắc nghiệm để bạn ôn ngay.
+        <b>Miễn phí, không cần đăng nhập, không giới hạn số câu.</b>
+        File được đọc ngay trên trình duyệt của bạn — web <b>không tự động tải lên hay lưu</b> file của bạn.
+      </p>
+      ${bankHtml}
+      <div class="quiz-start">
+        <p class="quiz-start-total">Trước khi bắt đầu, bạn chọn giúp mình 1 trong 2 nhé:</p>
+
+        <div class="quiz-start-block">
+          <p class="quiz-start-label">💝 Mình đồng ý chia sẻ tài liệu</p>
+          <p class="quiz-glossary-hint">Nếu bạn đồng ý donate tài liệu này cho web để phục vụ việc biên soạn, tổng hợp tài liệu trắc nghiệm, bạn có thể gửi tài liệu cho mình (cách gửi hiện ở bước sau).</p>
+          <button type="button" class="pomo-btn pomo-btn-primary" id="ugcDonateBtn">💝 Đồng ý chia sẻ</button>
+        </div>
+
+        <div class="quiz-start-block">
+          <p class="quiz-start-label">🔒 Mình không chia sẻ</p>
+          <p class="quiz-glossary-hint">Tài liệu chỉ dùng cho cá nhân bạn, không gửi cho ai.</p>
+          <button type="button" class="pomo-btn pomo-btn-secondary" id="ugcPersonalBtn">Không chia sẻ, mình dùng cá nhân</button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById("ugcDonateBtn").addEventListener("click", () => {
+      choice = "donate";
+      ugcTrack("ugc_chon", { lua_chon: "donate" });
+      showUpload();
+    });
+    document.getElementById("ugcPersonalBtn").addEventListener("click", () => {
+      choice = "personal";
+      ugcTrack("ugc_chon", { lua_chon: "personal" });
+      showUpload();
+    });
+    const reuse = document.getElementById("ugcReuseBtn");
+    if (reuse) reuse.addEventListener("click", () => startQuiz(bank, true));
+    const del = document.getElementById("ugcDeleteBtn");
+    if (del) del.addEventListener("click", () => { clearBank(); showChoice(); });
+  }
+
+  /* ---- Màn 2: tải file / dán chữ ---- */
+  function showUpload() {
+    const notice =
+      choice === "donate"
+        ? `<div class="quiz-start-block quiz-start-block-glossary">
+             <p class="quiz-start-label">💝 Cảm ơn bạn đã đồng ý chia sẻ!</p>
+             <p class="quiz-glossary-hint" style="margin:0">Bạn gửi tài liệu cho mình qua: ${ugcContactHtml()}.
+             Chỉ gửi tài liệu do chính bạn soạn hoặc bạn có quyền chia sẻ — vui lòng <b>không</b> gửi slide, giáo trình có bản quyền của giảng viên / nhà xuất bản.</p>
+           </div>`
+        : `<div class="quiz-start-block">
+             <p class="quiz-start-label">🔒 Không chia sẻ — mình sử dụng cá nhân.</p>
+             <p class="quiz-glossary-hint" style="margin:0">Đã ghi nhận. File của bạn không được gửi đi đâu. Bộ câu hỏi chỉ được nhớ trên trình duyệt của bạn để lần sau dùng lại (có nút xoá).</p>
+           </div>`;
+
+    root.innerHTML = `
+      <div class="detail-toolbar">
+        <button type="button" class="back-btn" id="ugcChangeChoiceBtn">← Đổi lựa chọn</button>
+      </div>
+      ${notice}
+
+      <div class="quiz-start-block">
+        <p class="quiz-start-label">📄 Chọn file câu hỏi (.docx hoặc .txt)</p>
+        <input type="file" id="ugcFile" accept=".docx,.txt" />
+        <p class="quiz-glossary-hint" style="margin:12px 0 6px">Hoặc dán nội dung câu hỏi vào đây:</p>
+        <textarea id="ugcPaste" rows="6" style="width:100%; box-sizing:border-box; border:1px solid #cfe4f5; border-radius:10px; padding:10px; font:inherit; font-size:13.5px;"></textarea>
+        <div class="quiz-start-row" style="margin-top:12px; justify-content:flex-start;">
+          <button type="button" class="pomo-btn pomo-btn-primary" id="ugcReadBtn">📖 Đọc file &amp; tạo trắc nghiệm</button>
+        </div>
+      </div>
+
+      <div id="ugcResult"></div>
+
+      <details class="cn-details" style="margin-top:14px;">
+        <summary><span class="cn-ten">ℹ️ File của mình cần soạn thế nào?</span></summary>
+        <div class="cn-body">
+          <p class="tkb-note" style="margin:0">• Mỗi câu hỏi 1 đoạn, các đáp án bắt đầu bằng <b>A.</b> <b>B.</b> <b>C.</b> <b>D.</b> (mỗi đáp án 1 dòng).</p>
+          <p class="tkb-note" style="margin:0">• Đánh dấu đáp án đúng bằng <b>1 trong 3 cách</b>: tô chữ <b>màu đỏ</b>, tô <b>nền vàng</b> (trong Word), hoặc gõ dấu <b>*</b> ngay trước đáp án đúng.</p>
+          <p class="tkb-note" style="margin:0">• Mỗi câu chỉ có <b>1</b> đáp án đúng. Câu nào thiếu / thừa đáp án đúng sẽ bị bỏ qua và báo cho bạn biết.</p>
+          <p class="tkb-note" style="margin:0">• Muốn chia theo chương: thêm 1 dòng <b>CHƯƠNG 1</b>, <b>CHƯƠNG 2</b>... trước các câu của chương đó.</p>
+          <p class="tkb-note" style="margin:0">• Chưa đọc được: file .pdf, .doc (Word đời cũ), ảnh chụp.</p>
+          <pre style="background:#f7fbff; border:1px solid #e2eef8; border-radius:8px; padding:10px; font-size:12.5px; margin:0; white-space:pre-wrap;">CHƯƠNG 1
+Câu 1. Nước sôi ở bao nhiêu độ C?
+A. 50
+*B. 100
+C. 150
+D. 200</pre>
+        </div>
+      </details>
+    `;
+
+    document.getElementById("ugcChangeChoiceBtn").addEventListener("click", showChoice);
+    document.getElementById("ugcReadBtn").addEventListener("click", handleRead);
+  }
+
+  function escMsg(s) {
+    return ugcEsc(s);
+  }
+
+  async function handleRead() {
+    const fileInput = document.getElementById("ugcFile");
+    const paste = document.getElementById("ugcPaste").value.trim();
+    const box = document.getElementById("ugcResult");
+    const file = fileInput && fileInput.files && fileInput.files[0];
+
+    if (!file && !paste) {
+      box.innerHTML = `<p class="tkb-note" style="color:#c0392b">Bạn chưa chọn file hoặc dán nội dung câu hỏi.</p>`;
+      return;
+    }
+    box.innerHTML = `<p class="tkb-note">⏳ Đang đọc…</p>`;
+
+    try {
+      const src = file
+        ? await ugcReadFile(file)
+        : { lines: paste.split(/\r?\n/).map((t) => ({ text: t, marked: false })), rawText: paste };
+      const r = ugcParseAll(src);
+      ugcTrack("ugc_doc_file", { cau_hop_le: r.questions.length, cau_loi: r.errors.length });
+      showResult(r);
+    } catch (e) {
+      box.innerHTML = `<p class="tkb-note" style="color:#c0392b">⚠️ ${escMsg(e.message || "Không đọc được file này.")}</p>`;
+    }
+  }
+
+  function showResult(r) {
+    const box = document.getElementById("ugcResult");
+    const errList = r.errors
+      .slice(0, 50)
+      .map((e) => `<li style="margin-bottom:4px;"><b>${e.cau}</b> — <i>${e.ly}</i></li>`)
+      .join("");
+    const more = r.errors.length > 50 ? `<p class="tkb-note">…và ${r.errors.length - 50} câu lỗi khác.</p>` : "";
+    const errHtml = r.errors.length
+      ? `<details class="cn-details" style="margin-top:10px;">
+           <summary><span class="cn-ten">⚠️ ${r.errors.length} câu bị bỏ qua (xem lý do)</span></summary>
+           <div class="cn-body"><ul style="margin:0; padding-left:18px; font-size:13px;">${errList}</ul>${more}</div>
+         </details>`
+      : "";
+
+    if (!r.questions.length) {
+      box.innerHTML = `
+        <p class="tkb-note" style="color:#c0392b">Chưa đọc được câu nào. Bạn xem lại cách soạn file ở mục ℹ️ bên dưới nhé.</p>
+        ${errHtml}`;
+      return;
+    }
+
+    box.innerHTML = `
+      <div class="quiz-result-summary">
+        <p class="quiz-score">Đọc được <strong>${r.questions.length}</strong> câu hợp lệ${r.errors.length ? `, bỏ qua <strong>${r.errors.length}</strong> câu lỗi` : ""}.</p>
+        <button type="button" class="pomo-btn pomo-btn-primary" id="ugcStartBtn">▶ Bắt đầu làm trắc nghiệm</button>
+      </div>
+      ${errHtml}`;
+    document.getElementById("ugcStartBtn").addEventListener("click", () => {
+      saveBank(r.questions);
+      startQuiz(r.questions, false);
+    });
+  }
+
+  /* ---- Màn 3: làm trắc nghiệm bằng Quiz Engine có sẵn ---- */
+  function startQuiz(questions, resume) {
+    root.innerHTML = `
+      <div class="detail-toolbar">
+        <button type="button" class="back-btn" id="ugcBackBtn">← Chọn file khác</button>
+      </div>
+      <div id="ugcQuiz"></div>`;
+    document.getElementById("ugcBackBtn").addEventListener("click", showChoice);
+    delete QUIZ_STATE_STORE["ugcQuiz"];
+    if (!resume) quizClearProgress("ugcQuiz");
+    initQuiz("ugcQuiz", questions, "Trắc nghiệm từ file của bạn");
+  }
+
+  showChoice();
+}
+
+/* Link Google Sheet "Ghi chú cá nhân" - chủ web cập nhật nội dung ngay trên Sheet,
+   KHÔNG cần sửa index.html mỗi lần. Muốn đổi sang sheet khác chỉ cần đổi link này. */
+const GHICHU_SHEET_URL = "https://docs.google.com/spreadsheets/d/17y3pNUQGq5DWEwA_GCYoDflGsmAmxrx7uzDJSwq00-w/edit?gid=0#gid=0";
+
 /* ---------- 2. DANH SÁCH CÁC "NGĂN" (môn / mục) ---------- */
 
 const SUBJECTS = [
@@ -3830,6 +4315,29 @@ const SUBJECTS = [
     desc: "Đính loại buổi học vào tuần, tự động xếp giờ tự học vào ô trống",
     render: renderDeXuatLichHoc,
     afterRender: initDeXuatLichHocUI,
+  },
+  {
+    id: "tao-trac-nghiem",
+    hocKy: null,
+    nhomMon: "Tiện ích",
+    icon: "📝",
+    title: "Tạo Trắc Nghiệm Từ File",
+    desc: "Tải file câu hỏi lên, làm trắc nghiệm ngay — miễn phí, không cần đăng nhập",
+    render: renderUgc,
+    afterRender: initUgc,
+  },
+  {
+    id: "ghi-chu-ca-nhan",
+    hocKy: null,
+    nhomMon: "Tiện ích",
+    icon: "📒",
+    title: "Ghi chú cá nhân Huynhngoctuongthinh",
+    desc: "Bảng tính cập nhật liên tục — bấm để mở thẳng Google Sheet",
+    externalUrl: GHICHU_SHEET_URL, // có trường này thì bấm vào ngăn sẽ mở thẳng link, không vào trang con
+    render: () => `
+      <p class="ctdt-meta">Ngăn này nằm trên Google Sheets (cập nhật liên tục). Nếu tab không tự mở, bấm nút bên dưới nhé.</p>
+      <a class="pomo-btn pomo-btn-primary" style="display:inline-block; text-decoration:none;" href="${GHICHU_SHEET_URL}" target="_blank" rel="noopener">📒 Mở Google Sheet ↗</a>
+    `,
   },
   {
     id: "tu-vung-chuyen-nganh",
@@ -4030,7 +4538,24 @@ function togglePin(id) {
 /* ---------- 4. ĐIỀU HƯỚNG ---------- */
 
 function goHome() { location.hash = ""; renderHome(); }
-function goToSubject(id) { location.hash = id; renderDetail(id); }
+/* Ngăn có trường externalUrl (vd Google Sheet): bấm vào là mở thẳng link ở tab mới,
+   không chuyển trang con, không đổi #hash. Vẫn ghi sự kiện GA4 xem_ngan như các ngăn khác. */
+function openExternalSubject(subject) {
+  if (window.gtag) gtag("event", "xem_ngan", { ngan_ten: subject.title });
+  const w = window.open(subject.externalUrl, "_blank");
+  if (w) {
+    try { w.opener = null; } catch (e) {}
+  } else {
+    location.href = subject.externalUrl; // trình duyệt chặn popup thì mở ngay tại tab này
+  }
+}
+
+function goToSubject(id) {
+  const s = SUBJECTS.find((x) => x.id === id);
+  if (s && s.externalUrl) { openExternalSubject(s); return; }
+  location.hash = id;
+  renderDetail(id);
+}
 
 function renderHome() {
   const pinned = getPinned();
