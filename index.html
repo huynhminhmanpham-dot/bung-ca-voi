@@ -4626,7 +4626,7 @@ function goToSubject(id) {
 
 function renderHome() {
   const pinned = getPinned();
-  const visibleSubjects = SUBJECTS.filter((s) => hiddenSubjectsIsUnlocked() || !HIDDEN_SUBJECT_IDS.includes(s.id));
+  const visibleSubjects = SUBJECTS.filter((s) => hiddenSubjectsIsUnlocked() || !hiddenSubjectsIsHidden(s.id));
   const sorted = [...visibleSubjects].sort((a, b) => {
     const aPinned = pinned.includes(a.id);
     const bPinned = pinned.includes(b.id);
@@ -4720,7 +4720,7 @@ function renderTopNav() {
   const nav = document.getElementById("topNav");
   if (!nav) return;
 
-  const navVisibleSubjects = SUBJECTS.filter((s) => hiddenSubjectsIsUnlocked() || !HIDDEN_SUBJECT_IDS.includes(s.id));
+  const navVisibleSubjects = SUBJECTS.filter((s) => hiddenSubjectsIsUnlocked() || !hiddenSubjectsIsHidden(s.id));
 
   const tienIch = navVisibleSubjects.filter((s) => s.nhomMon === "Tiện ích");
 
@@ -5036,8 +5036,9 @@ function chemcetusInitVisitCounter() {
 }
 
 /* =========================================================
-   ẨN BỚT MỘT SỐ NGĂN - để tôn trọng bản quyền slide của giảng
-   viên, các ngăn dưới đây không hiện trên trang chủ và menu
+   ẨN NGĂN THEO MẶC ĐỊNH (danh sách trắng VISIBLE_SUBJECT_IDS) - để tôn
+   trọng bản quyền slide của giảng viên, các ngăn KHÔNG nằm trong danh
+   sách cho phép sẽ không hiện trên trang chủ và menu
    "Tài Liệu Môn Học" theo mặc định. Bấm vào dòng chữ phụ đề
    ở đầu trang (Нгок Хюинь · ph) rồi nhập đúng mật khẩu sẽ hiện
    lại đầy đủ như trước. Trạng thái mở khóa chỉ tồn tại trong
@@ -5047,15 +5048,31 @@ function chemcetusInitVisitCounter() {
    ai biết đúng id ngăn (qua URL #...) vẫn mở được bình thường.
    ========================================================= */
 
-const HIDDEN_SUBJECT_IDS = [
-  "dstt",
-  "hoa-huu-co",
-  "hoa-vo-co",
-  "hoa-dai-cuong",
-  "vat-lieu-hoc",
-  "vat-li-dai-cuong",
-  "qtvtb-co-hoc",
+/* DANH SÁCH TRẮNG: CHỈ các ngăn có id nằm trong đây mới hiện mặc định.
+   Mọi ngăn khác (kể cả ngăn MỚI thêm sau này) đều tự động bị ẨN cho đến khi
+   bấm chữ phụ đề + nhập mật khẩu. Muốn cho 1 ngăn hiện công khai -> thêm id
+   của nó vào mảng này. Muốn ẩn lại -> xóa id khỏi mảng. */
+const VISIBLE_SUBJECT_IDS = [
+  "tkb",
+  "ctdt",
+  "pomodoro",
+  "de-xuat-lich-hoc",
+  "tao-trac-nghiem",
+  "ghi-chu-ca-nhan",
+  "tu-vung-chuyen-nganh",
+  "cnxhkh",
+  "lich-su-dang",
+  "tu-tuong-hcm",
+  "triet-hoc",
+  "ktct",
+  "qpan",
+  "anh-van",
+  "avdv",
+  "thcn-nc",
 ];
+function hiddenSubjectsIsHidden(id) {
+  return !VISIBLE_SUBJECT_IDS.includes(id);
+}
 const HIDDEN_UNLOCK_CODE = "1111";
 const HIDDEN_UNLOCK_KEY = "bungcavoi_hidden_unlocked";
 
