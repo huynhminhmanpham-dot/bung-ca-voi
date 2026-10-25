@@ -3325,6 +3325,63 @@ function initDstt() {
 }
 
 /* =========================================================
+   NGĂN "HÓA PHÂN TÍCH"
+   ========================================================= */
+
+const HPT_SOURCES = [
+  {
+    ten: "Hóa Phân Tích",
+    folders: [
+      {
+        ten: "Bài giảng",
+        files: [
+          { ten: "Chương 1", path: "HÓA PHÂN TÍCH/CHUONG 1.pdf" },
+          { ten: "Chương 2", path: "HÓA PHÂN TÍCH/CHUONG 2.pdf" },
+          { ten: "Chương 3", path: "HÓA PHÂN TÍCH/CHUONG 3.pdf" },
+          { ten: "Chương 4", path: "HÓA PHÂN TÍCH/CHUONG 4.pdf" },
+          { ten: "Chương 5", path: "HÓA PHÂN TÍCH/CHUONG 5.pdf" },
+          { ten: "Chương 6", path: "HÓA PHÂN TÍCH/CHUONG 6.pdf" },
+          { ten: "Chương 7", path: "HÓA PHÂN TÍCH/CHUONG 7.pdf" },
+        ],
+      },
+      {
+        ten: "Bài tập",
+        files: [
+          { ten: "BT Chương 1, 2", path: "HÓA PHÂN TÍCH/BT C1,C2.pdf" },
+          { ten: "BT Chương 3", path: "HÓA PHÂN TÍCH/bt chuong 3.pdf" },
+          { ten: "BT Chương 4 và 5", path: "HÓA PHÂN TÍCH/BT chuong4va5.docx.pdf" },
+          { ten: "Bài tập tính nồng độ", path: "HÓA PHÂN TÍCH/BAI TAP TINH NONG DO.pdf" },
+          { ten: "HD giải BT Chương 4", path: "HÓA PHÂN TÍCH/HD giai BT chuong 4.pdf" },
+          { ten: "HD giải BT Chương 6", path: "HÓA PHÂN TÍCH/HD giai BT chuong 6.pdf" },
+          { ten: "HD giải BT Chương 7", path: "HÓA PHÂN TÍCH/HD giai BT chuong 7.pdf" },
+        ],
+      },
+      {
+        ten: "Công thức tổng hợp",
+        files: [
+          { ten: "Công thức tổng hợp Hóa phân tích", path: "HÓA PHÂN TÍCH/Công thức Tổng Hợp Hóa phân tích - Copy.docx" },
+        ],
+      },
+    ],
+  },
+  // Thêm nguồn tài liệu Hóa Phân Tích mới thì thêm 1 object { ten, folders: [...] } vào đây
+];
+
+function renderHoaPhanTich() {
+  return `
+    <p class="ctdt-meta">
+      Tài liệu Hóa Phân Tích: bài giảng theo chương, bài tập & hướng dẫn giải, công thức tổng hợp.
+      Bấm vào tên nguồn để mở, rồi bấm tên file để xem trước — có nút tải xuống.
+    </p>
+    ${renderFileBrowserContainer("fbHoaPhanTich")}
+  `;
+}
+
+function initHoaPhanTich() {
+  initFileBrowser("fbHoaPhanTich", HPT_SOURCES, "Hóa Phân Tích");
+}
+
+/* =========================================================
    NGĂN "ĐỀ XUẤT LỊCH HỌC"
    - Đính màu (Lý thuyết/Thực hành/Trực tuyến/Đi thi/Tạm hoãn) vào từng
      ca trong tuần bằng cách bấm-chọn hoặc kéo-thả, gõ tên môn vào ô.
@@ -4497,6 +4554,16 @@ const SUBJECTS = [
     desc: "Bài giảng theo chương, slide, trắc nghiệm mẫu & ôn tập",
     render: renderDstt,
     afterRender: initDstt,
+  },
+  {
+    id: "hoa-phan-tich",
+    hocKy: null,
+    nhomMon: "Hóa Học",
+    icon: "🔬",
+    title: "Hóa Phân Tích",
+    desc: "Bài giảng 7 chương, bài tập & hướng dẫn giải, công thức tổng hợp",
+    render: renderHoaPhanTich,
+    afterRender: initHoaPhanTich,
   },
   {
     id: "thcn-nc",
