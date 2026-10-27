@@ -3403,7 +3403,7 @@ const RBK_TOPICS = [
       [3, "Tổng hợp", "Khung (template) có được loại bỏ sau đó không? Loại bằng cách nào và có để lại tạp chất hay làm đổi cấu trúc không?"],
     ] },
   { id: "flow", name: "Microreactor / phản ứng dòng chảy",
-    re: /micro-?reactors?|flow (chemistry|synthesis|reactor)|continuous[- ]flow|microfluidic|millireactor|scale[- ](up|out)|numbering[- ]up/i,
+    re: /micro-?reactors?|flow (chemistry|synthesis|reactor)|continuous[- ]flow|microfluidic|millireactor|numbering[- ]up/i,
     qs: [
       [1, "Thiết bị", "Microreactor là gì? Ưu điểm về truyền nhiệt và truyền khối nhờ tỉ số diện tích trên thể tích lớn."],
       [2, "Thiết bị", "Các kiểu phản ứng vi dòng thường gặp (T-mixer, chip serpentine, ống xoắn, dòng phân đoạn) khác nhau ra sao? Bài này chọn kiểu nào, vì sao?"],
@@ -3466,6 +3466,62 @@ const RBK_TOPICS = [
     qs: [
       [2, "Vật liệu", "Kích thước hạt và phân bố được xác định bằng phương pháp nào (TEM, DLS, công thức Scherrer)? Vì sao ba phương pháp này cho giá trị khác nhau?"],
       [3, "Vật liệu", "Cơ chế tạo mầm và phát triển hạt (mô hình LaMer) liên quan thế nào tới điều kiện trộn và nồng độ trong bài?"],
+    ] },
+  { id: "biomass", name: "Sinh khối / phụ phẩm làm nguyên liệu",
+    re: /biomass|by-?products?|agri(cultural)? (waste|residues?)|bagasse|husk|\bpeels?\b|lignocellulos\w+|\bwaste\b|\bresidues?\b/i,
+    qs: [
+      [1, "Nguyên liệu", "Phân biệt phụ phẩm (by-product) và phế phẩm (waste product). Nguyên liệu trong bài thuộc loại nào và vì sao?"],
+      [2, "Nguyên liệu", "Nguồn nguyên liệu có nằm trong chuỗi giá trị thực tế không? Quy mô vùng nguyên liệu, sản lượng và độ ổn định cung ứng là bao nhiêu để đề tài khả thi về kinh tế?"],
+      [2, "Nguyên liệu", "Đã so sánh đối chứng với các nguồn sinh khối khác về dung lượng, độ bền cơ học, khả năng tái sử dụng và nhóm chức bề mặt chưa? Nếu chưa, vì sao nguyên liệu này đáng chọn?"],
+      [2, "Nguyên liệu", "Thành phần sinh khối (cellulose, hemicellulose, lignin, tro) dao động theo mùa vụ, vùng trồng và cách bảo quản. Quy trình xử lý có chịu được dao động đó không?"],
+      [3, "Tính mới", "Chỉ đổi nguyên liệu sinh khối thì chưa chắc có tính mới khoa học. Quy luật tổng quát nào về ảnh hưởng của cấu trúc và nhóm chức sinh khối tới tính chất vật liệu mà đề tài rút ra được?"],
+      [3, "Quy trình", "Quy trình xử lý và chế tạo được kiểm chứng, nghiệm thu bằng những thông số kỹ thuật chuẩn hóa nào?"],
+    ] },
+  { id: "extract", name: "Chiết xuất / hoạt chất tự nhiên",
+    re: /extract(ion|ed|s)?\b|maceration|Soxhlet|ultrasound-assisted|microwave-assisted|essential oil|bioactive|polyphenols?|flavonoids?|gingerol|shogaol|phytochemical/i,
+    qs: [
+      [1, "Chiết xuất", "Cơ sở chọn dung môi hoặc hệ dung môi (nước, etanol, hỗn hợp) cho quy trình rửa và chiết: độ phân cực, độ hòa tan hoạt chất, an toàn?"],
+      [2, "Chiết xuất", "Dung môi đơn và hệ dung môi hỗn hợp ảnh hưởng thế nào tới độ tinh sạch và hiệu suất? Đã so sánh bằng thí nghiệm chưa?"],
+      [2, "Sản phẩm", "Sản phẩm thu được có chia thành các dạng (I, II, III...) không? Chỉ tiêu chất lượng cần đạt cho từng dạng là gì và đo thế nào?"],
+      [2, "Sản phẩm", "Dùng chất chuẩn (reference standard) nào để định lượng hoạt chất? Đường chuẩn, giới hạn phát hiện và độ lặp lại ra sao?"],
+      [3, "Sản phẩm", "Tạp chất đi kèm (mùi, màu, hợp chất phụ) từ nguyên liệu gốc ảnh hưởng gì tới ứng dụng cuối (dược, mỹ phẩm, thực phẩm)? Có giải pháp xử lý không?"],
+      [3, "Giá trị gia tăng", "Chiết từ phụ phẩm có ưu thế gì so với nguyên liệu tươi? Có hoạt chất đặc hiệu tăng hoặc hình thành sau chế biến (ví dụ shogaol hình thành từ gingerol khi xử lý nhiệt) mà nguyên liệu tươi không có hoặc rất ít, và có dữ liệu chứng minh không?"],
+    ] },
+  { id: "optim", name: "Tối ưu hóa quy trình",
+    re: /\bRSM\b|response surface|Taguchi|Box-?Behnken|central composite|\bCCD\b|design of experiments|\bDoE\b|optimi[sz](ation|ed)/i,
+    qs: [
+      [1, "Tối ưu hóa", "Phương pháp tối ưu hóa là gì (RSM, Taguchi, Box-Behnken...)? Vì sao chọn phương pháp này thay vì khảo sát từng yếu tố một (OFAT)?"],
+      [2, "Tối ưu hóa", "Các yếu tố đầu vào (biến độc lập) và khoảng khảo sát được chọn dựa trên cơ sở nào? Biến phụ thuộc (đáp ứng) là gì?"],
+      [3, "Tối ưu hóa", "Mô hình hồi quy có ý nghĩa thống kê không (ANOVA, p-value, lack of fit, R² hiệu chỉnh)? Điều kiện tối ưu dự đoán đã được kiểm chứng bằng thí nghiệm xác nhận chưa?"],
+      [3, "Tối ưu hóa", "Có tương tác giữa các yếu tố không? Điều kiện tối ưu có bền vững khi thay đổi nhẹ (robustness)?"],
+    ] },
+  { id: "hetero", name: "Vật liệu ghép / kháng khuẩn / cơ chế tác dụng",
+    re: /heterojunction|Z-scheme|S-scheme|antibacterial|antimicrobial|bactericid\w+|Bi2S3|WO3|nanocomposites?/i,
+    qs: [
+      [2, "Vật liệu", "Vì sao ghép hai thành phần (heterojunction, composite) thay vì dùng từng thành phần đơn? Vị trí vùng hóa trị và vùng dẫn của hai chất quyết định điều gì?"],
+      [2, "Cơ chế", "Cơ chế tác dụng (kháng khuẩn, quang xúc tác) được đề xuất thế nào? Bằng chứng nào cho thấy đó đúng là cơ chế, không chỉ là giả thuyết?"],
+      [3, "Vật liệu", "Hiệu ứng hiệp lực khi chuyển từ hệ đơn sang hệ ghép là gì? Có so sánh nhiều tỉ lệ ghép và hệ đơn trong cùng điều kiện để thấy mức tăng (ví dụ hiệu suất chuyển hóa) không?"],
+      [3, "Hiệu năng", "Hoạt tính được so với chất chuẩn hoặc đối chứng dương nào? Phép thử kháng khuẩn dùng chủng nào, nồng độ nào, lặp lại mấy lần?"],
+    ] },
+  { id: "biochar", name: "Vật liệu carbon / xây dựng / cố định CO2",
+    re: /biochar|carbon sequestration|CO2 (capture|sequestration|uptake|fixation)|carbonation|compressive strength|water absorption|\bmortar\b|concrete|\bcement\b/i,
+    qs: [
+      [2, "Vật liệu", "Mối liên hệ hệ thống giữa thành phần (hàm lượng carbon), cấu trúc (độ rỗng, vi cấu trúc, pha) và tính chất cơ - lý (độ hút nước, cường độ chịu lực) được khảo sát thế nào?"],
+      [3, "Hiệu năng", "Khả năng cố định hoặc giảm thiểu CO2 được định lượng bằng phương pháp nào, và có tính tới lượng CO2 phát sinh khi chế tạo (cân bằng carbon) không?"],
+      [3, "Hiệu năng", "Tăng hàm lượng carbon có đánh đổi với cường độ chịu lực hoặc độ bền không? Điểm cân bằng nằm ở đâu?"],
+    ] },
+  { id: "oil", name: "Hấp phụ dầu / vật liệu kị nước",
+    re: /oil (adsorption|sorption|absorption|spill)|sorbents?|oleophilic|hydrophobic/i,
+    qs: [
+      [1, "Hiệu năng", "Dung lượng hấp phụ dầu tính thế nào (g dầu trên g vật liệu), và khác gì khả năng giữ dầu sau khi lọc nước?"],
+      [2, "Hiệu năng", "Tính kị nước và ưa dầu của bề mặt do nhóm chức nào quyết định? Góc tiếp xúc nước đo được bao nhiêu?"],
+      [3, "Hiệu năng", "Tái sử dụng bằng cách ép, rửa hay đốt? Dung lượng giảm bao nhiêu sau mỗi chu kỳ, và độ bền cơ học khi ngâm lâu thế nào?"],
+    ] },
+  { id: "surfact", name: "Chất hoạt động bề mặt / chất định hướng",
+    re: /surfactants?|\bCTAB\b|\bSDS\b|\bPVP\b|Tween|capping agents?/i,
+    qs: [
+      [2, "Vật liệu", "Chất này đóng vai trò chất hoạt động bề mặt (surfactant) hay là hợp chất có nhóm chức tham gia phản ứng? Hai vai trò khác nhau thế nào trong hệ rắn hoặc lỏng?"],
+      [3, "Tổng hợp", "Chất hoạt động bề mặt hay chất định hướng có còn dư trên vật liệu không? Loại bỏ thế nào và có ảnh hưởng tới hoạt tính bề mặt không?"],
     ] },
 ];
 
@@ -3562,6 +3618,21 @@ const RBK_GENERIC = [
   [3, "Ứng dụng", "Từ kết quả phòng thí nghiệm đến ứng dụng thực: chi phí, độ bền, an toàn, nguồn nguyên liệu là những rào cản nào?"],
   [3, "Hướng mở", "Nếu có thêm 6 tháng và kinh phí, bạn sẽ làm thí nghiệm nào tiếp theo để củng cố hoặc bác bỏ kết luận?"],
   [3, "Đạo đức", "Nguồn tài trợ, xung đột lợi ích và việc loại bỏ dữ liệu (outlier) có được nêu rõ không?"],
+  [1, "Mục tiêu", "Mục tiêu tổng quát và các mục tiêu cụ thể là gì? Mục tiêu cụ thể có phải là các bước mắt xích để hoàn thành mục tiêu tổng quát không?"],
+  [2, "Mục tiêu", "Đâu là mục tiêu nghiên cứu và đâu chỉ là hành động, nhiệm vụ cụ thể? Hai thứ này có đang bị lẫn không?"],
+  [2, "Biến", "Biến độc lập chính, biến phụ thuộc và các biến cần kiểm soát trong thực nghiệm là gì?"],
+  [2, "Tính mới", "Khoảng trống nghiên cứu (research gap) là gì? Điểm mới khoa học khác thế nào với giải pháp chỉ hiếm hoặc khó triển khai?"],
+  [2, "Tính mới", "Luận cứ khoa học nào cho thấy hướng nghiên cứu này có khả năng thành công và tránh được rủi ro thất bại?"],
+  [2, "Văn phong", "Mọi ký hiệu và từ viết tắt đã được định nghĩa ở lần xuất hiện đầu tiên chưa?"],
+  [2, "Văn phong", "Có chỗ nào tuyên bố trước xu hướng của dữ liệu, hoặc dùng khẳng định tuyệt đối khi chưa có bằng chứng, không?"],
+  [1, "Văn phong", "Vật liệu hoặc sản phẩm mới được đặt tên theo nguyên tắc danh pháp nào? Có đặt tên tùy ý không?"],
+  [1, "Trình bày", "Slide dùng mẫu chuẩn khoa học (PowerPoint, Beamer), hình có nguồn, ký hiệu và đơn vị thống nhất chưa?"],
+  [2, "Kết quả dự kiến", "Kết quả dự kiến được xây dựng từ luận cứ khoa học, mô hình lý thuyết hay công bố tiền đề nào?"],
+  [2, "Phương pháp", "Quá trình diễn ra ở pha nào (pha rắn hay pha lỏng)? Điều đó ảnh hưởng thế nào tới cơ chế và điều kiện phản ứng?"],
+  [2, "Số liệu", "Dữ liệu thực nghiệm đã có đến thời điểm hiện tại là gì? Điều kiện hoặc mẫu nào cho kết quả tốt nhất cho tới nay?"],
+  [2, "Dự toán", "Kế hoạch kinh phí và sản phẩm đầu ra dự kiến là gì? Hạng mục nào tốn nhất và vì sao cần?"],
+  [3, "Ứng dụng", "Liều lượng hoặc lượng dùng một lần của sản phẩm được ước lượng dựa trên cơ sở khoa học hay thực tiễn nào?"],
+  [3, "Phạm vi", "Phần nào là đóng góp riêng của bạn, phần nào do người hướng dẫn hỗ trợ? Nếu có hai đề tài song song, ranh giới giữa chúng là gì?"],
 ];
 
 const RBK_SECTION_DEFS = [
@@ -3690,7 +3761,9 @@ function rbkAnalyze(text) {
     return { r, hits: hits.slice(0, 2) };
   });
   return { title: firstLine.length <= 220 ? firstLine : firstLine.slice(0, 200) + "...", doi: doiM ? doiM[0].replace(/[.)\]]+$/, "") : "",
-    words: rbkWords(t), sec, techs, topics, abb, solvents, metals, numClaims, roles };
+    words: rbkWords(t), sec, techs, topics, abb, solvents, metals, numClaims, roles,
+    noveltyClaims: Array.from(new Set((t.match(/\b(for the first time|first[- ](report|time|ever|study)|world['’]?s first|unprecedented|never (been )?reported|first-ever)\b/gi) || []).map((x) => x.toLowerCase()))).slice(0, 3),
+    expected: /expected (results?|outcomes?|to (increase|decrease|improve|enhance|reduce))|we (expect|anticipate)|is anticipated|kết quả dự kiến/i.test(t) };
 }
 
 function rbkBuildPool(a) {
@@ -3706,6 +3779,8 @@ function rbkBuildPool(a) {
   Object.keys(a.abb.defs).slice(0, 6).forEach((ab) => add(1, "Viết tắt", "\"" + ab + "\" là viết tắt của \"" + a.abb.defs[ab] + "\". Hãy giải thích khái niệm này bằng lời của bạn và vai trò của nó trong bài.", "dyn"));
   a.abb.undef.slice(0, 4).forEach((ab) => add(1, "Viết tắt", "Bài dùng \"" + ab + "\" mà không giải thích. Nó là gì? Hãy tra và nêu nghĩa đầy đủ cùng ý nghĩa trong bài.", "dyn"));
   a.numClaims.forEach((n) => add(2, "Số liệu", "Con số \"" + n + "\" được đo bằng phương pháp nào, trên bao nhiêu mẫu, và so với mẫu đối chứng nào?", "dyn"));
+  a.noveltyClaims.forEach((c) => add(2, "Tính mới", "Bài dùng cụm \"" + c + "\". Tổng quan tài liệu của bạn đã đủ toàn diện và có hệ thống để khẳng định điều đó chưa? Nếu chưa, nên diễn đạt lại thế nào cho đúng mức?", "dyn"));
+  if (a.expected) add(2, "Kết quả dự kiến", "Kết quả dự kiến dựa trên luận cứ nào: mô hình lý thuyết, công bố tiền đề uy tín hay dữ liệu sơ bộ của bạn? Bạn có đang giả định trước xu hướng tăng hoặc giảm của dữ liệu không?", "dyn");
   RBK_GENERIC.forEach((q) => add(q[0], q[1], q[2], "gen"));
   return pool;
 }
@@ -3791,7 +3866,114 @@ const RBK_GUIDE_HTML = `
     <li>Khác biệt giữa các mẫu có lớn hơn sai số không?</li>
     <li>Tác giả diễn giải gì từ hình này, và bạn có đồng ý không nếu chỉ nhìn dữ liệu?</li>
   </ul>
+</div>
+<div class="rbk-card">
+  <h4>Danh sách tự kiểm trước khi báo cáo (rút từ buổi báo cáo sinh viên ngày 27/10)</h4>
+  <ul>
+    <li><b>Từ viết tắt và ký hiệu:</b> định nghĩa ở lần xuất hiện đầu tiên.</li>
+    <li><b>Mục tiêu:</b> tách mục tiêu tổng quát và mục tiêu cụ thể (các mắt xích dẫn tới mục tiêu tổng quát); không lẫn mục tiêu với hành động, nhiệm vụ.</li>
+    <li><b>Biến:</b> nêu rõ biến độc lập, biến phụ thuộc và biến cần kiểm soát.</li>
+    <li><b>Khoảng trống và tính mới:</b> nói rõ research gap; điểm mới khoa học khác với giải pháp chỉ "hiếm" hay "khó làm". Chỉ đổi nguyên liệu thì chưa đủ mới nếu chưa rút ra quy luật tổng quát.</li>
+    <li><b>Văn phong:</b> tránh khẳng định tuyệt đối (như "đầu tiên trên thế giới") khi chưa tổng quan tài liệu đầy đủ; không tuyên bố trước xu hướng tăng hay giảm của dữ liệu khi chưa có bằng chứng.</li>
+    <li><b>Kết quả dự kiến:</b> dựa trên luận cứ, mô hình lý thuyết hoặc công bố tiền đề uy tín, kèm trích dẫn.</li>
+    <li><b>Đối chứng và chất chuẩn:</b> so sánh với nguồn khác hoặc mẫu chuẩn; dùng reference standard cho phép định lượng.</li>
+    <li><b>Nguyên liệu và quy trình:</b> chuỗi giá trị, quy mô nguồn nguyên liệu; phân biệt phụ phẩm và phế phẩm; giải thích vì sao chọn dung môi (đơn hay hỗn hợp); chỉ tiêu cho từng dạng sản phẩm; ảnh hưởng của tạp chất (mùi, màu) tới ứng dụng cuối.</li>
+    <li><b>Thuật ngữ vai trò:</b> chất hoạt động bề mặt khác hợp chất có nhóm chức tham gia phản ứng; nói rõ phản ứng ở pha rắn hay lỏng.</li>
+    <li><b>Tối ưu hóa:</b> nêu phương pháp (RSM, Taguchi...) và liệt kê các yếu tố đầu vào.</li>
+    <li><b>Giá trị gia tăng:</b> chứng minh vì sao chế biến từ phụ phẩm hơn dùng nguyên liệu tươi (ví dụ hoạt chất xuất hiện hoặc tăng sau chế biến), kèm cơ sở cho liều dùng.</li>
+    <li><b>Danh pháp:</b> đặt tên vật liệu mới theo quy ước, không đặt tùy ý.</li>
+    <li><b>Dự toán:</b> kinh phí và sản phẩm đầu ra rõ ràng.</li>
+    <li><b>Trình bày:</b> dùng mẫu slide chuẩn khoa học (PowerPoint, Beamer), không dùng công cụ thiết kế tự do; nói rõ phần việc của bạn và phần do người hướng dẫn hỗ trợ.</li>
+  </ul>
 </div>`;
+
+/* ---- Tải file lên: TXT/MD, DOCX (mammoth), PDF có lớp chữ (pdf.js, tự xử lý 2 cột), ảnh (OCR Tesseract) ----
+   File được đọc ngay trên máy người dùng. Thư viện chỉ tải từ jsDelivr khi chọn đúng loại file. */
+const RBK_LIBS = {
+  mammoth: "https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js",
+  pdfjs: "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js",
+  pdfWorker: "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js",
+  tesseract: "https://cdn.jsdelivr.net/npm/tesseract.js@5.0.5/dist/tesseract.min.js",
+};
+const rbkScriptCache = {};
+function rbkLoadScript(url) {
+  if (!rbkScriptCache[url]) {
+    rbkScriptCache[url] = new Promise((res, rej) => {
+      const el = document.createElement("script");
+      el.src = url; el.onload = () => res();
+      el.onerror = () => { delete rbkScriptCache[url]; rej(new Error("Không tải được thư viện đọc file, hãy kiểm tra kết nối mạng.")); };
+      document.head.appendChild(el);
+    });
+  }
+  return rbkScriptCache[url];
+}
+function rbkReadFile(file, mode) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = () => rej(new Error("Không đọc được file."));
+    if (mode === "text") r.readAsText(file); else r.readAsArrayBuffer(file);
+  });
+}
+async function rbkReadDocx(file) {
+  await rbkLoadScript(RBK_LIBS.mammoth);
+  const r = await window.mammoth.extractRawText({ arrayBuffer: await rbkReadFile(file, "buf") });
+  return r.value;
+}
+function rbkPdfPageText(items, W) {
+  const it = items.filter((i) => i.str && i.str.trim()).map((i) => ({ s: i.str, x: i.transform[4], y: i.transform[5], w: i.width || 0 }));
+  if (!it.length) return "";
+  const mid = W / 2;
+  const left = it.filter((i) => i.x + i.w <= mid + 4).length;
+  const right = it.filter((i) => i.x >= mid - 4).length;
+  const isCross = (i) => i.x < mid - 12 && i.x + i.w > mid + 12;
+  const cross = it.filter(isCross).length;
+  const twoCol = left >= 15 && right >= 15 && cross / it.length < 0.2;
+  const toLines = (arr) => {
+    const sorted = arr.slice().sort((a, b) => b.y - a.y || a.x - b.x);
+    const lines = []; let cur = null;
+    sorted.forEach((i) => {
+      if (cur && Math.abs(cur.y - i.y) < 4) cur.parts.push(i);
+      else { cur = { y: i.y, parts: [i] }; lines.push(cur); }
+    });
+    return lines.map((l) => l.parts.sort((a, b) => a.x - b.x).map((p) => p.s).join(" ").replace(/\s+/g, " ").trim()).filter(Boolean);
+  };
+  if (!twoCol) return toLines(it).join("\n");
+  const sorted = it.slice().sort((a, b) => b.y - a.y);
+  const out = []; let L = [], R = [], X = [];
+  const flushCols = () => { out.push(...toLines(L), ...toLines(R)); L = []; R = []; };
+  const flushCross = () => { if (X.length) { out.push(...toLines(X)); X = []; } };
+  sorted.forEach((i) => {
+    if (isCross(i)) { if (L.length || R.length) flushCols(); X.push(i); }
+    else { flushCross(); (i.x + i.w / 2 < mid ? L : R).push(i); }
+  });
+  flushCols(); flushCross();
+  return out.join("\n");
+}
+async function rbkReadPdf(file, onProg) {
+  await rbkLoadScript(RBK_LIBS.pdfjs);
+  const lib = window.pdfjsLib;
+  lib.GlobalWorkerOptions.workerSrc = RBK_LIBS.pdfWorker;
+  const pdf = await lib.getDocument({ data: await rbkReadFile(file, "buf") }).promise;
+  const max = Math.min(pdf.numPages, 60);
+  const pages = [];
+  for (let p = 1; p <= max; p++) {
+    if (onProg) onProg("Đang đọc PDF, trang " + p + "/" + max + "...");
+    const page = await pdf.getPage(p);
+    const vp = page.getViewport({ scale: 1 });
+    const tc = await page.getTextContent();
+    pages.push(rbkPdfPageText(tc.items, vp.width));
+  }
+  const text = pages.join("\n\n").replace(/([a-z])-\n([a-z])/g, "$1$2");
+  return { text, truncated: pdf.numPages > max, total: pdf.numPages };
+}
+async function rbkReadImage(file, onProg) {
+  await rbkLoadScript(RBK_LIBS.tesseract);
+  const r = await window.Tesseract.recognize(file, "eng+vie", {
+    logger: (m) => { if (onProg && m.status) onProg("OCR: " + m.status + (typeof m.progress === "number" ? " " + Math.round(m.progress * 100) + "%" : "")); },
+  });
+  return r.data.text;
+}
 
 function renderReadingGuide() {
   return `
@@ -3804,6 +3986,13 @@ function renderReadingGuide() {
     <div id="rbkLab" style="display:none;">
       <p class="ctdt-meta">Dán nội dung bài báo (toàn văn hoặc chỉ Abstract + Introduction + Conclusion) vào ô bên dưới. Hệ thống nhận diện các phần, thuật ngữ, phương pháp phân tích, rồi giả lập hội đồng hỏi bạn. <b>Câu hỏi không kèm đáp án</b>, bạn tự tra cứu và tự trả lời. Mọi thứ chạy ngay trên trình duyệt, bài của bạn không được gửi đi đâu và không lưu lại.</p>
       <textarea id="rbkInput" class="rbk-input" rows="12" placeholder="Dán bài báo vào đây (tiếng Anh hoặc tiếng Việt)..."></textarea>
+      <div class="rbk-row">
+        <label class="pomo-btn pomo-btn-secondary" style="cursor:pointer;">Tải file lên (TXT, DOCX, PDF, ảnh)
+          <input type="file" id="rbkFile" accept=".txt,.md,.docx,.pdf,.png,.jpg,.jpeg,.webp,.bmp" multiple style="display:none;">
+        </label>
+        <span id="rbkFileStatus" class="rbk-prog"></span>
+      </div>
+      <p class="tkb-note">File được đọc ngay trên máy bạn, không gửi lên máy chủ nào; chữ đọc được sẽ thêm vào cuối ô bên trên để bạn xem lại và sửa trước khi phân tích. Lần đầu chọn mỗi loại file, trình duyệt tải thêm một thư viện đọc file. PDF 2 cột được tự xếp lại cột trái rồi cột phải (có thể sai ở bố cục phức tạp). PDF scan và ảnh dùng OCR, dễ sai công thức, chỉ số dưới và dấu tiếng Việt, nên hãy đọc lại. File .doc cũ hãy lưu thành .docx.</p>
       <div class="rbk-row">
         <label>Số câu hỏi:
           <select id="rbkCount"><option value="20">20</option><option value="30" selected>30</option><option value="40">40</option><option value="50">50</option></select>
@@ -3909,6 +4098,40 @@ function initReadingGuide() {
       <div id="rbkQBox"></div>`;
     renderQuestions();
   }
+
+  const fileInput = document.getElementById("rbkFile");
+  const fileStatus = document.getElementById("rbkFileStatus");
+  fileInput.addEventListener("change", async () => {
+    const files = Array.from(fileInput.files || []);
+    if (!files.length) return;
+    const parts = [], notes = [];
+    const say = (m) => { fileStatus.textContent = m; };
+    for (const f of files) {
+      const name = f.name.toLowerCase();
+      try {
+        say("Đang đọc " + f.name + "...");
+        let txt = "";
+        if (/\.(txt|md)$/.test(name)) txt = await rbkReadFile(f, "text");
+        else if (name.endsWith(".docx")) txt = await rbkReadDocx(f);
+        else if (name.endsWith(".pdf")) {
+          const r = await rbkReadPdf(f, say);
+          txt = r.text;
+          if (r.truncated) notes.push(f.name + ": mới đọc 60/" + r.total + " trang đầu.");
+          if (txt.replace(/\s/g, "").length < 100) {
+            txt = "";
+            notes.push(f.name + ": PDF gần như không có lớp chữ (có thể là bản scan). Hãy chụp từng trang thành ảnh rồi tải ảnh lên để dùng OCR.");
+          }
+        } else if (/\.(png|jpe?g|webp|bmp)$/.test(name)) {
+          txt = await rbkReadImage(f, say);
+          notes.push(f.name + ": đã dùng OCR, hãy đọc lại công thức, chỉ số dưới và dấu tiếng Việt.");
+        } else notes.push(f.name + ": định dạng chưa hỗ trợ (nhận TXT, MD, DOCX, PDF, ảnh PNG/JPG).");
+        if (txt.trim()) parts.push(txt.trim());
+      } catch (e) { notes.push(f.name + ": " + (e && e.message ? e.message : "lỗi không xác định")); }
+    }
+    if (parts.length) input.value = (input.value.trim() ? input.value.trim() + "\n\n" : "") + parts.join("\n\n");
+    say((parts.length ? "Đã thêm " + parts.length + " file vào ô nhập. " : "") + notes.join(" "));
+    fileInput.value = "";
+  });
 
   document.getElementById("rbkGo").addEventListener("click", () => {
     const txt = input.value.trim();
