@@ -793,6 +793,22 @@ table.tkb tbody tr:nth-child(even) td { background: #f7fbff; }
 .rbk-qs label { cursor: pointer; }
 .rbk-cat { display: inline-block; background: #eef2f7; color: #3a5a80; border-radius: 6px; padding: 0 7px; font-size: 12px; margin-right: 4px; }
 .rbk-done { opacity: 0.5; text-decoration: line-through; }
+
+.rbk-drop { border: 2px dashed #9fb8d4; border-radius: 12px; padding: 22px; text-align: center; color: #5b7590; font-size: 14px; background: #f8fbff; margin: 10px 0; outline: none; }
+.rbk-drop:focus { border-color: #0b3d91; background: #eef6ff; }
+.rbk-link { color: #0b3d91; text-decoration: underline; cursor: pointer; font-weight: 600; }
+.rbk-imgs { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0; }
+.rbk-img { max-width: 240px; max-height: 200px; border: 1px solid #cfe4f5; border-radius: 8px; cursor: zoom-in; background: #fff; }
+.rbk-img-big { max-width: 100%; max-height: none; cursor: zoom-out; }
+
+/* ===== Ngăn Liêm Chính Học Thuật ===== */
+.lc-text { white-space: pre-wrap; background: #fff; border: 1px solid #dbe6f2; border-radius: 10px; padding: 12px 14px; max-height: 420px; overflow: auto; font-size: 14px; line-height: 1.7; }
+.lc-hl { background: #ffe08a; border-radius: 3px; padding: 0 1px; }
+.lc-tag { display: inline-block; border-radius: 999px; padding: 2px 10px; font-size: 12px; margin: 2px 4px 2px 0; border: 1px solid; }
+.lc-ok { background: #e8f6ee; color: #1e7a45; border-color: #bfe3cd; }
+.lc-warn { background: #fff6e0; color: #8a5a00; border-color: #f0dca0; }
+.lc-bad { background: #fdeaea; color: #a32a1f; border-color: #f2c4bf; }
+.lc-info { background: #eef2f7; color: #3a5a80; border-color: #d3dde9; }
 </style>
 </head>
 <body>
@@ -3633,6 +3649,8 @@ const RBK_GENERIC = [
   [2, "Dự toán", "Kế hoạch kinh phí và sản phẩm đầu ra dự kiến là gì? Hạng mục nào tốn nhất và vì sao cần?"],
   [3, "Ứng dụng", "Liều lượng hoặc lượng dùng một lần của sản phẩm được ước lượng dựa trên cơ sở khoa học hay thực tiễn nào?"],
   [3, "Phạm vi", "Phần nào là đóng góp riêng của bạn, phần nào do người hướng dẫn hỗ trợ? Nếu có hai đề tài song song, ranh giới giữa chúng là gì?"],
+  [1, "Đọc hình", "Hãy đọc to chú thích, trục x, trục y và đơn vị của hình quan trọng nhất trong bài, chưa nhìn kết luận của tác giả."],
+  [2, "Đọc hình", "Chỉ nhìn dữ liệu của hình chính (che phần diễn giải), bạn có rút ra cùng kết luận với tác giả không?"],
 ];
 
 const RBK_SECTION_DEFS = [
@@ -3773,6 +3791,10 @@ function rbkBuildPool(a) {
   a.techs.forEach((tc) => {
     add(1, "Phân tích", tc.k + " trong bài này nhằm chứng minh điều gì? Bạn giải thích được nguyên lý đo của nó trong 2 câu không, và nếu bỏ " + tc.k + " thì kết luận nào yếu đi?", "tech");
     if (tc.q) add(tc.q[0], tc.q[1], tc.q[2], "tech");
+  });
+  a.techs.forEach((tc) => {
+    const fid = RBK_TECH_FIG[tc.k]; const fg = fid && RBK_FIGS.find((x) => x.id === fid);
+    if (fg) { const q = fg.qs[Math.floor(Math.random() * fg.qs.length)]; add(q[0], "Đọc hình", "Về hình " + tc.k + " trong bài: " + q[1], "tech"); }
   });
   a.solvents.forEach((s) => add(2, "Dung môi", "Bài dùng " + s + ": vì sao chọn dung môi này (độ phân cực, nhiệt độ sôi, độ hòa tan tiền chất)? Có thể thay bằng dung môi xanh hơn không, và hiệu năng thay đổi ra sao?", "dyn"));
   if (a.metals.length >= 3) add(2, "Vật liệu", "Bài có nhiều kim loại (" + a.metals.slice(0, 6).join(", ") + "). Đây là hệ đa kim thông thường hay entropy cao? Tỉ lệ thực đo (ICP, EDS) có khớp tỉ lệ nạp không?", "dyn");
@@ -3975,12 +3997,252 @@ async function rbkReadImage(file, onProg) {
   return r.data.text;
 }
 
+/* ---------------- ĐỌC HÌNH ẢNH VÀ BIỂU ĐỒ ----------------
+   Hệ thống KHÔNG tự hiểu nội dung ảnh. Nó hiện ảnh cạnh hướng dẫn đọc và bộ câu hỏi riêng cho từng loại hình.
+   Muốn thêm loại hình: thêm 1 object vào RBK_FIGS. re = nhận diện loại hình từ chú thích (caption). */
+const RBK_FIG_GENERAL = [
+  "Đọc chú thích (caption) trước, chưa nhìn dữ liệu. Hình này định chứng minh điều gì?",
+  "Trục x và trục y là gì, đơn vị gì, thang tuyến tính hay log, có cắt trục không?",
+  "Có mẫu đối chứng (blank, control, mẫu chưa xử lý) trên cùng hình không?",
+  "Có thanh sai số không? Là độ lệch chuẩn hay sai số chuẩn? Lặp lại mấy lần?",
+  "Các mẫu có vẽ cùng thang, cùng điều kiện đo để so sánh được không?",
+  "Che phần diễn giải của tác giả đi: chỉ nhìn dữ liệu, bạn rút ra điều gì? Sau đó mới so với tác giả.",
+  "Tác giả có chọn đại diện đẹp nhất không? Hình có đủ số mẫu hoặc số lần đo để tin không?",
+];
+
+const RBK_TECH_FIG = { "XRD": "xrd", "SEM": "sem", "TEM": "tem", "EDS/EDX": "mapping", "XPS": "xps", "FTIR": "ftir", "Raman": "ftir",
+  "BET / hấp phụ N2": "bet", "TGA": "tga", "DSC": "tga", "UV-Vis / DRS": "uvvis", "Điện hóa (CV/LSV/EIS)": "ec" };
+
+const RBK_FIGS = [
+  { id: "xrd", name: "Giản đồ nhiễu xạ tia X (XRD)", re: /2\s?θ|2\s?theta|\bXRD\b|diffraction pattern|JCPDS|ICDD/i,
+    what: "Cho biết vật liệu có những pha tinh thể nào, kết tinh tốt đến đâu.",
+    see: ["Trục x là góc 2θ (độ), trục y là cường độ (đơn vị tùy ý, không so sánh tuyệt đối giữa các mẫu).",
+      "So vị trí các pic với thẻ chuẩn (JCPDS/ICDD) để xác định pha. Có gán chỉ số (hkl) không?",
+      "Pic nhọn và hẹp thường là tinh thể lớn, kết tinh tốt. Pic rộng và thấp là tinh thể rất nhỏ hoặc kết tinh kém. Nền gồ rộng gợi ý pha vô định hình.",
+      "Pic dịch chuyển giữa các mẫu gợi ý thay đổi thông số mạng (pha tạp, ứng suất). Pic lạ gợi ý pha tạp chất.",
+      "Các mẫu có chồng hoặc xếp lệch (offset) trên cùng thang không?"],
+    trap: ["Kích thước tinh thể tính bằng công thức Scherrer không phải kích thước hạt, và cần trừ độ rộng thiết bị.",
+      "Pic nhỏ dễ lẫn với nhiễu; khẳng định có pha phụ cần dữ liệu đủ rõ.",
+      "Gán (hkl) hoặc gán pha chỉ dựa vào vài pic là chưa chắc chắn."],
+    qs: [[1, "Trục x, trục y là gì và đơn vị là gì? Các pic chính nằm ở góc 2θ nào?"], [1, "Các pic ứng với pha nào trong thẻ chuẩn? Thẻ số mấy?"],
+      [2, "Có pic lạ không? Nếu có thì thuộc pha nào và ở mẫu nào?"], [2, "Pic dịch chuyển hoặc mở rộng giữa các mẫu cho biết điều gì về cấu trúc?"],
+      [3, "Kích thước tinh thể tính từ Scherrer có hiệu chỉnh độ rộng thiết bị không, và có khớp với TEM không?"],
+      [3, "Nền gồ rộng có cho thấy pha vô định hình không? Tỉ lệ pha tinh thể là bao nhiêu và tính thế nào?"]] },
+  { id: "sem", name: "Ảnh hiển vi điện tử quét (SEM)", re: /\bSEM\b|scanning electron/i,
+    what: "Cho thấy hình thái bề mặt, kích thước và độ đồng đều của hạt ở thang vi mô.",
+    see: ["Đọc thanh tỉ lệ (scale bar) và độ phóng đại trước, rồi mới nhận xét kích thước.",
+      "Hình thái: hạt, tấm, thanh, xốp, khối; có đồng đều không, có kết tụ không?",
+      "Có nhiều ảnh ở các độ phóng đại và các vùng khác nhau không, hay chỉ một ảnh?",
+      "So với mẫu đối chứng hoặc mẫu trước xử lý, hình thái thay đổi thế nào?"],
+    trap: ["Ảnh đẹp có thể là vùng chọn lọc, chưa đại diện cho cả mẫu.",
+      "Kích thước đo bằng mắt không bằng thống kê từ nhiều hạt (histogram, số hạt đếm).",
+      "SEM không kết luận được pha hay thành phần, chỉ gợi ý hình thái."],
+    qs: [[1, "Thanh tỉ lệ bao nhiêu? Kích thước hạt trong ảnh khoảng bao nhiêu?"], [2, "Ảnh này đại diện cho toàn mẫu hay chỉ một vùng? Có thống kê kích thước từ bao nhiêu hạt?"],
+      [2, "Hình thái khác gì so với mẫu đối chứng, và vì sao quy trình lại gây ra khác biệt đó?"], [3, "Hình thái này liên hệ thế nào với diện tích bề mặt (BET) và hiệu năng đo được?"]] },
+  { id: "tem", name: "Ảnh TEM, HRTEM, SAED", re: /\bTEM\b|HRTEM|\bSAED\b|\bSTEM\b|lattice fringes?/i,
+    what: "Cho thấy hình dạng và kích thước hạt nano, mặt mạng tinh thể và kiểu nhiễu xạ điện tử.",
+    see: ["Thanh tỉ lệ và độ phóng đại; có histogram phân bố kích thước không, đếm bao nhiêu hạt?",
+      "HRTEM: khoảng cách giữa các vân mạng (d) đo bằng FFT hoặc profile; ứng với mặt (hkl) nào?",
+      "SAED: vòng liên tục là đa tinh thể, các điểm sáng riêng là đơn tinh thể, vòng mờ là vô định hình.",
+      "Các giá trị d và vòng SAED có khớp với XRD không?"],
+    trap: ["Đếm ít hạt hoặc hạt chồng nhau làm sai kích thước trung bình.",
+      "Chùm điện tử có thể làm hư hoặc biến đổi mẫu.", "Một vùng HRTEM đẹp không chứng minh toàn mẫu cùng pha."],
+    qs: [[1, "Kích thước hạt trung bình và độ lệch là bao nhiêu, đếm trên bao nhiêu hạt?"], [2, "Khoảng cách mặt mạng d đo được ứng với mặt (hkl) nào, và khớp XRD không?"],
+      [2, "Vòng hay điểm nhiễu xạ SAED cho biết mẫu đơn tinh thể, đa tinh thể hay vô định hình?"], [3, "Mẫu có bị hư do chùm điện tử không, và làm sao biết cấu trúc thấy được là cấu trúc thật?"]] },
+  { id: "mapping", name: "Bản đồ nguyên tố (EDS mapping) và HAADF-STEM", re: /mapping|\bEDS\b|\bEDX\b|HAADF|elemental distribution|line ?scan/i,
+    what: "Cho biết các nguyên tố nằm ở đâu và có phân bố đồng đều không.",
+    see: ["Mỗi màu ứng với nguyên tố nào; ảnh nền là gì?", "Các nguyên tố chồng khít nhau (đồng nhất) hay tách thành vùng riêng?",
+      "Có bảng hàm lượng nguyên tố (at% hoặc wt%) kèm theo không, và có khớp tỉ lệ nạp không?", "Mapping ở thang nào (vi mô hay nano)?"],
+    trap: ["Mapping đồng đều ở thang vi mô chưa chứng minh trộn đồng nhất ở thang nguyên tử.",
+      "EDS bán định lượng, sai số lớn với nguyên tố nhẹ; đỉnh của các nguyên tố có thể chồng nhau.", "Tín hiệu có thể đến từ lưới đỡ hoặc đế mẫu."],
+    qs: [[1, "Mỗi màu là nguyên tố nào? Phân bố có đồng đều không?"], [2, "Tỉ lệ nguyên tố đo được có khớp tỉ lệ nạp ban đầu không? Nếu lệch thì vì sao?"],
+      [3, "Mapping này đủ chứng minh trộn đồng nhất ở thang nguyên tử không, hay cần HAADF-STEM, XAS?"]] },
+  { id: "bet", name: "Đường đẳng nhiệt hấp phụ N2 (BET, BJH)", re: /P\s?\/\s?P0|isotherm|N2 (adsorption|physisorption)|\bBET\b|\bBJH\b|pore size distribution/i,
+    what: "Cho biết diện tích bề mặt riêng, thể tích lỗ và kiểu cấu trúc xốp.",
+    see: ["Trục x là P/P0 (áp suất tương đối), trục y là lượng hấp phụ (thường cm³/g STP).",
+      "Dạng đường: loại I (hấp phụ mạnh ở P/P0 thấp) gợi ý vi xốp; loại IV có vòng trễ gợi ý trung xốp; hình dạng vòng trễ (H1 đến H4) gợi ý dạng lỗ.",
+      "Nhánh hấp phụ và nhánh giải hấp có khép kín không?", "Phân bố kích thước lỗ tính bằng phương pháp nào (BJH, DFT)?",
+      "Diện tích BET tính trong khoảng P/P0 nào?"],
+    trap: ["Tính BET cho vật liệu vi xốp (như MOF) cần chọn khoảng P/P0 theo tiêu chí Rouquerol, nếu không số có thể sai nhiều.",
+      "BJH không tốt cho lỗ rất nhỏ (vi lỗ); cần DFT.", "Vòng trễ không khép ở áp suất thấp có thể do trương nở hoặc hấp phụ không thuận nghịch."],
+    qs: [[1, "Đường đẳng nhiệt thuộc loại nào? Diện tích BET là bao nhiêu, đơn vị gì?"], [2, "Hình dạng vòng trễ cho biết gì về dạng lỗ?"],
+      [2, "Khoảng P/P0 để tính BET được chọn thế nào? Có kiểm tra tiêu chí Rouquerol không?"], [3, "Phân bố kích thước lỗ tính bằng phương pháp nào, vì sao phù hợp với kích thước lỗ của vật liệu này?"]] },
+  { id: "ftir", name: "Phổ FTIR / Raman", re: /FT-?IR|infrared|wavenumber|cm-1|cm⁻¹|\bRaman\b/i,
+    what: "Cho biết nhóm chức và liên kết hóa học có trong vật liệu.",
+    see: ["Trục x là số sóng (cm⁻¹), thường đảo chiều (lớn ở bên trái); trục y là độ truyền qua hoặc độ hấp thụ.",
+      "Gán dải theo nhóm chức: O-H khoảng 3200 đến 3600, C=O khoảng 1650 đến 1750, các dải của khung vô cơ ở số sóng thấp.",
+      "So mẫu trước và sau xử lý: dải nào mất đi, xuất hiện mới, hoặc dịch chuyển?",
+      "Raman: tỉ lệ cường độ hai dải D và G của carbon cho biết mức độ trật tự."],
+    trap: ["Nước hấp phụ làm xuất hiện dải rộng khoảng 3400 và 1630, dễ nhầm với nhóm chức của vật liệu.",
+      "Gán dải chỉ mang tính gợi ý nếu không có mẫu chuẩn đối chiếu.", "Thang y có chuẩn hóa không, các phổ có xếp lệch không?"],
+    qs: [[1, "Dải nào ứng với nhóm chức nào? Ghi rõ số sóng."], [2, "Sau xử lý có dải nào mất, xuất hiện hoặc dịch chuyển, và điều đó cho biết quá trình hóa học nào xảy ra?"],
+      [3, "Dải ở khoảng 3400 có thể là nước hấp phụ không? Làm sao phân biệt với nhóm O-H của vật liệu?"]] },
+  { id: "xps", name: "Phổ XPS", re: /\bXPS\b|binding energy|photoelectron/i,
+    what: "Cho biết nguyên tố và trạng thái oxi hóa ở bề mặt (vài nm đầu).",
+    see: ["Trục x là năng lượng liên kết (eV). Phổ khảo sát cho biết có nguyên tố nào, phổ độ phân giải cao cho trạng thái hóa học.",
+      "Phổ đã hiệu chỉnh theo C 1s (khoảng 284,8 eV) chưa?", "Đỉnh được tách thành các thành phần nào; vị trí mỗi thành phần ứng với trạng thái nào?",
+      "Dịch chuyển đỉnh giữa các mẫu nói lên thay đổi môi trường hóa học nào?"],
+    trap: ["XPS chỉ phản ánh bề mặt, có thể khác thành phần bên trong.", "Tách đỉnh có thể tùy ý nếu thêm nhiều thành phần; cần ràng buộc hợp lý (độ rộng, tách spin-quỹ đạo).",
+      "Tích điện bề mặt có thể làm dịch cả phổ."],
+    qs: [[1, "Phổ có những nguyên tố nào? Đã hiệu chỉnh năng lượng liên kết theo gì?"], [2, "Mỗi thành phần tách đỉnh ứng với trạng thái oxi hóa nào, và dựa vào tài liệu nào?"],
+      [3, "XPS chỉ nhìn bề mặt: kết luận về trạng thái oxi hóa có áp dụng cho toàn vật liệu không?"]] },
+  { id: "tga", name: "Đường TGA / DSC", re: /\bTGA\b|thermogravimetric|\bDSC\b|weight loss|mass loss|\bDTG\b/i,
+    what: "Cho biết độ bền nhiệt, lượng dung môi hoặc chất hữu cơ, phần còn lại sau nung.",
+    see: ["Trục x là nhiệt độ, trục y là phần trăm khối lượng; đường DTG (đạo hàm) có đỉnh tại nhiệt độ mất khối lượng nhanh nhất.",
+      "Mỗi bậc mất khối lượng ứng với quá trình nào (mất nước, mất dung môi, phân hủy chất hữu cơ)?", "Phần còn lại cuối cùng là gì (thường là oxit kim loại)? Có khớp tính toán không?",
+      "Môi trường khí (N₂ hay không khí) và tốc độ gia nhiệt là bao nhiêu?"],
+    trap: ["Các bậc có thể chồng lên nhau, khó tách.", "Dung môi hấp phụ làm sai kết luận về độ bền nhiệt của khung.", "Đổi tốc độ gia nhiệt hay khí sẽ đổi vị trí các bậc."],
+    qs: [[1, "Có mấy bậc mất khối lượng, ở khoảng nhiệt độ nào?"], [2, "Mỗi bậc ứng với quá trình nào, và dựa vào đâu kết luận như vậy?"],
+      [3, "Phần còn lại cuối cùng có khớp với tính toán từ công thức vật liệu không?"]] },
+  { id: "uvvis", name: "Phổ UV-Vis và đồ thị Tauc (band gap)", re: /UV-?vis|absorbance|Tauc|band ?gap|αhν|\(αhν\)|diffuse reflectance|Kubelka/i,
+    what: "Cho biết vùng ánh sáng vật liệu hấp thụ và năng lượng vùng cấm (band gap).",
+    see: ["Phổ hấp thụ: bước sóng của cực đại và của bờ hấp thụ.", "Đồ thị Tauc: trục y là (αhν) lũy thừa n, trục x là năng lượng photon hν (eV).",
+      "Band gap lấy từ giao điểm của đường tiếp tuyến với trục hoành.", "n = 2 dùng cho chuyển mức trực tiếp, n = 1/2 cho gián tiếp: tác giả chọn n nào và dựa vào đâu?"],
+    trap: ["Chọn sai n sẽ cho band gap sai.", "Vị trí kẻ tiếp tuyến mang tính chủ quan; hai người có thể ra hai giá trị khác nhau.",
+      "Mẫu bột dùng phản xạ khuếch tán và hàm Kubelka-Munk, không dùng trực tiếp công thức cho dung dịch."],
+    qs: [[1, "Band gap bằng bao nhiêu eV và đọc từ đâu trên đồ thị?"], [2, "Vì sao chọn n này (chuyển mức trực tiếp hay gián tiếp)? Có tài liệu cho vật liệu này không?"],
+      [3, "Vùng kẻ tiếp tuyến được chọn thế nào để kết quả lặp lại được giữa người này và người khác?"]] },
+  { id: "ec", name: "Đường điện hóa (CV, LSV, Tafel) và Nyquist (EIS)", re: /voltammogram|\bCV\b|\bLSV\b|Tafel|overpotential|mA ?cm|vs\.? ?(RHE|SCE|Ag\/AgCl)|Nyquist|impedance|\bEIS\b|Rct/i,
+    what: "Cho biết hoạt tính điện hóa, tốc độ phản ứng và điện trở của hệ.",
+    see: ["Trục x là điện thế: so với điện cực nào (RHE, SCE, Ag/AgCl)? Có quy đổi chưa?", "Trục y là mật độ dòng: chuẩn hóa theo diện tích hình học hay diện tích hoạt động điện hóa?",
+      "Quá thế tại mật độ dòng chuẩn (thường 10 mA cm⁻²) và độ dốc Tafel (mV mỗi decade) là bao nhiêu?",
+      "CV: đỉnh oxi hóa, đỉnh khử, khoảng cách giữa hai đỉnh, ảnh hưởng của tốc độ quét.",
+      "Nyquist: trục Z' và -Z'' (Ω); bán nguyệt là điện trở chuyển điện tích; điểm cắt trục thực ở tần số cao là điện trở dung dịch."],
+    trap: ["Chưa hiệu chỉnh điện trở dung dịch (iR) làm sai quá thế.", "Bong bóng khí và dòng điện dung (lớp kép) có thể làm sai đường cong.",
+      "Mạch tương đương khớp đẹp không chứng minh mô hình vật lý đúng."],
+    qs: [[1, "Điện thế so với điện cực nào? Dòng được chuẩn hóa theo diện tích nào?"], [2, "Quá thế tại 10 mA cm⁻² và độ dốc Tafel là bao nhiêu? So với đối chứng thì thế nào?"],
+      [2, "Đã hiệu chỉnh iR chưa, và ảnh hưởng thế nào tới kết quả?"], [3, "Bán nguyệt Nyquist cho Rct bao nhiêu và mạch tương đương nào được dùng, vì sao?"]] },
+  { id: "kin", name: "Đồ thị hấp phụ: động học và đẳng nhiệt", re: /Langmuir|Freundlich|pseudo-?(first|second)|kinetics?|isotherm model|\bqe\b|\bqm\b|adsorption capacity/i,
+    what: "Cho biết hấp phụ nhanh hay chậm, dung lượng cực đại và mô hình mô tả dữ liệu.",
+    see: ["Điểm thực nghiệm (ký hiệu) so với đường khớp mô hình; điểm có nằm sát đường không?", "Trục y là qe hay qt (mg/g), trục x là thời gian hoặc nồng độ cân bằng Ce.",
+      "Bảng tham số: qm, hằng số k, hệ số R²; so giữa các mô hình.", "Điều kiện: pH, nhiệt độ, lượng chất hấp phụ, nồng độ ban đầu."],
+    trap: ["R² cao không chứng minh cơ chế hấp phụ.", "Tuyến tính hóa phương trình làm méo sai số; nên khớp phi tuyến.", "Ít điểm dữ liệu khiến mô hình nhiều tham số khớp được mọi thứ."],
+    qs: [[1, "qe tính thế nào, đơn vị gì? Nồng độ đầu và lượng chất hấp phụ là bao nhiêu?"], [2, "Mô hình nào khớp tốt hơn và dựa vào tiêu chí nào ngoài R²?"],
+      [3, "Cơ chế hấp phụ được chứng minh bằng dữ liệu nào ngoài việc khớp mô hình?"]] },
+  { id: "bar", name: "Biểu đồ cột hoặc đường có thanh sai số", re: /error bars?|mean ±|standard deviation|\bSD\b|\bn ?= ?\d|bar chart|p ?< ?0\.0\d/i,
+    what: "So sánh hiệu năng giữa các mẫu hoặc điều kiện.",
+    see: ["Đại lượng ở trục y là gì, đơn vị gì; trục có bắt đầu từ 0 không?", "Thanh sai số là SD hay SE? Số lần lặp n là bao nhiêu?",
+      "Hai cột khác nhau có thanh sai số chồng lên nhau không?", "Có ký hiệu ý nghĩa thống kê (dấu sao, chữ cái) không; dùng kiểm định nào?"],
+    trap: ["Trục y bị cắt làm sự khác biệt nhỏ trông rất lớn.", "Không có thanh sai số hoặc n quá nhỏ thì khó tin kết luận.", "So sánh nhiều nhóm mà không hiệu chỉnh kiểm định nhiều lần."],
+    qs: [[1, "Trục y là gì, thang thế nào? Thanh sai số là gì và n bằng bao nhiêu?"], [2, "Khác biệt giữa các cột có lớn hơn sai số không? Có kiểm định thống kê nào?"],
+      [3, "Nếu thang trục bắt đầu từ 0, sự khác biệt còn rõ như vậy không?"]] },
+  { id: "scheme", name: "Sơ đồ quy trình hoặc cơ chế (scheme)", re: /scheme|schematic|illustration of|proposed mechanism|mechanism of/i,
+    what: "Tóm tắt quy trình tổng hợp hoặc cơ chế mà tác giả đề xuất.",
+    see: ["Các bước theo thứ tự, điều kiện ghi trên mũi tên (nhiệt độ, thời gian, dung môi).", "Chất đầu, sản phẩm trung gian và sản phẩm cuối là gì?",
+      "Phần nào đã có bằng chứng thực nghiệm, phần nào chỉ là suy đoán (thường vẽ mũi tên đứt hoặc dấu hỏi)?"],
+    trap: ["Sơ đồ cơ chế là giả thuyết, không tự nó là chứng cứ.", "Sơ đồ đẹp dễ che việc thiếu dữ liệu ở bước then chốt."],
+    qs: [[1, "Hãy kể lại quy trình theo sơ đồ bằng lời của bạn, bước nào quan trọng nhất?"], [2, "Bước nào trong cơ chế đề xuất có bằng chứng thực nghiệm đi kèm, bước nào chưa?"],
+      [3, "Có cơ chế thay thế nào cũng giải thích được dữ liệu không, và thí nghiệm nào sẽ phân biệt?"]] },
+  { id: "other", name: "Hình hoặc biểu đồ khác (chung)", re: null,
+    what: "Áp dụng khung đọc chung bên dưới cho mọi loại hình.",
+    see: ["Xác định loại dữ liệu: ảnh hay đồ thị, đo bằng phương pháp gì.", "Tìm trục, đơn vị, chú giải, thanh tỉ lệ, đối chứng.", "Ghi lại xu hướng chính bằng một câu, trước khi đọc diễn giải của tác giả."],
+    trap: ["Chỉ đọc kết luận mà bỏ qua dữ liệu.", "Hình chọn lọc, thiếu đối chứng hoặc sai số."],
+    qs: [[1, "Hình này thể hiện đại lượng nào theo đại lượng nào?"], [2, "Xu hướng chính trên hình là gì, và có phù hợp với diễn giải của tác giả không?"],
+      [3, "Điều gì trong hình khiến bạn nghi ngờ nhất, và cần thêm dữ liệu gì để yên tâm?"]] },
+];
+
+function rbkFigGuideHtml(id) {
+  const f = RBK_FIGS.find((x) => x.id === id) || RBK_FIGS[RBK_FIGS.length - 1];
+  const ul = (arr) => "<ul>" + arr.map((x) => `<li>${rbkEsc(x)}</li>`).join("") + "</ul>";
+  const lv = [1, 2, 3].map((l) => {
+    const items = f.qs.filter((q) => q[0] === l);
+    return items.length ? `<h4 class="rbk-lv rbk-lv${l}">${RBK_LEVELS[l]}</h4><ol class="rbk-qs">${items.map((q) => `<li>${rbkEsc(q[1])}</li>`).join("")}</ol>` : "";
+  }).join("");
+  return `<div class="rbk-card"><h4>${rbkEsc(f.name)}</h4><p><b>Hình này cho biết:</b> ${rbkEsc(f.what)}</p>
+    <p><b>Nhìn vào đâu (theo thứ tự):</b></p>${ul(f.see)}
+    <p><b>Bẫy hay gặp:</b></p>${ul(f.trap)}</div>
+    <div class="rbk-card"><h4>Câu hỏi hội đồng về loại hình này (tự tra cứu, không có đáp án)</h4>${lv}</div>
+    <div class="rbk-card"><h4>Khung đọc chung cho mọi hình</h4>${ul(RBK_FIG_GENERAL)}</div>
+    <div class="rbk-card"><h4>Ghi chú của bạn</h4><p class="tkb-note">Viết bằng lời của mình, không nhìn diễn giải của tác giả: trục và đơn vị, xu hướng chính, so với đối chứng, kết luận bạn rút ra, điều còn nghi ngờ.</p>
+    <textarea class="rbk-input" rows="5" placeholder="Mình thấy ở hình này..."></textarea></div>`;
+}
+
+/* Khởi tạo tab đọc hình. Trả về { setType } để tab 2 gọi sang. */
+function rbkInitFigTab() {
+  const sel = document.getElementById("rbkFigType");
+  const out = document.getElementById("rbkFigOut");
+  const drop = document.getElementById("rbkDrop");
+  const fileIn = document.getElementById("rbkFigFile");
+  const imgsBox = document.getElementById("rbkImgs");
+  const cap = document.getElementById("rbkCap");
+  const ocrBtn = document.getElementById("rbkOcrFig");
+  const ocrSt = document.getElementById("rbkOcrStatus");
+  if (!sel) return { setType: () => {} };
+  let files = [];
+  sel.innerHTML = RBK_FIGS.map((f) => `<option value="${f.id}">${rbkEsc(f.name)}</option>`).join("");
+  sel.value = "other";
+  const showGuide = () => { out.innerHTML = rbkFigGuideHtml(sel.value); };
+  const setType = (id) => { if (RBK_FIGS.some((f) => f.id === id)) { sel.value = id; showGuide(); } };
+  sel.addEventListener("change", showGuide);
+  showGuide();
+
+  function detect() {
+    const t = cap.value;
+    if (!t.trim()) return;
+    const hit = RBK_FIGS.find((f) => f.re && f.re.test(t));
+    if (hit && sel.value !== hit.id) { sel.value = hit.id; showGuide(); }
+  }
+  cap.addEventListener("input", detect);
+
+  function addImages(list) {
+    const imgs = Array.from(list).filter((f) => f && /^image\//.test(f.type));
+    if (!imgs.length) { ocrSt.textContent = "Không thấy ảnh hợp lệ (nhận PNG, JPG, WEBP)."; return; }
+    imgs.forEach((f) => {
+      files.push(f);
+      const rd = new FileReader();
+      rd.onload = () => {
+        const im = document.createElement("img");
+        im.src = rd.result; im.className = "rbk-img"; im.alt = "Hình từ bài báo";
+        im.addEventListener("click", () => im.classList.toggle("rbk-img-big"));
+        imgsBox.appendChild(im);
+      };
+      rd.readAsDataURL(f);
+    });
+    ocrSt.textContent = "Bấm vào ảnh để phóng to hoặc thu nhỏ.";
+  }
+  fileIn.addEventListener("change", () => { addImages(fileIn.files || []); fileIn.value = ""; });
+  drop.addEventListener("dragover", (e) => { e.preventDefault(); });
+  drop.addEventListener("drop", (e) => { e.preventDefault(); if (e.dataTransfer) addImages(e.dataTransfer.files || []); });
+  drop.addEventListener("paste", (e) => {
+    const items = (e.clipboardData && e.clipboardData.items) || [];
+    const got = [];
+    for (const it of items) if (it.kind === "file" && /^image\//.test(it.type)) got.push(it.getAsFile());
+    if (got.length) { e.preventDefault(); addImages(got); }
+  });
+  document.getElementById("rbkImgClear").addEventListener("click", () => { files = []; imgsBox.innerHTML = ""; ocrSt.textContent = ""; });
+  ocrBtn.addEventListener("click", async () => {
+    if (!files.length) { ocrSt.textContent = "Hãy tải hoặc dán ảnh trước."; return; }
+    try {
+      const txt = await rbkReadImage(files[files.length - 1], (m) => { ocrSt.textContent = m; });
+      cap.value = (cap.value.trim() ? cap.value.trim() + "\n" : "") + txt.trim();
+      ocrSt.textContent = "Đã đọc chữ trên ảnh vào ô chú thích (có thể sai, hãy kiểm tra).";
+      detect();
+    } catch (e) { ocrSt.textContent = e && e.message ? e.message : "Không đọc được chữ trên ảnh."; }
+  });
+  return { setType };
+}
+
+function rbkCopyText(txt, btn, doneLabel) {
+  const ok = () => { if (btn) btn.textContent = doneLabel || "Đã chép"; };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok, () => {});
+  else { const ta = document.createElement("textarea"); ta.value = txt; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); ok(); } catch (e) {} document.body.removeChild(ta); }
+}
+
+function rbkMakePrompt(text) {
+  return "Bạn là hội đồng phản biện khoa học (hóa học, vật liệu). Tôi sắp báo cáo bài báo dưới đây.\n" +
+    "1) Xác định các phần của bài và tóm tắt đúng 5 ý: vấn đề, khoảng trống, giải pháp, bằng chứng, hạn chế.\n" +
+    "2) Đặt 30 câu hỏi từ cơ bản đến nâng cao, KHÔNG kèm đáp án. Tập trung: thuật ngữ và từ viết tắt, dung môi và tính xanh, vì sao chọn phương pháp tổng hợp, ý nghĩa từng phương pháp phân tích, cách đọc các hình, mẫu đối chứng và sai số, kết luận có vượt dữ liệu không, scale-up hay scale-out.\n" +
+    "3) Chỉ ra các câu kết luận có khả năng vượt quá dữ liệu.\n" +
+    "Chỉ dựa vào nội dung bài, không bịa số liệu hay tài liệu tham khảo. Điều gì bài không nêu thì ghi \"bài không nêu\".\n\n--- BÀI BÁO ---\n" + text;
+}
+
 function renderReadingGuide() {
   return `
   <div class="rbk-wrap">
     <div class="rbk-tabs">
       <button class="rbk-tab rbk-tab-on" data-rbk-tab="guide">1. Hướng dẫn đọc báo cơ bản</button>
       <button class="rbk-tab" data-rbk-tab="lab">2. Phân tích bài và hội đồng giả lập</button>
+      <button class="rbk-tab" data-rbk-tab="fig">3. Đọc hình ảnh và biểu đồ</button>
     </div>
     <div id="rbkGuide">${RBK_GUIDE_HTML}</div>
     <div id="rbkLab" style="display:none;">
@@ -4003,6 +4265,17 @@ function renderReadingGuide() {
       <p class="tkb-note">Lưu ý: đây là bộ nhận diện bằng từ khóa và mẫu câu, không phải AI. Nó bắt tốt các đề tài hóa học và vật liệu phổ biến (MOF, HEO, đông khô, microreactor, xúc tác, hấp phụ...). Nếu dán từ PDF 2 cột mà chữ bị trộn dòng, hãy dán từng cột.</p>
       <div id="rbkOut"></div>
     </div>
+    <div id="rbkFig" style="display:none;">
+      <p class="ctdt-meta">Chọn loại hình, rồi tải hoặc dán ảnh hình từ bài báo. <b>Hệ thống không tự hiểu nội dung ảnh</b> (không dùng AI nhìn ảnh). Nó đặt ảnh cạnh hướng dẫn đọc và bộ câu hỏi riêng cho loại hình đó để bạn tự đọc, tự trả lời. Ảnh chỉ nằm trên máy bạn, không gửi đi đâu.</p>
+      <div class="rbk-row"><label>Loại hình: <select id="rbkFigType"></select></label></div>
+      <div id="rbkDrop" class="rbk-drop" tabindex="0">Kéo thả ảnh vào đây, hoặc bấm vào ô này rồi nhấn Ctrl+V để dán ảnh chụp màn hình, hoặc
+        <label class="rbk-link">chọn file ảnh<input type="file" id="rbkFigFile" accept="image/*" multiple style="display:none;"></label></div>
+      <div id="rbkImgs" class="rbk-imgs"></div>
+      <div class="rbk-row"><button id="rbkImgClear" class="pomo-btn pomo-btn-secondary">Xóa ảnh</button>
+        <button id="rbkOcrFig" class="pomo-btn pomo-btn-secondary">Đọc chữ trên ảnh (OCR)</button><span id="rbkOcrStatus" class="rbk-prog"></span></div>
+      <textarea id="rbkCap" class="rbk-input" rows="2" placeholder="(Không bắt buộc) Dán chú thích hình (caption) hoặc chữ trên trục, hệ thống sẽ đoán loại hình và chọn sẵn hướng dẫn phù hợp..."></textarea>
+      <div id="rbkFigOut"></div>
+    </div>
   </div>`;
 }
 
@@ -4014,12 +4287,15 @@ function initReadingGuide() {
   if (!guide || !lab) return;
   let A = null, QS = [];
 
-  document.querySelectorAll("[data-rbk-tab]").forEach((b) => b.addEventListener("click", () => {
-    const t = b.getAttribute("data-rbk-tab");
-    document.querySelectorAll("[data-rbk-tab]").forEach((x) => x.classList.toggle("rbk-tab-on", x === b));
+  const figPanel = document.getElementById("rbkFig");
+  const showTab = (t) => {
+    document.querySelectorAll("[data-rbk-tab]").forEach((x) => x.classList.toggle("rbk-tab-on", x.getAttribute("data-rbk-tab") === t));
     guide.style.display = t === "guide" ? "" : "none";
     lab.style.display = t === "lab" ? "" : "none";
-  }));
+    if (figPanel) figPanel.style.display = t === "fig" ? "" : "none";
+  };
+  document.querySelectorAll("[data-rbk-tab]").forEach((b) => b.addEventListener("click", () => showTab(b.getAttribute("data-rbk-tab"))));
+  const figApi = rbkInitFigTab();
 
   function chip(s) { return `<span class="rbk-chip">${rbkEsc(s)}</span>`; }
 
@@ -4030,6 +4306,7 @@ function initReadingGuide() {
         <button id="rbkAsk" class="pomo-btn pomo-btn-primary">Hội đồng hỏi ngẫu nhiên</button>
         <button id="rbkReshuffle" class="pomo-btn pomo-btn-secondary">Đổi bộ câu hỏi</button>
         <button id="rbkCopy" class="pomo-btn pomo-btn-secondary">Chép tất cả</button>
+        <button id="rbkPrompt" class="pomo-btn pomo-btn-secondary">Chép prompt để hỏi AI</button>
         <span class="rbk-prog">Đã tìm hiểu: ${done}/${QS.length}</span>
       </div>
       <div id="rbkPanel" class="rbk-panel" style="display:none;"></div>`;
@@ -4056,6 +4333,7 @@ function initReadingGuide() {
       document.getElementById("rbkNext").addEventListener("click", () => document.getElementById("rbkAsk").click());
       document.getElementById("rbkMark").addEventListener("click", () => { q.done = true; renderQuestions(); document.getElementById("rbkAsk").click(); });
     });
+    document.getElementById("rbkPrompt").addEventListener("click", () => { rbkCopyText(rbkMakePrompt(input.value.trim()), document.getElementById("rbkPrompt"), "Đã chép prompt, hãy dán vào Claude hoặc ChatGPT"); });
     document.getElementById("rbkCopy").addEventListener("click", () => {
       const txt = QS.map((q, i) => (i + 1) + ". [" + RBK_LEVELS[q.lv] + " | " + q.cat + "] " + q.q).join("\n");
       const ok = () => { document.getElementById("rbkCopy").textContent = "Đã chép"; };
@@ -4072,7 +4350,7 @@ function initReadingGuide() {
       return `<tr><td>${rbkEsc(d[1])}</td><td>${body ? "Có (" + rbkWords(body) + " từ)" : '<span class="rbk-miss">Không thấy</span>'}</td><td>${rbkEsc(d[3])}</td></tr>`;
     }).join("");
     const found = secKeys.filter((k) => a.sec.secs[k]).length;
-    const techRows = a.techs.length ? a.techs.map((t) => `<tr><td><b>${rbkEsc(t.k)}</b></td><td>${rbkEsc(t.what)}</td></tr>`).join("") : `<tr><td colspan="2">Chưa nhận diện được phương pháp phân tích nào.</td></tr>`;
+    const techRows = a.techs.length ? a.techs.map((t) => `<tr><td><b>${rbkEsc(t.k)}</b></td><td>${rbkEsc(t.what)}</td><td>${RBK_TECH_FIG[t.k] ? `<button class="pomo-btn pomo-btn-secondary" style="padding:4px 10px;font-size:12px;" data-figgo="${RBK_TECH_FIG[t.k]}">Cách đọc hình</button>` : ""}</td></tr>`).join("") : `<tr><td colspan="3">Chưa nhận diện được phương pháp phân tích nào.</td></tr>`;
     const defRows = Object.keys(a.abb.defs).map((k) => `<tr><td><b>${rbkEsc(k)}</b></td><td>${rbkEsc(a.abb.defs[k])}</td></tr>`).join("");
     const roleHtml = a.roles.map((x, i) => `<div class="rbk-role"><b>${rbkEsc(x.r.name)}</b><div class="rbk-ask">${rbkEsc(x.r.ask)}</div>
       ${x.hits.length ? x.hits.map((s) => `<div class="rbk-hit">"${rbkEsc(s)}"</div>`).join("") : '<div class="rbk-hit rbk-miss">Chưa tìm thấy câu gợi ý trong đoạn đã dán.</div>'}
@@ -4088,7 +4366,7 @@ function initReadingGuide() {
       <table class="rbk-tbl"><tr><th>Phần</th><th>Trạng thái</th><th>Đọc để tìm</th></tr>${secRows}</table>
       ${found < 3 ? '<p class="tkb-note">Tìm thấy ít tiêu đề phần. Có thể bài dán không xuống dòng ở tiêu đề, khi đó mỗi tiêu đề (Abstract, Introduction...) nên đứng riêng một dòng.</p>' : ""}
       <h3 class="rbk-h">Phương pháp phân tích trong bài và ý nghĩa</h3>
-      <table class="rbk-tbl"><tr><th>Phương pháp</th><th>Dùng để làm gì</th></tr>${techRows}</table>
+      <table class="rbk-tbl"><tr><th>Phương pháp</th><th>Dùng để làm gì</th><th>Đọc hình</th></tr>${techRows}</table>
       <h3 class="rbk-h">Từ viết tắt</h3>
       ${defRows ? `<table class="rbk-tbl"><tr><th>Viết tắt</th><th>Nghĩa (suy ra từ bài)</th></tr>${defRows}</table>` : "<p>Không bắt được cặp 'Tên đầy đủ (VIẾT TẮT)' nào.</p>"}
       ${a.abb.undef.length ? `<p><b>Viết tắt không được giải thích trong đoạn đã dán (hãy tự tra):</b> ${a.abb.undef.map(chip).join(" ")}</p>` : ""}
@@ -4097,6 +4375,7 @@ function initReadingGuide() {
       ${roleHtml}
       <div id="rbkQBox"></div>`;
     renderQuestions();
+    out.querySelectorAll("[data-figgo]").forEach((b) => b.addEventListener("click", () => { figApi.setType(b.getAttribute("data-figgo")); showTab("fig"); window.scrollTo({ top: 0, behavior: "smooth" }); }));
   }
 
   const fileInput = document.getElementById("rbkFile");
@@ -4142,6 +4421,647 @@ function initReadingGuide() {
     out.scrollIntoView({ behavior: "smooth", block: "start" });
   });
   document.getElementById("rbkClear").addEventListener("click", () => { input.value = ""; out.innerHTML = ""; A = null; QS = []; });
+}
+
+/* =========================================================
+   NGĂN "LIÊM CHÍNH HỌC THUẬT" (mặc định ẩn)
+   1) So sánh bản nháp với nguồn bạn dán + tìm lặp + tạo link tìm cụm câu
+   2) Kiểm tra tài liệu tham khảo (Crossref, OpenAlex, doi.org) + tìm bản truy cập mở hợp pháp
+   3) Soi văn phong và đề xuất sửa bài (KHÔNG có điểm phần trăm AI)
+   4) Hồ sơ quá trình viết (lưu phiên bản trên máy, xuất báo cáo)
+   5) Sổ tay tránh bị lừa + khung ủng hộ tự nguyện
+   Không quét web hay kho luận văn. Không dùng Sci-Hub hay nguồn vi phạm bản quyền.
+   ========================================================= */
+const LC_QR_SRC = "qr.png"; /* đặt ảnh mã QR tên qr.png cùng thư mục với index.html */
+const LC_VER_KEY = "lc_versions_v1";
+const LC_REF_HEAD = /^\s*(references?|bibliography|tài liệu tham khảo)\s*:?\s*$/im;
+
+function lcNorm(t) { return String(t).normalize("NFC").replace(/\u00a0/g, " ").replace(/\r/g, ""); }
+
+function lcTokens(text) {
+  const out = []; const re = /[\p{L}\p{N}]+/gu; let m;
+  while ((m = re.exec(text))) out.push({ w: m[0].toLowerCase(), s: m.index, e: m.index + m[0].length });
+  return out;
+}
+
+function lcLang(text) {
+  const letters = (text.match(/\p{L}/gu) || []).length || 1;
+  const vi = (text.match(/[ăâđêôơưàáảãạằắẳẵặầấẩẫậèéẻẽẹềếểễệìíỉĩịòóỏõọồốổỗộờớởỡợùúủũụừứửữựỳýỷỹỵ]/gi) || []).length;
+  return vi / letters > 0.04 ? "vi" : "en";
+}
+
+function lcCutRefs(text) {
+  const m = text.match(LC_REF_HEAD);
+  return m ? text.slice(0, m.index) : text;
+}
+
+function lcSplit(text) {
+  const p = text.replace(/\r/g, "")
+    .replace(/\b(e\.g|i\.e|et al|Fig|Figs|vs|approx|ca|Eq|Ref|No|Dr|Prof)\./gi, "$1§")
+    .replace(/([.!?:;])\n+/g, "$1 ")
+    .replace(/([^\n])\n(?=[\p{Ll}])/gu, "$1 ")
+    .replace(/\n+/g, ". ");
+  return p.split(/(?<=[.!?])\s+(?=[\p{Lu}\p{N}\[(“"])/u).map((s) => s.replace(/§/g, ".").replace(/\s+/g, " ").trim()).filter((s) => s.length >= 12);
+}
+
+/* ---------- 1. So sánh với nguồn ---------- */
+function lcKeySet(tokens, n) {
+  const set = new Set();
+  for (let i = 0; i + n <= tokens.length; i++) set.add(tokens.slice(i, i + n).map((t) => t.w).join(" "));
+  return set;
+}
+
+function lcCompare(draftRaw, sources, opts) {
+  opts = opts || {};
+  let body = lcNorm(draftRaw);
+  if (opts.skipRefs) body = lcCutRefs(body);
+  const lang = lcLang(body);
+  const n = opts.n || (lang === "vi" ? 7 : 5);
+  const tk = lcTokens(body);
+  const covered = new Array(tk.length).fill(-1);
+  sources.forEach((src, si) => {
+    const set = lcKeySet(lcTokens(lcNorm(src)), n);
+    for (let i = 0; i + n <= tk.length; i++) {
+      const key = tk.slice(i, i + n).map((t) => t.w).join(" ");
+      if (set.has(key)) for (let j = i; j < i + n; j++) if (covered[j] === -1) covered[j] = si;
+    }
+  });
+  const ranges = [];
+  for (let i = 0; i < tk.length; i++) {
+    if (covered[i] === -1) continue;
+    let j = i;
+    while (j + 1 < tk.length && covered[j + 1] === covered[i]) j++;
+    ranges.push({ from: i, to: j, si: covered[i], words: j - i + 1, text: body.slice(tk[i].s, tk[j].e) });
+    i = j;
+  }
+  const per = sources.map((_, si) => covered.filter((c) => c === si).length);
+  const total = tk.length;
+  const hit = covered.filter((c) => c !== -1).length;
+  let html = "", pos = 0;
+  ranges.forEach((r) => {
+    html += rbkEsc(body.slice(pos, tk[r.from].s)) + `<mark class="lc-hl" title="Giống nguồn ${r.si + 1}">` + rbkEsc(r.text) + "</mark>";
+    pos = tk[r.to].e;
+  });
+  html += rbkEsc(body.slice(pos));
+  return { lang, n, total, hit, pct: total ? (hit / total) * 100 : 0, per, ranges, html };
+}
+
+/* ---------- Tìm lặp trong chính bài ---------- */
+function lcRepeats(raw) {
+  const body = lcCutRefs(lcNorm(raw));
+  const lang = lcLang(body);
+  const n = lang === "vi" ? 6 : 5;
+  const tk = lcTokens(body);
+  const map = new Map();
+  for (let i = 0; i + n <= tk.length; i++) {
+    const k = tk.slice(i, i + n).map((t) => t.w).join(" ");
+    if (!map.has(k)) map.set(k, []);
+    map.get(k).push(i);
+  }
+  const rep = new Array(tk.length).fill(false);
+  map.forEach((pos) => { if (pos.length >= 2) pos.forEach((p) => { if (p - pos[0] >= n) for (let j = p; j < p + n; j++) rep[j] = true; }); });
+  const phrases = new Map();
+  for (let i = 0; i < tk.length; i++) {
+    if (!rep[i]) continue;
+    let j = i;
+    while (j + 1 < tk.length && rep[j + 1]) j++;
+    const key = tk.slice(i, j + 1).map((t) => t.w).join(" ");
+    phrases.set(key, (phrases.get(key) || 1) + 1);
+    i = j;
+  }
+  const list = Array.from(phrases.entries()).map(([k, c]) => ({ text: k, words: k.split(" ").length, count: c })).sort((a, b) => b.words - a.words).slice(0, 10);
+  const seen = new Map();
+  lcSplit(body).forEach((s) => { const k = s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim(); if (k.split(" ").length >= 6) seen.set(k, (seen.get(k) || 0) + 1); });
+  const dupSent = Array.from(seen.entries()).filter((e) => e[1] >= 2).map((e) => ({ text: e[0], count: e[1] }));
+  const repTokens = rep.filter(Boolean).length;
+  return { lang, n, total: tk.length, repTokens, pct: tk.length ? (repTokens / tk.length) * 100 : 0, phrases: list, dupSent };
+}
+
+/* ---------- Chọn câu đặc trưng và tạo link tìm cụm chính xác ---------- */
+function lcPickPhrases(raw, k) {
+  const body = lcCutRefs(lcNorm(raw));
+  const sents = lcSplit(body).filter((s) => { const w = rbkWords(s); return w >= 12 && w <= 60; });
+  if (!sents.length) return [];
+  const score = (s) => {
+    const toks = s.match(/[\p{L}\p{N}]+/gu) || [];
+    let sc = new Set(toks.map((x) => x.toLowerCase())).size;
+    toks.forEach((x) => { if (/\d/.test(x)) sc += 0.5; if (/^\p{Lu}{2,}/u.test(x)) sc += 0.5; if (x.length >= 9) sc += 0.5; });
+    return sc;
+  };
+  const chunks = Math.min(k, sents.length), size = sents.length / chunks, out = [];
+  for (let c = 0; c < chunks; c++) {
+    const part = sents.slice(Math.floor(c * size), Math.floor((c + 1) * size) || undefined);
+    if (!part.length) continue;
+    const best = part.slice().sort((a, b) => score(b) - score(a))[0];
+    const words = best.split(/\s+/);
+    const start = Math.max(0, Math.floor((words.length - 10) / 2));
+    const phrase = words.slice(start, start + 10).join(" ").replace(/[“”"]/g, "").replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, "");
+    const q = encodeURIComponent('"' + phrase + '"');
+    out.push({ sentence: best, phrase, scholar: "https://scholar.google.com/scholar?q=" + q, google: "https://www.google.com/search?q=" + q });
+  }
+  return out;
+}
+
+/* ---------- 2. Tài liệu tham khảo ---------- */
+function lcExtractRefs(raw) {
+  const t = lcNorm(raw);
+  const m = t.match(LC_REF_HEAD);
+  const body = m ? t.slice(m.index + m[0].length) : t;
+  const lines = body.split(/\n/).map((l) => l.trim()).filter(Boolean);
+  const numRe = /^(\[\d+\]|\(\d+\)|\d+[.)])\s*\S/;
+  const numbered = lines.filter((l) => numRe.test(l)).length >= Math.max(2, lines.length * 0.4);
+  const refs = [];
+  if (numbered) lines.forEach((l) => { if (numRe.test(l) || !refs.length) refs.push(l); else refs[refs.length - 1] += " " + l; });
+  else lines.forEach((l) => refs.push(l));
+  return refs.filter((r) => r.length >= 15 || /10\.\d{4,9}\//.test(r)).slice(0, 60);
+}
+
+function lcDoiOf(s) {
+  const m = s.match(/\b10\.\d{4,9}\/[^\s"<>]+/);
+  return m ? m[0].replace(/[.,;:)\]]+$/, "") : "";
+}
+
+async function lcFetchJson(url, ms) {
+  const c = new AbortController();
+  const id = setTimeout(() => c.abort(), ms || 12000);
+  try {
+    const r = await fetch(url, { signal: c.signal, headers: { Accept: "application/json" } });
+    if (!r.ok) { const e = new Error("HTTP " + r.status); e.status = r.status; throw e; }
+    return await r.json();
+  } finally { clearTimeout(id); }
+}
+
+function lcMeta(m) {
+  const a0 = (m.author || [])[0] || {};
+  const issued = ((m.issued || {})["date-parts"] || [[]])[0] || [];
+  const upd = m["updated-by"] || [];
+  return { title: (m.title || [])[0] || "", first: a0.family || a0.name || "", year: issued[0] || "", journal: (m["container-title"] || [])[0] || "",
+    updates: upd.map((u) => u.type || u.label || "cập nhật") };
+}
+
+/* Đối chiếu dòng trích dẫn với thông tin Crossref: tiêu đề, tác giả đầu, năm */
+function lcMatchInfo(line, meta) {
+  const L = lcNorm(line).toLowerCase();
+  const lt = new Set(lcTokens(L).map((t) => t.w));
+  const tt = lcTokens(meta.title || "").map((t) => t.w).filter((w) => w.length >= 4);
+  const titleScore = tt.length ? tt.filter((w) => lt.has(w)).length / tt.length : 0;
+  const first = meta.first ? lcNorm(meta.first).toLowerCase() : "";
+  return { titleScore, author: first ? L.includes(first) : null, year: meta.year ? L.includes(String(meta.year)) : null };
+}
+
+async function lcOpenAccess(doi) {
+  try {
+    const o = await lcFetchJson("https://api.openalex.org/works/doi:" + encodeURI(doi) + "?select=open_access,best_oa_location,title");
+    const loc = o.best_oa_location || {};
+    const url = loc.pdf_url || loc.landing_page_url || (o.open_access || {}).oa_url || "";
+    return { isOa: !!(o.open_access && o.open_access.is_oa), url, version: loc.version || "", license: loc.license || "" };
+  } catch (e) { return null; }
+}
+
+async function lcCheckRef(line) {
+  const res = { line, doi: lcDoiOf(line), exists: null, meta: null, info: null, oa: null, guessed: false, error: "" };
+  if (res.doi) {
+    try {
+      const j = await lcFetchJson("https://api.crossref.org/works/" + encodeURI(res.doi));
+      res.exists = true; res.meta = lcMeta(j.message || {});
+    } catch (e) {
+      if (e.status === 404) {
+        try { const h = await lcFetchJson("https://doi.org/api/handles/" + encodeURI(res.doi)); res.exists = h.responseCode === 1 ? "other" : false; }
+        catch (e2) { if (e2.status === 404) res.exists = false; else res.error = "Không kiểm tra được doi.org"; }
+      } else res.error = "Không kết nối được Crossref";
+    }
+  } else {
+    try {
+      const q = line.replace(/^(\[\d+\]|\(\d+\)|\d+[.)])\s*/, "").slice(0, 300);
+      const j = await lcFetchJson("https://api.crossref.org/works?rows=1&select=DOI,title,author,issued,container-title&query.bibliographic=" + encodeURIComponent(q));
+      const it = ((j.message || {}).items || [])[0];
+      if (it) {
+        const meta = lcMeta(it); const info = lcMatchInfo(line, meta);
+        if (info.titleScore >= 0.6) { res.doi = it.DOI || ""; res.meta = meta; res.exists = true; res.guessed = true; }
+      }
+    } catch (e) { res.error = "Không kết nối được Crossref"; }
+  }
+  if (res.meta) res.info = lcMatchInfo(line, res.meta);
+  if (res.doi && (res.exists === true || res.exists === "other")) res.oa = await lcOpenAccess(res.doi);
+  return res;
+}
+
+function lcRefRow(i, r) {
+  const badge = (cls, txt) => `<span class="lc-tag lc-${cls}">${rbkEsc(txt)}</span>`;
+  const b = [];
+  if (r.error) b.push(badge("warn", r.error + ", hãy thử lại"));
+  else if (r.doi && !r.guessed) {
+    if (r.exists === true) {
+      b.push(badge("ok", "DOI có thật"));
+      if (r.info) {
+        b.push(r.info.titleScore >= 0.6 ? badge("ok", "Tiêu đề khớp") : badge("bad", "Tiêu đề KHÔNG khớp: có thể gắn sai DOI"));
+        if (r.info.author === false) b.push(badge("warn", "Không thấy tên tác giả đầu"));
+        if (r.info.year === false) b.push(badge("warn", "Năm khác (" + r.meta.year + ")"));
+      }
+      if (r.meta && r.meta.updates.length) b.push(badge("warn", "Crossref ghi có cập nhật liên quan (" + r.meta.updates.join(", ") + "), hãy mở bài kiểm tra"));
+    } else if (r.exists === "other") b.push(badge("warn", "DOI có trên doi.org nhưng không thuộc Crossref (vd. DataCite), chưa đối chiếu được tiêu đề"));
+    else if (r.exists === false) b.push(badge("bad", "Không tìm thấy DOI này: có thể gõ sai hoặc không có thật"));
+  } else if (r.guessed) {
+    b.push(badge("warn", "Không có DOI trong trích dẫn; có bài khớp tiêu đề trên Crossref (DOI " + r.doi + "), bạn cần tự xác nhận"));
+  } else b.push(badge("warn", "Không có DOI và không tìm thấy bài khớp trên Crossref. Chưa kết luận là bịa: sách, luận văn, tạp chí trong nước thường không có trên Crossref"));
+  let oa = "";
+  if (r.oa && r.oa.url) oa = `<a href="${rbkEsc(r.oa.url)}" target="_blank" rel="noopener">Mở bản truy cập mở</a>${r.oa.version ? " (" + rbkEsc(r.oa.version) + ")" : ""}`;
+  else if (r.exists === true || r.exists === "other") {
+    const q = encodeURIComponent((r.meta && r.meta.title) || r.line.slice(0, 120));
+    oa = `Chưa thấy bản mở. Cách hợp pháp: thư viện trường, email tác giả liên hệ, <a href="https://scholar.google.com/scholar?q=${q}" target="_blank" rel="noopener">tìm preprint trên Scholar</a>`;
+  }
+  const shown = r.line.length > 160 ? r.line.slice(0, 160) + "..." : r.line;
+  return `<tr><td>${i + 1}</td><td>${rbkEsc(shown)}${r.meta && r.meta.title ? `<div class="tkb-note" style="margin:4px 0 0;">Crossref: ${rbkEsc(r.meta.title)} (${rbkEsc(r.meta.first)}, ${rbkEsc(String(r.meta.year))})</div>` : ""}</td><td>${r.doi ? rbkEsc(r.doi) : "-"}</td><td>${b.join(" ")}</td><td>${oa}</td></tr>`;
+}
+
+/* ---------- 3. Soi văn phong và đề xuất sửa bài ---------- */
+const LC_CITE = /\[\d+[^\]]*\]|\([^()]*(19|20)\d{2}[a-z]?[^()]*\)/;
+const LC_EN = {
+  heavy: /^(moreover|furthermore|additionally|in addition|notably|importantly|in conclusion|overall|in summary|consequently|undoubtedly)(?![\p{L}])/iu,
+  filler: /(it is (important|worth) (to note|noting)|plays? an? (crucial|vital|pivotal|key) role|a wide range of|in the realm of|delve[sd]? (into)?|a plethora of|tapestry|has garnered|in today'?s (world|era)|paves? the way|shed light on)/iu,
+  vague: /(?<![\p{L}])(significantly|substantially|remarkabl[ey]|excellent|outstanding|superior|much (better|higher|lower)|better|improved|enhanced|greater|higher|lower)(?![\p{L}])/iu,
+  absolute: /(?<![\p{L}])(for the first time|first (report|time|ever)|always|never|proves?|undoubtedly|clearly demonstrates?|completely|entirely)(?![\p{L}])/iu,
+  needcite: /(has been reported|have been reported|previous (studies|works?|research)|it is (well )?known that|widely used|many studies|numerous studies|has been shown)/iu,
+};
+const LC_VI = {
+  heavy: /^(bên cạnh đó|hơn nữa|ngoài ra|nhìn chung|tóm lại|đáng chú ý là|có thể thấy rằng)(?![\p{L}])/iu,
+  filler: /(đóng vai trò (quan trọng|then chốt|thiết yếu)|ngày càng|mang lại nhiều lợi ích|góp phần nâng cao|trong bối cảnh hiện nay|có thể nói rằng|một cách hiệu quả|không chỉ[^.]{0,60}mà còn)/iu,
+  vague: /(đáng kể|rất tốt|khá cao|khá thấp|tốt hơn|cao hơn|thấp hơn|cải thiện|vượt trội|hiệu quả cao)/iu,
+  absolute: /(đầu tiên trên thế giới|lần đầu tiên|chắc chắn|hoàn toàn|tuyệt đối|luôn luôn|không bao giờ|chứng minh được rằng)/iu,
+  needcite: /(nhiều nghiên cứu|các nghiên cứu (trước|gần đây)|đã được (chứng minh|báo cáo)|được sử dụng rộng rãi|theo các nghiên cứu)/iu,
+};
+const LC_TAGS = {
+  absolute: ["Khẳng định tuyệt đối", 3, "Chỉ khẳng định tuyệt đối khi đã tổng quan tài liệu đầy đủ. Nếu chưa, nêu phạm vi bạn đã tìm hoặc bỏ cụm này."],
+  vague: ["Nhận định định lượng thiếu số liệu", 3, "Thay bằng số liệu: tăng hoặc giảm bao nhiêu, so với mẫu đối chứng nào, sai số bao nhiêu."],
+  nocite: ["Cần trích dẫn", 3, "Thêm trích dẫn cho khẳng định này, hoặc nói rõ đây là kết quả của chính bạn."],
+  long: ["Câu dài", 2, "Tách thành 2 hoặc 3 câu, mỗi câu một ý."],
+  filler: ["Cụm sáo rỗng", 2, "Bỏ cụm này và nêu thẳng điều cụ thể bạn muốn nói."],
+  heavy: ["Liên từ mở đầu lặp", 1, "Nhiều câu mở bằng liên từ giống nhau. Bỏ bớt hoặc gộp ý để logic tự nối các câu."],
+};
+
+function lcStyle(raw) {
+  const t = lcNorm(raw);
+  const lang = lcLang(t);
+  const body = lcCutRefs(t);
+  const R = lang === "vi" ? LC_VI : LC_EN;
+  const sents = lcSplit(body);
+  const lens = sents.map((s) => rbkWords(s));
+  const longT = lang === "vi" ? 50 : 40;
+  let flagged = [], heavyCount = 0;
+  sents.forEach((s, i) => {
+    const tags = [];
+    const hasNum = /\d/.test(s);
+    if (lens[i] > longT) tags.push("long");
+    if (R.filler.test(s)) tags.push("filler");
+    if (R.absolute.test(s)) tags.push("absolute");
+    if (R.vague.test(s) && !hasNum) tags.push("vague");
+    if (R.needcite.test(s) && !LC_CITE.test(s)) tags.push("nocite");
+    if (R.heavy.test(s)) { heavyCount++; tags.push("heavy"); }
+    if (tags.length) flagged.push({ s, tags });
+  });
+  if (heavyCount < 3) flagged = flagged.map((f) => ({ s: f.s, tags: f.tags.filter((x) => x !== "heavy") })).filter((f) => f.tags.length);
+  const count = {};
+  flagged.forEach((f) => f.tags.forEach((x) => { count[x] = (count[x] || 0) + 1; }));
+  const mean = lens.length ? lens.reduce((a, b) => a + b, 0) / lens.length : 0;
+  const sd = lens.length ? Math.sqrt(lens.reduce((a, b) => a + (b - mean) * (b - mean), 0) / lens.length) : 0;
+  const dashes = (body.match(/—/g) || []).length + (body.match(/(?<!\d)–|–(?!\d)/g) || []).length;
+  const ab = rbkAbbrevs(body, new Set());
+  flagged.sort((a, b) => b.tags.length - a.tags.length || Math.max(...b.tags.map((x) => LC_TAGS[x][1])) - Math.max(...a.tags.map((x) => LC_TAGS[x][1])));
+  const fixes = [];
+  const add = (sev, txt) => fixes.push({ sev, txt });
+  if (count.absolute) add(3, "Xử lý " + count.absolute + " câu có khẳng định tuyệt đối (vd. lần đầu tiên, chắc chắn, chứng minh được rằng).");
+  if (ab.undef.length) add(3, "Định nghĩa các từ viết tắt ở lần xuất hiện đầu tiên: " + ab.undef.slice(0, 8).join(", ") + ".");
+  if (count.vague) add(3, "Bổ sung số liệu cho " + count.vague + " câu nhận định định lượng (tốt hơn, cải thiện, đáng kể...).");
+  if (count.nocite) add(3, "Thêm trích dẫn cho " + count.nocite + " câu nêu 'nhiều nghiên cứu', 'đã được báo cáo'.");
+  if (count.long) add(2, "Tách " + count.long + " câu quá dài.");
+  if (count.filler) add(2, "Bỏ hoặc viết lại " + count.filler + " câu có cụm sáo rỗng.");
+  if (count.heavy) add(1, "Giảm liên từ mở đầu: " + count.heavy + " câu mở bằng liên từ giống nhau.");
+  return { lang, sentences: sents.length, words: rbkWords(body), mean, cv: mean ? sd / mean : 0, dashes, undef: ab.undef, flagged, count, fixes };
+}
+
+/* ---------- 4. Hồ sơ quá trình viết ---------- */
+function lcLoadVers() { try { return JSON.parse(localStorage.getItem(LC_VER_KEY) || "[]"); } catch (e) { return []; } }
+function lcSaveVers(v) { try { localStorage.setItem(LC_VER_KEY, JSON.stringify(v)); return true; } catch (e) { return false; } }
+
+async function lcHash(str) {
+  try {
+    if (!(window.crypto && window.crypto.subtle)) return "";
+    const buf = await window.crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  } catch (e) { return ""; }
+}
+
+function lcDelta(prev, cur) {
+  const a = lcTokens(lcNorm(prev)).map((t) => t.w), b = lcTokens(lcNorm(cur)).map((t) => t.w);
+  const cnt = new Map();
+  a.forEach((w) => cnt.set(w, (cnt.get(w) || 0) + 1));
+  let common = 0;
+  b.forEach((w) => { const c = cnt.get(w) || 0; if (c > 0) { common++; cnt.set(w, c - 1); } });
+  const sa = lcKeySet(a.map((w) => ({ w })), 4), sb = lcKeySet(b.map((w) => ({ w })), 4);
+  let inter = 0; sa.forEach((k) => { if (sb.has(k)) inter++; });
+  const uni = sa.size + sb.size - inter;
+  return { added: b.length - common, removed: a.length - common, sim: uni ? (inter / uni) * 100 : (a.length === b.length ? 100 : 0) };
+}
+
+function lcReportText(name, vers) {
+  const f = (ts) => new Date(ts).toLocaleString("vi-VN");
+  const lines = ["BÁO CÁO QUÁ TRÌNH VIẾT (do người dùng tự tạo trên trình duyệt)", "Tên tài liệu: " + (name || "(chưa đặt tên)"), "Số phiên bản: " + vers.length, ""];
+  vers.forEach((v, i) => {
+    let d = "bản đầu";
+    if (i > 0) { const x = lcDelta(vers[i - 1].text, v.text); d = "+" + x.added + " từ, -" + x.removed + " từ, giống bản trước " + Math.round(x.sim) + "%"; }
+    lines.push("#" + (i + 1) + " | " + f(v.ts) + " | " + (v.label || "(không nhãn)") + " | " + rbkWords(v.text) + " từ | " + d + (v.hash ? " | mã " + v.hash.slice(0, 12) : ""));
+  });
+  lines.push("", "LƯU Ý: Báo cáo này do chính người dùng tạo trên máy của mình, không có bên thứ ba xác thực. Nên kèm lịch sử phiên bản của Word hoặc Google Docs, ghi chú đọc tài liệu và khả năng giải thích trực tiếp nội dung bài.");
+  return lines.join("\n");
+}
+
+/* ---------- Tải file vào ô nhập ---------- */
+async function lcFilesToText(files, say) {
+  const parts = [], notes = [];
+  for (const f of files) {
+    const name = f.name.toLowerCase();
+    try {
+      say("Đang đọc " + f.name + "...");
+      let txt = "";
+      if (/\.(txt|md)$/.test(name)) txt = await rbkReadFile(f, "text");
+      else if (name.endsWith(".docx")) txt = await rbkReadDocx(f);
+      else if (name.endsWith(".pdf")) {
+        const r = await rbkReadPdf(f, say);
+        txt = r.text;
+        if (r.truncated) notes.push(f.name + ": mới đọc 60/" + r.total + " trang đầu.");
+        if (txt.replace(/\s/g, "").length < 100) { txt = ""; notes.push(f.name + ": PDF gần như không có lớp chữ (có thể là bản scan)."); }
+      } else notes.push(f.name + ": định dạng chưa hỗ trợ (nhận TXT, MD, DOCX, PDF).");
+      if (txt.trim()) parts.push(txt.trim());
+    } catch (e) { notes.push(f.name + ": " + (e && e.message ? e.message : "lỗi không xác định")); }
+  }
+  return { parts, notes };
+}
+function lcAttachUpload(inputEl, textarea, statusEl) {
+  inputEl.addEventListener("change", async () => {
+    const files = Array.from(inputEl.files || []);
+    if (!files.length) return;
+    const say = (m) => { statusEl.textContent = m; };
+    const r = await lcFilesToText(files, say);
+    if (r.parts.length) textarea.value = (textarea.value.trim() ? textarea.value.trim() + "\n\n" : "") + r.parts.join("\n\n");
+    say((r.parts.length ? "Đã thêm " + r.parts.length + " file vào ô nhập. " : "") + r.notes.join(" "));
+    inputEl.value = "";
+  });
+}
+let lcUpId = 0;
+function lcUploadRow() {
+  const id = "lcUp" + (++lcUpId);
+  return `<div class="rbk-row"><label class="pomo-btn pomo-btn-secondary" style="cursor:pointer;">Tải file (TXT, DOCX, PDF)
+    <input type="file" id="${id}" accept=".txt,.md,.docx,.pdf" multiple style="display:none;"></label><span id="${id}s" class="rbk-prog"></span></div>`;
+}
+
+const LC_GUIDE_HTML = `
+<div class="rbk-card"><h4>Con số phần trăm nghĩa là gì</h4>
+  <ul>
+    <li><b>Phần trăm trùng lặp</b> chỉ cho biết bài giống bao nhiêu so với <b>kho mà công cụ đó có</b>. Kho khác nhau thì con số khác nhau. Giống nhau chưa chắc là đạo văn: trích dẫn đúng, thuật ngữ, công thức, quy trình chuẩn đều có thể bị tính.</li>
+    <li><b>Phần trăm "AI"</b> là một ước lượng thống kê, có thể sai theo cả hai hướng. Văn học thuật hình thức và người viết không phải bản ngữ dễ bị gắn nhầm. Một con số riêng lẻ không đủ làm bằng chứng.</li>
+    <li>Cùng một bài có thể ra kết quả rất khác ở các công cụ khác nhau. Nếu bị hỏi, hãy yêu cầu xem báo cáo chi tiết theo từng câu, không chỉ một con số.</li>
+  </ul></div>
+<div class="rbk-card"><h4>Dấu hiệu dịch vụ nên tránh</h4>
+  <ul>
+    <li>Hứa chính xác 100%, hoặc "đảm bảo qua" một hệ thống cụ thể của trường.</li>
+    <li>Không nêu rõ tỉ lệ nhận nhầm, không giải thích kết quả.</li>
+    <li>Không có chính sách dữ liệu: bài của bạn có được lưu và dùng làm kho đối chiếu hay không.</li>
+    <li>Thu phí cao theo từng lần, hoặc ép nộp bài gấp để "xử lý ngay".</li>
+    <li>Cam kết "né" công cụ kiểm tra. Đây là hành vi gian lận, có thể bị xử lý kỷ luật.</li>
+  </ul>
+  <p>Ba câu nên hỏi trước khi nộp bài cho bất kỳ nơi nào: bài của tôi có được lưu không và lưu bao lâu? Con số này đo bằng kho nào? Tỉ lệ nhận nhầm đã được công bố ở đâu?</p></div>
+<div class="rbk-card"><h4>Nếu bài của bạn bị gắn cờ oan</h4>
+  <ul>
+    <li>Giữ các bản nháp có thời gian, lịch sử phiên bản của Word hoặc Google Docs, ghi chú đọc tài liệu, dữ liệu thô.</li>
+    <li>Chuẩn bị giải thích trực tiếp các phần bị nghi: vì sao viết vậy, số liệu từ đâu, nguồn nào.</li>
+    <li>Yêu cầu xem báo cáo theo từng đoạn, và đề nghị đánh giá bằng nhiều cách thay vì một con số.</li>
+    <li>Tab 4 giúp bạn lưu quá trình viết thành báo cáo, nhưng đó chỉ là hồ sơ tự lập, không phải bằng chứng độc lập.</li>
+  </ul></div>
+<div class="rbk-card"><h4>Giới hạn của ngăn này</h4>
+  <ul>
+    <li>Không quét internet hay kho luận văn, chỉ so với những gì bạn dán vào. Không thay thế công cụ chính thức của trường khi nộp bài.</li>
+    <li>Tab 3 chỉ chỉ ra dấu hiệu về cách viết, không kết luận ai viết bài và không đưa điểm phần trăm AI.</li>
+    <li>Quyền riêng tư: tab 1, 3 xử lý hoàn toàn trên máy bạn. Tab 2 gửi DOI (hoặc dòng trích dẫn nếu không có DOI) tới Crossref, OpenAlex, doi.org, không gửi nội dung bài. Tab 4 lưu phiên bản ngay trong trình duyệt của bạn.</li>
+    <li>Ngăn này không truy cập các trang chia sẻ bài trái phép. Muốn đọc bài trả phí, hãy dùng bản truy cập mở, thư viện trường hoặc email tác giả.</li>
+  </ul></div>`;
+
+function renderIntegrity() {
+  return `
+  <div class="rbk-wrap">
+    <div class="rbk-tabs">
+      <button class="rbk-tab rbk-tab-on" data-lc-tab="compare">1. So sánh và tìm lặp</button>
+      <button class="rbk-tab" data-lc-tab="refs">2. Tài liệu tham khảo</button>
+      <button class="rbk-tab" data-lc-tab="style">3. Soi văn phong và sửa bài</button>
+      <button class="rbk-tab" data-lc-tab="log">4. Hồ sơ quá trình viết</button>
+      <button class="rbk-tab" data-lc-tab="guide">5. Tránh bị lừa</button>
+    </div>
+
+    <div id="lcP-compare">
+      <p class="ctdt-meta">Dán bản nháp của bạn và một hoặc nhiều nguồn bạn đã đọc (bài báo, giáo trình, chương sách). Ngăn tô những đoạn trong bản nháp giống nguồn từ một số từ liên tiếp trở lên. Ngăn <b>không quét internet hay kho luận văn</b>, chỉ so với những gì bạn dán vào. Văn bản chỉ xử lý trên máy bạn.</p>
+      <b>Bản nháp của bạn</b>
+      <textarea id="lcDraft" class="rbk-input" rows="9" placeholder="Dán bản nháp của bạn..."></textarea>
+      ${lcUploadRow()}
+      <div id="lcSources"></div>
+      <div class="rbk-row">
+        <button id="lcAddSrc" class="pomo-btn pomo-btn-secondary">Thêm nguồn</button>
+        <label><input type="checkbox" id="lcSkipRefs" checked> Bỏ qua phần Tài liệu tham khảo của bản nháp</label>
+      </div>
+      <div class="rbk-row">
+        <button id="lcGoCompare" class="pomo-btn pomo-btn-primary">So sánh với nguồn</button>
+        <button id="lcGoRepeat" class="pomo-btn pomo-btn-primary">Tìm lặp và tạo link tìm nguồn</button>
+      </div>
+      <div id="lcOutCompare"></div>
+      <div id="lcOutRepeat"></div>
+    </div>
+
+    <div id="lcP-refs" style="display:none;">
+      <p class="ctdt-meta">Dán danh mục tài liệu tham khảo (hoặc cả bài có đề mục References). Ngăn tra từng DOI trên Crossref để xem tài liệu có thật, tiêu đề, tác giả, năm có khớp không, và tìm bản <b>truy cập mở hợp pháp</b> qua OpenAlex. Dòng không có DOI được thử tìm theo nội dung trích dẫn. Tối đa 60 tài liệu mỗi lần.</p>
+      <p class="tkb-note">Quyền riêng tư: tab này gửi DOI (hoặc dòng trích dẫn nếu không có DOI) tới Crossref, OpenAlex và doi.org. Không gửi nội dung bài.</p>
+      <textarea id="lcRefs" class="rbk-input" rows="9" placeholder="[1] Tác giả, Tên bài, Tạp chí, năm, doi:10.xxxx/xxxxx&#10;[2] ..."></textarea>
+      ${lcUploadRow()}
+      <div class="rbk-row"><button id="lcGoRefs" class="pomo-btn pomo-btn-primary">Kiểm tra tài liệu tham khảo</button>
+        <button id="lcStopRefs" class="pomo-btn pomo-btn-secondary">Dừng</button><span id="lcRefProg" class="rbk-prog"></span></div>
+      <div id="lcOutRefs"></div>
+    </div>
+
+    <div id="lcP-style" style="display:none;">
+      <p class="ctdt-meta">Dán đoạn văn (tiếng Anh hoặc tiếng Việt). Ngăn chỉ ra câu có dấu hiệu cần xem lại về cách viết và gợi ý sửa. <b>Đây không phải máy dò AI và không có điểm phần trăm AI.</b> Văn học thuật do người viết cũng thường có các dấu hiệu này. Văn bản chỉ xử lý trên máy bạn.</p>
+      <textarea id="lcStyleText" class="rbk-input" rows="10" placeholder="Dán đoạn văn cần soi..."></textarea>
+      ${lcUploadRow()}
+      <div class="rbk-row"><button id="lcGoStyle" class="pomo-btn pomo-btn-primary">Soi văn phong và đề xuất sửa</button></div>
+      <div id="lcOutStyle"></div>
+    </div>
+
+    <div id="lcP-log" style="display:none;">
+      <p class="ctdt-meta">Lưu các phiên bản bài viết theo thời gian ngay trong trình duyệt của bạn (không gửi đi đâu). Ngăn tính phần thay đổi giữa các bản và xuất báo cáo quá trình viết. Báo cáo này do bạn tự tạo, không có bên thứ ba xác thực, nên hãy kèm lịch sử phiên bản của Word hoặc Google Docs. Xóa dữ liệu trình duyệt sẽ mất các bản đã lưu.</p>
+      <div class="rbk-row"><label>Tên tài liệu: <input id="lcLogName" class="rbk-input" style="width:260px;" placeholder="Báo cáo đề tài..."></label>
+        <label>Nhãn phiên bản: <input id="lcLogLabel" class="rbk-input" style="width:220px;" placeholder="Nháp phần mở đầu"></label></div>
+      <textarea id="lcLogText" class="rbk-input" rows="9" placeholder="Dán bản hiện tại của bài..."></textarea>
+      ${lcUploadRow()}
+      <div class="rbk-row"><button id="lcSaveVer" class="pomo-btn pomo-btn-primary">Lưu phiên bản</button>
+        <button id="lcExport" class="pomo-btn pomo-btn-secondary">Xuất báo cáo (.txt)</button>
+        <button id="lcClearVers" class="pomo-btn pomo-btn-secondary">Xóa tất cả</button><span id="lcLogMsg" class="rbk-prog"></span></div>
+      <div id="lcVerList"></div>
+    </div>
+
+    <div id="lcP-guide" style="display:none;">${LC_GUIDE_HTML}</div>
+
+    <div class="rbk-card"><h4>Ủng hộ tự nguyện</h4>
+      <p>Ngăn này miễn phí. Nếu thấy hữu ích, bạn có thể ủng hộ khoảng 1.000 đến 5.000 đồng cho mỗi lần dùng bằng mã QR bên dưới. Hoàn toàn không bắt buộc và không ảnh hưởng tới kết quả.</p>
+      <img id="lcQr" src="${LC_QR_SRC}" alt="Mã QR ủng hộ" style="max-width:220px;border-radius:8px;" onerror="this.style.display='none';document.getElementById('lcQrMiss').style.display='';">
+      <p id="lcQrMiss" class="tkb-note" style="display:none;">(Chưa gắn mã QR.)</p></div>
+  </div>`;
+}
+
+function initIntegrity() {
+  const $ = (id) => document.getElementById(id);
+  if (!$("lcP-compare")) return;
+  const panels = ["compare", "refs", "style", "log", "guide"];
+  const showTab = (t) => {
+    document.querySelectorAll("[data-lc-tab]").forEach((b) => b.classList.toggle("rbk-tab-on", b.getAttribute("data-lc-tab") === t));
+    panels.forEach((p) => { $("lcP-" + p).style.display = p === t ? "" : "none"; });
+  };
+  document.querySelectorAll("[data-lc-tab]").forEach((b) => b.addEventListener("click", () => showTab(b.getAttribute("data-lc-tab"))));
+
+  // gắn nút tải file cho các ô đã có sẵn
+  const attachAll = (root) => root.querySelectorAll('input[type="file"][id^="lcUp"]').forEach((inp) => {
+    if (inp.dataset.bound) return; inp.dataset.bound = "1";
+    const ta = inp.closest(".rbk-row").previousElementSibling;
+    if (ta && ta.tagName === "TEXTAREA") lcAttachUpload(inp, ta, $(inp.id + "s"));
+  });
+  attachAll(document);
+
+  // --- Tab 1 ---
+  let srcCount = 0;
+  const addSource = () => {
+    if (srcCount >= 5) return;
+    srcCount++;
+    const div = document.createElement("div");
+    div.innerHTML = `<b>Nguồn ${srcCount}</b><textarea class="rbk-input lc-src" rows="6" placeholder="Dán nội dung nguồn ${srcCount} (bài báo, giáo trình...)"></textarea>${lcUploadRow()}`;
+    $("lcSources").appendChild(div);
+    attachAll(div);
+  };
+  addSource();
+  $("lcAddSrc").addEventListener("click", addSource);
+
+  $("lcGoCompare").addEventListener("click", () => {
+    const draft = $("lcDraft").value;
+    const srcs = Array.from(document.querySelectorAll(".lc-src")).map((t) => t.value).filter((v) => v.trim());
+    const out = $("lcOutCompare");
+    if (draft.trim().length < 100) { out.innerHTML = '<p class="rbk-miss">Hãy dán bản nháp (ít nhất vài câu).</p>'; return; }
+    if (!srcs.length) { out.innerHTML = '<p class="rbk-miss">Hãy dán ít nhất một nguồn để so sánh.</p>'; return; }
+    const r = lcCompare(draft, srcs, { skipRefs: $("lcSkipRefs").checked });
+    const top = r.ranges.slice().sort((a, b) => b.words - a.words).slice(0, 10);
+    out.innerHTML = `<h3 class="rbk-h">Kết quả so sánh</h3>
+      <div class="rbk-card"><p><b>${r.pct.toFixed(1)}%</b> số từ của bản nháp nằm trong các đoạn giống nguồn từ ${r.n} từ liên tiếp trở lên (${r.hit}/${r.total} từ).</p>
+      <p>${r.per.map((c, i) => "Nguồn " + (i + 1) + ": " + (r.total ? ((c / r.total) * 100).toFixed(1) : 0) + "%").join(" | ")}</p>
+      <p class="tkb-note">Con số này chỉ nói về mức giống với những nguồn bạn đã dán. Giống nhau không đồng nghĩa với đạo văn: trích dẫn đúng, thuật ngữ và quy trình chuẩn cũng bị tính. Hãy xem từng đoạn.</p></div>
+      <h3 class="rbk-h">Bản nháp (đoạn giống được tô màu)</h3>
+      <div class="lc-text">${r.html}</div>
+      <h3 class="rbk-h">Các đoạn giống dài nhất</h3>
+      ${top.length ? `<ol class="rbk-qs">${top.map((x) => `<li><b>${x.words} từ, nguồn ${x.si + 1}:</b> ${rbkEsc(x.text)}</li>`).join("")}</ol>` : "<p>Không có đoạn nào giống từ " + r.n + " từ liên tiếp trở lên.</p>"}`;
+  });
+
+  $("lcGoRepeat").addEventListener("click", () => {
+    const draft = $("lcDraft").value;
+    const out = $("lcOutRepeat");
+    if (draft.trim().length < 100) { out.innerHTML = '<p class="rbk-miss">Hãy dán bản nháp (ít nhất vài câu).</p>'; return; }
+    const rp = lcRepeats(draft);
+    const links = lcPickPhrases(draft, 10);
+    out.innerHTML = `<h3 class="rbk-h">Lặp trong chính bài</h3>
+      <div class="rbk-card"><p>${rp.pct.toFixed(1)}% số từ nằm trong cụm lặp lại từ ${rp.n} từ liên tiếp trở lên.</p>
+      ${rp.phrases.length ? `<p><b>Cụm lặp dài nhất:</b></p><ol class="rbk-qs">${rp.phrases.map((x) => `<li>${rbkEsc(x.text)} (${x.words} từ)</li>`).join("")}</ol>` : "<p>Không thấy cụm lặp đáng kể.</p>"}
+      ${rp.dupSent.length ? `<p><b>Câu xuất hiện nhiều lần:</b></p><ul>${rp.dupSent.map((x) => `<li>${rbkEsc(x.text)} (${x.count} lần)</li>`).join("")}</ul>` : ""}</div>
+      <h3 class="rbk-h">Link tìm nguồn nghi trùng (bạn tự bấm kiểm tra)</h3>
+      <p class="tkb-note">Ngăn chọn các câu đặc trưng và tạo sẵn link tìm cụm chính xác trên Google Scholar và Google. Bấm link sẽ mở trang tìm kiếm, ngăn không gửi gì đi.</p>
+      ${links.length ? `<ol class="rbk-qs">${links.map((x) => `<li>${rbkEsc(x.phrase)} &nbsp; <a href="${x.scholar}" target="_blank" rel="noopener">Scholar</a> | <a href="${x.google}" target="_blank" rel="noopener">Google</a></li>`).join("")}</ol>` : "<p>Chưa chọn được câu phù hợp (bài quá ngắn).</p>"}`;
+  });
+
+  // --- Tab 2 ---
+  let stopRefs = false;
+  $("lcStopRefs").addEventListener("click", () => { stopRefs = true; });
+  $("lcGoRefs").addEventListener("click", async () => {
+    const refs = lcExtractRefs($("lcRefs").value);
+    const out = $("lcOutRefs"), prog = $("lcRefProg");
+    if (!refs.length) { out.innerHTML = '<p class="rbk-miss">Chưa thấy tài liệu tham khảo nào. Hãy dán danh mục, mỗi tài liệu một dòng.</p>'; return; }
+    stopRefs = false;
+    const rows = [];
+    out.innerHTML = `<div id="lcRefSum"></div><table class="rbk-tbl"><tr><th>#</th><th>Tài liệu</th><th>DOI</th><th>Kết quả</th><th>Bản đọc hợp pháp</th></tr><tbody id="lcRefBody"></tbody></table>`;
+    const stat = { n: 0, ok: 0, bad: 0, nodoi: 0, oa: 0 };
+    for (let i = 0; i < refs.length; i++) {
+      if (stopRefs) { prog.textContent = "Đã dừng ở tài liệu " + i + "/" + refs.length + "."; break; }
+      prog.textContent = "Đang kiểm tra " + (i + 1) + "/" + refs.length + "...";
+      let r;
+      try { r = await lcCheckRef(refs[i]); } catch (e) { r = { line: refs[i], doi: "", exists: null, meta: null, info: null, oa: null, guessed: false, error: "Lỗi không xác định" }; }
+      rows.push(lcRefRow(i, r));
+      stat.n++;
+      if (r.exists === true && !r.guessed && r.info && r.info.titleScore >= 0.6) stat.ok++;
+      if (r.exists === false || (r.exists === true && !r.guessed && r.info && r.info.titleScore < 0.6)) stat.bad++;
+      if (!r.doi || r.guessed) stat.nodoi++;
+      if (r.oa && r.oa.url) stat.oa++;
+      $("lcRefBody").innerHTML = rows.join("");
+      $("lcRefSum").innerHTML = `<div class="rbk-card"><p>Đã kiểm tra <b>${stat.n}</b> tài liệu: <b>${stat.ok}</b> khớp DOI và tiêu đề, <b>${stat.bad}</b> cần xem lại (DOI không tìm thấy hoặc tiêu đề không khớp), <b>${stat.nodoi}</b> không có DOI, <b>${stat.oa}</b> có bản truy cập mở.</p>
+        <p class="tkb-note">Không tìm thấy trên Crossref chưa chắc là bịa. Hãy tự mở nguồn để xác nhận.</p></div>`;
+      await new Promise((res) => setTimeout(res, 120));
+    }
+    if (!stopRefs) prog.textContent = "Xong.";
+  });
+
+  // --- Tab 3 ---
+  $("lcGoStyle").addEventListener("click", () => {
+    const txt = $("lcStyleText").value;
+    const out = $("lcOutStyle");
+    if (txt.trim().length < 150) { out.innerHTML = '<p class="rbk-miss">Hãy dán đoạn văn dài hơn (ít nhất vài câu).</p>'; return; }
+    const r = lcStyle(txt);
+    const tagHtml = (k) => `<span class="lc-tag lc-${LC_TAGS[k][1] >= 3 ? "bad" : LC_TAGS[k][1] === 2 ? "warn" : "info"}">${rbkEsc(LC_TAGS[k][0])}</span>`;
+    out.innerHTML = `<h3 class="rbk-h">Thống kê</h3>
+      <div class="rbk-card"><p>${r.lang === "vi" ? "Tiếng Việt" : "Tiếng Anh"} | ${r.sentences} câu | ${r.words} từ | trung bình ${r.mean.toFixed(1)} từ mỗi câu | độ đều của độ dài câu (hệ số biến thiên) ${r.cv.toFixed(2)} | ${r.dashes} dấu gạch ngang dài</p>
+      <p class="tkb-note">Chỉ là thông tin tham khảo. Word tự đổi gạch nối thành gạch dài, và nhiều người viết thật cũng dùng. Không dùng các chỉ số này để kết luận ai viết bài.</p></div>
+      <h3 class="rbk-h">Đề xuất sửa bài (ưu tiên từ trên xuống)</h3>
+      ${r.fixes.length ? `<ol class="rbk-qs">${r.fixes.sort((a, b) => b.sev - a.sev).map((f) => `<li>${rbkEsc(f.txt)}</li>`).join("")}</ol>` : "<p>Không thấy vấn đề nổi bật theo các quy tắc hiện có. Việc này không có nghĩa bài đã tốt, hãy đọc lại bằng mắt.</p>"}
+      <h3 class="rbk-h">Câu cần xem lại (${r.flagged.length})</h3>
+      ${r.flagged.slice(0, 40).map((f) => `<div class="rbk-role"><div>${f.tags.map(tagHtml).join(" ")}</div><div class="rbk-hit">${rbkEsc(f.s)}</div><div class="rbk-ask">${f.tags.map((k) => rbkEsc(LC_TAGS[k][2])).join(" ")}</div></div>`).join("") || "<p>Không có câu nào bị gắn cờ.</p>"}
+      ${r.flagged.length > 40 ? `<p class="tkb-note">Chỉ hiện 40 câu đầu tiên, sắp theo mức cần xem lại.</p>` : ""}`;
+  });
+
+  // --- Tab 4 ---
+  const renderVers = () => {
+    const vers = lcLoadVers();
+    if (!vers.length) { $("lcVerList").innerHTML = "<p>Chưa có phiên bản nào.</p>"; return; }
+    $("lcVerList").innerHTML = `<table class="rbk-tbl"><tr><th>#</th><th>Thời gian</th><th>Nhãn</th><th>Số từ</th><th>So với bản trước</th><th></th></tr>` +
+      vers.map((v, i) => {
+        let d = "bản đầu";
+        if (i > 0) { const x = lcDelta(vers[i - 1].text, v.text); d = "+" + x.added + " từ, -" + x.removed + " từ, giống " + Math.round(x.sim) + "%"; }
+        return `<tr><td>${i + 1}</td><td>${rbkEsc(new Date(v.ts).toLocaleString("vi-VN"))}</td><td>${rbkEsc(v.label || "")}</td><td>${rbkWords(v.text)}</td><td>${d}</td><td><button class="pomo-btn pomo-btn-secondary" style="padding:3px 9px;font-size:12px;" data-lcload="${i}">Nạp lại</button> <button class="pomo-btn pomo-btn-secondary" style="padding:3px 9px;font-size:12px;" data-lcdel="${i}">Xóa</button></td></tr>`;
+      }).join("") + "</table>";
+    $("lcVerList").querySelectorAll("[data-lcload]").forEach((b) => b.addEventListener("click", () => { const v = lcLoadVers()[+b.getAttribute("data-lcload")]; if (v) { $("lcLogText").value = v.text; $("lcLogName").value = v.name || $("lcLogName").value; } }));
+    $("lcVerList").querySelectorAll("[data-lcdel]").forEach((b) => b.addEventListener("click", () => { const all = lcLoadVers(); all.splice(+b.getAttribute("data-lcdel"), 1); lcSaveVers(all); renderVers(); }));
+  };
+  renderVers();
+  $("lcSaveVer").addEventListener("click", async () => {
+    const text = $("lcLogText").value;
+    if (text.trim().length < 20) { $("lcLogMsg").textContent = "Hãy dán nội dung bài trước."; return; }
+    const vers = lcLoadVers();
+    if (vers.length >= 40) { $("lcLogMsg").textContent = "Đã đủ 40 phiên bản, hãy xóa bớt hoặc xuất báo cáo."; return; }
+    const ts = Date.now();
+    const prevHash = vers.length ? vers[vers.length - 1].hash || "" : "";
+    const hash = await lcHash(prevHash + "|" + ts + "|" + text);
+    vers.push({ ts, name: $("lcLogName").value.trim(), label: $("lcLogLabel").value.trim(), text, hash });
+    $("lcLogMsg").textContent = lcSaveVers(vers) ? "Đã lưu phiên bản " + vers.length + "." : "Không lưu được (bộ nhớ trình duyệt đầy hoặc bị chặn).";
+    renderVers();
+  });
+  $("lcExport").addEventListener("click", () => {
+    const vers = lcLoadVers();
+    if (!vers.length) { $("lcLogMsg").textContent = "Chưa có phiên bản để xuất."; return; }
+    const blob = new Blob([lcReportText($("lcLogName").value.trim(), vers)], { type: "text/plain;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = "bao-cao-qua-trinh-viet.txt";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  });
+  $("lcClearVers").addEventListener("click", () => {
+    if (!window.confirm("Xóa tất cả phiên bản đã lưu trong trình duyệt này?")) return;
+    lcSaveVers([]); renderVers(); $("lcLogMsg").textContent = "Đã xóa.";
+  });
 }
 
 /* =========================================================
@@ -5394,6 +6314,16 @@ const SUBJECTS = [
     desc: "Hướng dẫn đọc báo (DOI, cấu trúc, trả phí) và hội đồng giả lập đặt câu hỏi từ bài báo bạn dán vào",
     render: renderReadingGuide,
     afterRender: initReadingGuide,
+  },
+  {
+    id: "liem-chinh-hoc-thuat",
+    hocKy: null,
+    nhomMon: "Tiện ích",
+    icon: "🛡️",
+    title: "Liêm Chính Học Thuật",
+    desc: "So sánh với nguồn, kiểm tra tài liệu tham khảo, soi văn phong và sửa bài, hồ sơ quá trình viết, sổ tay tránh bị lừa",
+    render: renderIntegrity,
+    afterRender: initIntegrity,
   },
   {
     id: "thcn-nc",
