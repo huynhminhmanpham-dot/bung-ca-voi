@@ -809,6 +809,12 @@ table.tkb tbody tr:nth-child(even) td { background: #f7fbff; }
 .lc-warn { background: #fff6e0; color: #8a5a00; border-color: #f0dca0; }
 .lc-bad { background: #fdeaea; color: #a32a1f; border-color: #f2c4bf; }
 .lc-info { background: #eef2f7; color: #3a5a80; border-color: #d3dde9; }
+
+.lc-s { cursor: pointer; border-radius: 3px; }
+.lc-lv1 { background: #fff3b0; } .lc-lv2 { background: #ffd8a8; } .lc-lv3 { background: #ffb3b3; } .lc-ex { background: #bfdcff; }
+.lc-legend { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.lc-key { display: inline-block; border: 1px solid #d3dde9; border-radius: 6px; padding: 3px 10px; font-size: 13px; background: #fff; }
+.lc-key.lc-lv1 { background: #fff3b0; } .lc-key.lc-lv2 { background: #ffd8a8; } .lc-key.lc-lv3 { background: #ffb3b3; } .lc-key.lc-ex { background: #bfdcff; }
 </style>
 </head>
 <body>
@@ -4436,7 +4442,175 @@ const LC_QR_SRC = "qr.png"; /* đặt ảnh mã QR tên qr.png cùng thư mục 
 const LC_VER_KEY = "lc_versions_v1";
 const LC_REF_HEAD = /^\s*(references?|bibliography|tài liệu tham khảo)\s*:?\s*$/im;
 
-function lcNorm(t) { return String(t).normalize("NFC").replace(/\u00a0/g, " ").replace(/\r/g, ""); }
+/* ---- Làm sạch văn bản và phát hiện ký tự bất thường ---- */
+const LC_HOMO = { "\u0430": "a", "\u0435": "e", "\u043E": "o", "\u0440": "p", "\u0441": "c", "\u0443": "y", "\u0445": "x", "\u0456": "i", "\u0458": "j", "\u0455": "s",
+  "\u0410": "A", "\u0412": "B", "\u0415": "E", "\u041A": "K", "\u041C": "M", "\u041D": "H", "\u041E": "O", "\u0420": "P", "\u0421": "C", "\u0422": "T", "\u0425": "X", "\u0423": "Y",
+  "\u03BF": "o", "\u03BD": "v", "\u039F": "O", "\u0391": "A", "\u0392": "B", "\u0395": "E", "\u0396": "Z", "\u0397": "H", "\u0399": "I", "\u039A": "K", "\u039C": "M", "\u039D": "N", "\u03A1": "P", "\u03A4": "T", "\u03A7": "X", "\u03A5": "Y" };
+const LC_INVIS = /[\u200B\u200C\u200D\u2060\uFEFF\u00AD]/g;
+const LC_BIDI = /[\u202A-\u202E\u2066-\u2069]/g;
+const LC_SPACES = /[\u2000-\u200A\u202F\u205F\u3000]/g;
+function lcLatinDominant(t) {
+  const letters = (t.match(/\p{L}/gu) || []).length || 1;
+  const latin = (t.match(/\p{Script=Latin}/gu) || []).length;
+  const lookalike = (t.match(/[\u0370-\u03FF\u0400-\u04FF]/g) || []).filter((ch) => LC_HOMO[ch]).length;
+  return (latin + lookalike) / letters > 0.85;
+}
+function lcNorm(t) {
+  let s = String(t).normalize("NFC").replace(/\r/g, "").replace(/\u00a0/g, " ").replace(LC_INVIS, "").replace(LC_BIDI, "").replace(LC_SPACES, " ");
+  if (lcLatinDominant(s)) s = s.replace(/[\u0370-\u03FF\u0400-\u04FF]/g, (ch) => LC_HOMO[ch] || ch);
+  return s;
+}
+function lcAnomalies(raw) {
+  const t = String(raw).normalize("NFC").replace(/\r/g, "");
+  const items = [];
+  const show = (i, len) => t.slice(Math.max(0, i - 18), i + len + 18).replace(/[\u200B-\u200D\u2060\uFEFF\u00AD]/g, "[ẩn]").replace(/\s+/g, " ");
+  const scan = (re, label, fix) => {
+    const r = new RegExp(re.source, "g"); let m, c = 0; const ex = [];
+    while ((m = r.exec(t))) { c++; if (ex.length < 3) ex.push(show(m.index, m[0].length)); }
+    if (c) items.push({ label, count: c, examples: ex, fix });
+  };
+  scan(LC_INVIS, "Ký tự vô hình (zero-width, soft hyphen) chèn giữa chữ", "Đã xóa trước khi so sánh");
+  scan(LC_BIDI, "Ký tự điều khiển chiều chữ", "Đã xóa trước khi so sánh");
+  scan(LC_SPACES, "Khoảng trắng đặc biệt (em space, thin space...)", "Đã đổi thành khoảng trắng thường");
+  if (lcLatinDominant(t)) {
+    const re = /[\p{L}\p{N}]+/gu; let m, c = 0; const ex = [];
+    while ((m = re.exec(t))) {
+      if (/[\u0370-\u03FF\u0400-\u04FF]/.test(m[0]) && Array.from(m[0]).some((ch) => LC_HOMO[ch])) { c++; if (ex.length < 3) ex.push(m[0]); }
+    }
+    if (c) items.push({ label: "Chữ lẫn ký tự Cy-ril hoặc Hy Lạp trông giống chữ Latin", count: c, examples: ex, fix: "Đã đổi về chữ Latin tương ứng trước khi so sánh" });
+  }
+  return items;
+}
+
+/* ---- So sánh theo câu, tô màu theo mức giống ---- */
+const LC_REASONS = ["Đã ghi nguồn trích dẫn", "Là tài liệu tham khảo", "Là phụ lục", "Hệ thống phát hiện sai", "Lý do khác"];
+const LC_LEVEL_NAME = { 1: "Thấp (vàng)", 2: "Trung bình (cam)", 3: "Cao (đỏ)" };
+const LC_LEGEND_HTML = `<div class="lc-legend"><span class="lc-key">Không tô: dưới 50% hoặc không giống</span><span class="lc-key lc-lv1">Vàng: giống 50 đến 70%</span><span class="lc-key lc-lv2">Cam: giống 70 đến 90%</span><span class="lc-key lc-lv3">Đỏ: giống từ 90%</span><span class="lc-key lc-ex">Xanh: đã loại trừ</span></div>`;
+
+function lcSentSpans(body) {
+  const prot = body.replace(/\b(e\.g|i\.e|et al|Fig|Figs|vs|approx|ca|Eq|Ref|No|Dr|Prof|TS|PGS|ThS|GS)\./gi, (m) => m.slice(0, -1) + "§");
+  const re = /([.!?]+["”')\]]*)\s+(?=[\p{Lu}\p{N}"“(\[])|\n[ \t]*\n/gu;
+  const raw = []; let start = 0, m;
+  while ((m = re.exec(prot))) { raw.push([start, m[1] ? m.index + m[1].length : m.index]); start = m.index + m[0].length; }
+  raw.push([start, prot.length]);
+  const spans = [];
+  raw.forEach(([a, b]) => {
+    while (a < b && /\s/.test(body[a])) a++;
+    while (b > a && /\s/.test(body[b - 1])) b--;
+    if (b - a < 12) return;
+    const text = body.slice(a, b);
+    const toks = lcTokens(text);
+    spans.push({ s: a, e: b, text, toks: toks.length, tk: toks.map((x) => x.w), sims: [], ex: null, eff: null });
+  });
+  return spans;
+}
+function lcKgrams(words, k) {
+  const set = new Set();
+  for (let i = 0; i + k <= words.length; i++) set.add(words.slice(i, i + k).join(" "));
+  return set;
+}
+/* Độ giống của câu với từng nguồn = tỉ lệ cụm k từ liên tiếp của câu xuất hiện trong nguồn (k=3 tiếng Anh, 4 tiếng Việt) */
+function lcSentSims(spans, sources, lang) {
+  const k = lang === "vi" ? 4 : 3;
+  const sets = sources.map((src) => lcKgrams(lcTokens(lcNorm(src)).map((t) => t.w), k));
+  spans.forEach((sp) => {
+    const total = sp.tk.length - k + 1;
+    sp.sims = sets.map((set) => {
+      if (total < 2) return 0;
+      let hit = 0;
+      for (let i = 0; i < total; i++) if (set.has(sp.tk.slice(i, i + k).join(" "))) hit++;
+      return hit / total;
+    });
+  });
+  return k;
+}
+function lcEff(sp, srcEx) {
+  let best = 0, bi = -1;
+  sp.sims.forEach((v, i) => { if (!srcEx[i] && v > best) { best = v; bi = i; } });
+  return { sim: best, src: bi, level: best >= 0.9 ? 3 : best >= 0.7 ? 2 : best >= 0.5 ? 1 : 0 };
+}
+function lcSummary(st) {
+  const lv = [0, 0, 0, 0], words = [0, 0, 0, 0];
+  let exN = 0, exW = 0, flaggedW = 0;
+  st.spans.forEach((sp) => {
+    const e = lcEff(sp, st.srcEx); sp.eff = e;
+    if (e.level > 0 && sp.ex) { exN++; exW += sp.toks; }
+    else if (e.level > 0) { lv[e.level]++; words[e.level] += sp.toks; flaggedW += sp.toks; }
+  });
+  return { lv, words, exN, exW, flaggedW, pct: st.total ? (flaggedW / st.total) * 100 : 0 };
+}
+const LC_STYLE_BG = { 1: "#fff3b0", 2: "#ffd8a8", 3: "#ffb3b3", 4: "#bfdcff" };
+function lcColoredHtml(st, mode) {
+  let html = "", pos = 0;
+  st.spans.forEach((sp, i) => {
+    html += rbkEsc(st.body.slice(pos, sp.s));
+    const e = sp.eff || lcEff(sp, st.srcEx);
+    const txt = rbkEsc(sp.text);
+    if (e.level > 0) {
+      const lvl = sp.ex ? 4 : e.level;
+      const tip = (sp.ex ? "Đã loại trừ: " + sp.ex.reason + ". " : "") + "Giống nguồn " + st.srcNames[e.src].idx + ": " + Math.round(e.sim * 100) + "%";
+      if (mode === "report") html += `<span style="background:${LC_STYLE_BG[lvl]};" title="${rbkEsc(tip)}">${txt}</span>`;
+      else html += `<span class="lc-s ${sp.ex ? "lc-ex" : "lc-lv" + e.level}" data-si="${i}" title="${rbkEsc(tip)}">${txt}</span>`;
+    } else html += txt;
+    pos = sp.e;
+  });
+  return html + rbkEsc(st.body.slice(pos));
+}
+function lcFlagged(st) {
+  return st.spans.map((sp, i) => ({ sp, i })).filter((x) => x.sp.eff && x.sp.eff.level > 0);
+}
+function lcReportHtml(st, sm) {
+  const when = new Date().toLocaleString("vi-VN");
+  const flagged = lcFlagged(st);
+  const rows = flagged.map((x, n) => {
+    const e = x.sp.eff, lvl = x.sp.ex ? 4 : e.level;
+    return `<tr><td>${n + 1}</td><td style="background:${LC_STYLE_BG[lvl]};">${x.sp.ex ? "Đã loại trừ" : LC_LEVEL_NAME[e.level]}</td><td>${Math.round(e.sim * 100)}%</td><td>Nguồn ${st.srcNames[e.src].idx}</td><td>${rbkEsc(x.sp.text.length > 300 ? x.sp.text.slice(0, 300) + "..." : x.sp.text)}${x.sp.ex ? `<br><i>Lý do loại trừ: ${rbkEsc(x.sp.ex.reason)}${x.sp.ex.note ? ". " + rbkEsc(x.sp.ex.note) : ""}</i>` : ""}</td></tr>`;
+  }).join("");
+  const anom = (st.anom || []).map((a) => `<li>${rbkEsc(a.where)}: ${rbkEsc(a.label)} (${a.count}). ${rbkEsc(a.fix)}</li>`).join("");
+  const srcs = st.srcNames.map((s, i) => `<li>Nguồn ${s.idx}: ${rbkEsc(s.name)}${st.srcEx[i] ? " (đã loại khỏi phép tính)" : ""}</li>`).join("");
+  return `<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>Báo cáo so sánh văn bản</title>
+<style>body{font-family:Arial,Helvetica,sans-serif;max-width:900px;margin:24px auto;padding:0 16px;color:#1c2b3a;line-height:1.6}table{border-collapse:collapse;width:100%}td,th{border:1px solid #cdd8e4;padding:6px 8px;vertical-align:top;font-size:14px}th{background:#0b3d91;color:#fff;text-align:left}.t{white-space:pre-wrap;border:1px solid #cdd8e4;padding:12px;border-radius:8px}</style></head><body>
+<h1>Báo cáo so sánh văn bản</h1><p>Tạo bởi ngăn Liêm Chính Học Thuật, ngày ${rbkEsc(when)}.</p>
+<h2>Tóm tắt</h2><table><tr><th>Chỉ số</th><th>Giá trị</th></tr>
+<tr><td>Điểm trùng lặp (số từ thuộc câu giống từ 50% trở lên, chia tổng số từ)</td><td><b>${sm.pct.toFixed(1)}%</b> (${sm.flaggedW}/${st.total} từ)</td></tr>
+<tr><td>Mức cao (đỏ, từ 90%)</td><td>${sm.lv[3]} câu, ${sm.words[3]} từ</td></tr><tr><td>Mức trung bình (cam, 70 đến 90%)</td><td>${sm.lv[2]} câu, ${sm.words[2]} từ</td></tr>
+<tr><td>Mức thấp (vàng, 50 đến 70%)</td><td>${sm.lv[1]} câu, ${sm.words[1]} từ</td></tr><tr><td>Đã loại trừ (xanh)</td><td>${sm.exN} câu, ${sm.exW} từ</td></tr></table>
+<h2>Nguồn đối chiếu</h2><ul>${srcs}</ul>
+${anom ? `<h2>Ký tự bất thường đã xử lý</h2><ul>${anom}</ul>` : ""}
+<h2>Bản nháp (câu giống được tô màu)</h2><p><span style="background:#fff3b0">Vàng 50 đến 70%</span> <span style="background:#ffd8a8">Cam 70 đến 90%</span> <span style="background:#ffb3b3">Đỏ từ 90%</span> <span style="background:#bfdcff">Xanh đã loại trừ</span></p>
+<div class="t">${lcColoredHtml(st, "report")}</div>
+<h2>Danh sách câu giống</h2>${rows ? `<table><tr><th>#</th><th>Mức</th><th>Giống</th><th>Nguồn</th><th>Nội dung</th></tr>${rows}</table>` : "<p>Không có câu nào giống từ 50% trở lên.</p>"}
+<h2>Lưu ý</h2><ul><li>Báo cáo được tạo trên máy của người dùng. Ngăn chỉ so với các nguồn đã dán, không quét internet hay kho luận văn.</li>
+<li>Giống nhau không đồng nghĩa với đạo văn: trích dẫn đúng, thuật ngữ và quy trình chuẩn cũng bị tính. Thang màu chỉ là quy ước hiển thị.</li>
+<li>Không nên dùng báo cáo này làm căn cứ duy nhất để kết luận vi phạm học thuật.</li></ul></body></html>`;
+}
+function lcReportTxt(st, sm) {
+  const L = ["BÁO CÁO TÓM TẮT SO SÁNH VĂN BẢN", "Ngày: " + new Date().toLocaleString("vi-VN"), "",
+    "Điểm trùng lặp: " + sm.pct.toFixed(1) + "% (" + sm.flaggedW + "/" + st.total + " từ thuộc câu giống từ 50% trở lên)",
+    "Mức cao (đỏ): " + sm.lv[3] + " câu | Trung bình (cam): " + sm.lv[2] + " câu | Thấp (vàng): " + sm.lv[1] + " câu | Đã loại trừ: " + sm.exN + " câu", "", "NGUỒN ĐỐI CHIẾU"];
+  st.srcNames.forEach((s, i) => L.push("Nguồn " + s.idx + ": " + s.name + (st.srcEx[i] ? " (đã loại khỏi phép tính)" : "")));
+  L.push("", "CÁC CÂU GIỐNG");
+  lcFlagged(st).forEach((x, n) => {
+    L.push((n + 1) + ". [" + (x.sp.ex ? "Đã loại trừ: " + x.sp.ex.reason : LC_LEVEL_NAME[x.sp.eff.level]) + ", " + Math.round(x.sp.eff.sim * 100) + "%, nguồn " + st.srcNames[x.sp.eff.src].idx + "] " + x.sp.text);
+  });
+  L.push("", "LƯU Ý: Chỉ so với nguồn đã dán, không quét internet. Giống nhau không đồng nghĩa với đạo văn. Không dùng làm căn cứ duy nhất để kết luận vi phạm.");
+  return L.join("\n");
+}
+function lcDownload(name, mime, content) {
+  const blob = new Blob([content], { type: mime + ";charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+const LC_SAMPLE_SRC = "Vật liệu khung kim loại hữu cơ (MOF) là nhóm vật liệu xốp có diện tích bề mặt riêng rất lớn, được tạo thành từ các nút kim loại liên kết với phối tử hữu cơ. Các MOF thường được tổng hợp bằng phương pháp nhiệt dung môi trong N,N-dimethylformamide ở nhiệt độ từ 80 đến 150 độ C trong nhiều giờ. Độ bền của MOF trong nước là một thách thức lớn đối với ứng dụng thực tế.";
+const LC_SAMPLE_DRAFT = "1. Giới thiệu\nVật liệu khung kim loại hữu cơ (MOF) là nhóm vật liệu xốp có diện tích bề mặt riêng rất lớn, được tạo thành từ các nút kim loại liên kết với phối tử hữu cơ. Trong nghiên cứu này chúng tôi tổng hợp MOF tại 120 độ C trong 12 giờ rồi rửa bằng ethanol. Theo [1], các MOF thường được tổng hợp bằng phương pháp nhiệt dung môi trong N,N-dimethylformamide ở nhiệt độ từ 80 đến 150 độ C, còn thời gian phản ứng thay đổi theo từng hệ vật liệu. Khả năng giữ cấu trúc khi tiếp xúc với nước vẫn là rào cản chính khi đưa vật liệu vào ứng dụng.";
+
+function lcAnomHtml(list) {
+  if (!list.length) return "";
+  return `<div class="rbk-card"><h4>Ký tự bất thường đã được xử lý</h4><p class="tkb-note">Văn bản dán vào có ký tự ẩn hoặc ký tự lạ trông giống chữ Latin. Chúng làm việc so khớp bị sai, nên ngăn đã làm sạch trước khi so sánh.</p><ul>${list.map((a) => `<li><b>${rbkEsc(a.where)}</b>: ${rbkEsc(a.label)}: ${a.count} chỗ. ${rbkEsc(a.fix)}. Ví dụ: ${a.examples.map((x) => "“" + rbkEsc(x) + "”").join(" ; ")}</li>`).join("")}</ul></div>`;
+}
+
 
 function lcTokens(text) {
   const out = []; const re = /[\p{L}\p{N}]+/gu; let m;
@@ -4845,37 +5019,86 @@ const LC_GUIDE_HTML = `
     <li>Ngăn này không truy cập các trang chia sẻ bài trái phép. Muốn đọc bài trả phí, hãy dùng bản truy cập mở, thư viện trường hoặc email tác giả.</li>
   </ul></div>`;
 
+const LC_START_HTML = `
+<div class="rbk-card"><h4>Ngăn này dùng để làm gì</h4>
+  <p>Giúp bạn <b>tự kiểm tra bài đang viết trước khi nộp</b>: bài có giống tài liệu bạn đã đọc quá nhiều không, tài liệu tham khảo có thật không, câu nào nên sửa, và lưu lại quá trình viết để có thể giải trình khi cần.</p>
+  <p>Ngăn <b>không phải máy bắt đạo văn hay máy dò AI</b>, không quét internet hay kho luận văn, và không thay thế công cụ chính thức của trường khi nộp bài.</p></div>
+<div class="rbk-card"><h4>Các từ dùng trong ngăn</h4>
+  <ul>
+    <li><b>Bản nháp (Đoạn tài liệu bạn đang viết):</b> phần chữ của chính bạn mà bạn muốn kiểm tra.</li>
+    <li><b>Nguồn đối chiếu (Tài liệu bạn đã đọc hoặc muốn so sánh):</b> bài báo, giáo trình, chương sách bạn dán vào để xem bản nháp có giống không.</li>
+    <li><b>Điểm trùng lặp:</b> số từ thuộc những câu giống nguồn từ 50% trở lên, chia cho tổng số từ của bản nháp.</li>
+    <li><b>Loại trừ:</b> đánh dấu một câu giống là hợp lệ (đã ghi nguồn trích dẫn, tài liệu tham khảo, phụ lục...) để không tính vào điểm. Bạn có thể hoàn tác.</li>
+    <li><b>DOI:</b> mã định danh của một bài báo. Tab 2 dùng DOI để kiểm tra tài liệu có thật không.</li>
+    <li><b>Bản truy cập mở:</b> bản bài báo được cung cấp hợp pháp và miễn phí (bản tác giả, preprint).</li>
+  </ul></div>
+<div class="rbk-card"><h4>Bắt đầu nhanh trong 4 bước (tab 1)</h4>
+  <ol>
+    <li>Mở tab <b>1. So sánh và tìm lặp</b>, dán <b>Bản nháp</b> vào ô đầu tiên.</li>
+    <li>Dán <b>Nguồn đối chiếu</b> vào ô bên dưới (bấm "Thêm nguồn" nếu có nhiều tài liệu).</li>
+    <li>Bấm <b>So sánh với nguồn</b>. Câu giống được tô màu theo mức.</li>
+    <li><b>Bấm vào câu được tô màu</b> để xem giống bao nhiêu phần trăm. Nếu đó là trích dẫn đã ghi nguồn, bấm "Loại trừ" và chọn lý do, điểm sẽ tính lại ngay. Cuối cùng tải báo cáo nếu cần.</li>
+  </ol>
+  <p><button id="lcSampleBtn" class="pomo-btn pomo-btn-primary">Thử ngay bằng ví dụ mẫu</button></p></div>
+<div class="rbk-card"><h4>Bảng màu</h4>${LC_LEGEND_HTML}
+  <p class="tkb-note">Màu chỉ là quy ước hiển thị để dễ đọc, theo cách thể hiện của các hệ thống kiểm tra tài liệu thông dụng. Đây không phải ngưỡng kết luận có đạo văn hay không, và mỗi đơn vị có thể dùng ngưỡng khác.</p></div>
+<div class="rbk-card"><h4>Chọn tab nào cho việc gì</h4>
+  <table class="rbk-tbl"><tr><th>Bạn muốn</th><th>Dùng</th><th>Bạn nhận được</th></tr>
+    <tr><td>Biết bài mình có giống tài liệu đã đọc không</td><td>Tab 1</td><td>Câu tô màu, điểm trùng lặp, báo cáo tải về</td></tr>
+    <tr><td>Phát hiện ký tự ẩn hoặc chữ lạ giống chữ Latin</td><td>Tab 1, nút "Kiểm tra ký tự bất thường"</td><td>Danh sách ký tự và nơi xuất hiện</td></tr>
+    <tr><td>Biết tài liệu tham khảo có thật không</td><td>Tab 2</td><td>Bảng kết quả và link bản đọc hợp pháp</td></tr>
+    <tr><td>Biết câu nào nên sửa</td><td>Tab 3</td><td>Danh sách việc cần sửa và câu cần xem lại</td></tr>
+    <tr><td>Lưu quá trình viết để giải trình</td><td>Tab 4</td><td>Các phiên bản và báo cáo .txt</td></tr>
+    <tr><td>Hiểu con số kiểm tra ở nơi khác</td><td>Tab 5</td><td>Giải thích, dấu hiệu dịch vụ nên tránh</td></tr>
+  </table></div>
+<div class="rbk-card"><h4>Hỏi nhanh</h4>
+  <ul>
+    <li><b>Vì sao điểm là 0%?</b> Không có câu nào giống nguồn bạn đã dán từ 50% trở lên. Hãy kiểm tra bạn đã dán đúng nguồn và đủ nội dung chưa. Điểm 0% không có nghĩa bài chắc chắn không giống tài liệu nào khác trên internet.</li>
+    <li><b>Vì sao điểm cao dù tôi đã trích dẫn?</b> Ngăn không tự phân biệt được trích dẫn. Hãy bấm vào câu đó và loại trừ với lý do "Đã ghi nguồn trích dẫn". Nên đặt đoạn trích trong ngoặc kép và ghi nguồn rõ ràng.</li>
+    <li><b>Ngăn có bắt được đoạn viết lại bằng từ khác không?</b> Chỉ bắt tốt khi bạn giữ nhiều cụm từ liền nhau. Viết lại hoàn toàn bằng từ khác thì ngăn không bắt được, và công cụ nào cũng khó. Quan trọng là bạn hiểu và diễn đạt bằng lời của mình, kèm trích dẫn.</li>
+    <li><b>Thông báo "ký tự bất thường" nghĩa là gì?</b> Văn bản có ký tự ẩn hoặc chữ lạ trông giống chữ Latin, có thể làm sai việc so khớp. Ngăn đã làm sạch trước khi so. Ngăn chỉ kiểm tra được ký tự, không thấy được định dạng như chữ trắng trên nền trắng hay cỡ chữ siêu nhỏ vì khi dán vào, định dạng đã mất.</li>
+    <li><b>Dán từ PDF bị lỗi dòng?</b> PDF hai cột hay bị trộn dòng. Hãy dán từng cột, hoặc dùng bản Word.</li>
+    <li><b>Dữ liệu của tôi có được lưu không?</b> Tab 1 và 3 xử lý trên máy bạn, không lưu. Tab 2 gửi DOI hoặc dòng trích dẫn tới Crossref, OpenAlex, doi.org. Tab 4 lưu trong trình duyệt của chính bạn.</li>
+    <li><b>Kết quả có dùng làm bằng chứng được không?</b> Không nên. Đây là công cụ tự kiểm tra, và kể cả các hệ thống chính thức cũng khuyến cáo không dùng một con số làm căn cứ duy nhất.</li>
+  </ul></div>`;
+
 function renderIntegrity() {
   return `
   <div class="rbk-wrap">
     <div class="rbk-tabs">
-      <button class="rbk-tab rbk-tab-on" data-lc-tab="compare">1. So sánh và tìm lặp</button>
+      <button class="rbk-tab rbk-tab-on" data-lc-tab="start">Hướng dẫn sử dụng</button>
+      <button class="rbk-tab" data-lc-tab="compare">1. So sánh và tìm lặp</button>
       <button class="rbk-tab" data-lc-tab="refs">2. Tài liệu tham khảo</button>
       <button class="rbk-tab" data-lc-tab="style">3. Soi văn phong và sửa bài</button>
       <button class="rbk-tab" data-lc-tab="log">4. Hồ sơ quá trình viết</button>
       <button class="rbk-tab" data-lc-tab="guide">5. Tránh bị lừa</button>
     </div>
 
-    <div id="lcP-compare">
-      <p class="ctdt-meta">Dán bản nháp của bạn và một hoặc nhiều nguồn bạn đã đọc (bài báo, giáo trình, chương sách). Ngăn tô những đoạn trong bản nháp giống nguồn từ một số từ liên tiếp trở lên. Ngăn <b>không quét internet hay kho luận văn</b>, chỉ so với những gì bạn dán vào. Văn bản chỉ xử lý trên máy bạn.</p>
-      <b>Bản nháp của bạn</b>
-      <textarea id="lcDraft" class="rbk-input" rows="9" placeholder="Dán bản nháp của bạn..."></textarea>
+    <div id="lcP-start">${LC_START_HTML}</div>
+
+    <div id="lcP-compare" style="display:none;">
+      <p class="ctdt-meta"><b>Cách dùng:</b> (1) Dán <b>Bản nháp (Đoạn tài liệu bạn đang viết)</b> vào ô đầu tiên. (2) Dán một hoặc nhiều <b>Nguồn đối chiếu (Tài liệu bạn đã đọc hoặc muốn so sánh)</b> như bài báo, giáo trình, chương sách. (3) Bấm "So sánh với nguồn". (4) Bấm vào câu được tô màu để xem chi tiết, và loại trừ nếu đó là trích dẫn đã ghi nguồn. Ngăn <b>không quét internet hay kho luận văn</b>, chỉ so với những gì bạn dán vào. Văn bản chỉ xử lý trên máy bạn.</p>
+      <p><button id="lcSampleBtn2" class="pomo-btn pomo-btn-secondary">Chưa biết bắt đầu? Dùng ví dụ mẫu</button></p>
+      <b>Bản nháp (Đoạn tài liệu bạn đang viết)</b>
+      <textarea id="lcDraft" class="rbk-input" rows="9" placeholder="Dán bản nháp (đoạn tài liệu bạn đang viết) vào đây..."></textarea>
       ${lcUploadRow()}
       <div id="lcSources"></div>
       <div class="rbk-row">
-        <button id="lcAddSrc" class="pomo-btn pomo-btn-secondary">Thêm nguồn</button>
-        <label><input type="checkbox" id="lcSkipRefs" checked> Bỏ qua phần Tài liệu tham khảo của bản nháp</label>
+        <button id="lcAddSrc" class="pomo-btn pomo-btn-secondary">Thêm nguồn đối chiếu</button>
+        <label><input type="checkbox" id="lcSkipRefs" checked> Bỏ qua phần Tài liệu tham khảo ở cuối bản nháp</label>
       </div>
       <div class="rbk-row">
         <button id="lcGoCompare" class="pomo-btn pomo-btn-primary">So sánh với nguồn</button>
         <button id="lcGoRepeat" class="pomo-btn pomo-btn-primary">Tìm lặp và tạo link tìm nguồn</button>
+        <button id="lcGoAnom" class="pomo-btn pomo-btn-secondary">Kiểm tra ký tự bất thường</button>
       </div>
+      <div id="lcOutAnom"></div>
       <div id="lcOutCompare"></div>
       <div id="lcOutRepeat"></div>
     </div>
 
     <div id="lcP-refs" style="display:none;">
-      <p class="ctdt-meta">Dán danh mục tài liệu tham khảo (hoặc cả bài có đề mục References). Ngăn tra từng DOI trên Crossref để xem tài liệu có thật, tiêu đề, tác giả, năm có khớp không, và tìm bản <b>truy cập mở hợp pháp</b> qua OpenAlex. Dòng không có DOI được thử tìm theo nội dung trích dẫn. Tối đa 60 tài liệu mỗi lần.</p>
+      <p class="ctdt-meta"><b>Cách dùng:</b> (1) Dán danh mục tài liệu tham khảo của bạn, mỗi tài liệu một dòng. (2) Bấm "Kiểm tra tài liệu tham khảo". (3) Đọc cột "Kết quả" và mở link ở cột "Bản đọc hợp pháp". Bạn có thể dán danh mục tài liệu tham khảo hoặc cả bài có đề mục References. Ngăn tra từng DOI trên Crossref để xem tài liệu có thật, tiêu đề, tác giả, năm có khớp không, và tìm bản <b>truy cập mở hợp pháp</b> qua OpenAlex. Dòng không có DOI được thử tìm theo nội dung trích dẫn. Tối đa 60 tài liệu mỗi lần.</p>
       <p class="tkb-note">Quyền riêng tư: tab này gửi DOI (hoặc dòng trích dẫn nếu không có DOI) tới Crossref, OpenAlex và doi.org. Không gửi nội dung bài.</p>
       <textarea id="lcRefs" class="rbk-input" rows="9" placeholder="[1] Tác giả, Tên bài, Tạp chí, năm, doi:10.xxxx/xxxxx&#10;[2] ..."></textarea>
       ${lcUploadRow()}
@@ -4885,18 +5108,18 @@ function renderIntegrity() {
     </div>
 
     <div id="lcP-style" style="display:none;">
-      <p class="ctdt-meta">Dán đoạn văn (tiếng Anh hoặc tiếng Việt). Ngăn chỉ ra câu có dấu hiệu cần xem lại về cách viết và gợi ý sửa. <b>Đây không phải máy dò AI và không có điểm phần trăm AI.</b> Văn học thuật do người viết cũng thường có các dấu hiệu này. Văn bản chỉ xử lý trên máy bạn.</p>
-      <textarea id="lcStyleText" class="rbk-input" rows="10" placeholder="Dán đoạn văn cần soi..."></textarea>
+      <p class="ctdt-meta"><b>Cách dùng:</b> (1) Dán đoạn tài liệu bạn đang viết (tiếng Anh hoặc tiếng Việt). (2) Bấm "Soi văn phong và đề xuất sửa". (3) Làm theo danh sách việc cần sửa, rồi xem từng câu bị gắn cờ. Ngăn chỉ ra câu có dấu hiệu cần xem lại về cách viết và gợi ý sửa. <b>Đây không phải máy dò AI và không có điểm phần trăm AI.</b> Văn học thuật do người viết cũng thường có các dấu hiệu này. Văn bản chỉ xử lý trên máy bạn.</p>
+      <textarea id="lcStyleText" class="rbk-input" rows="10" placeholder="Dán đoạn tài liệu bạn đang viết cần soi..."></textarea>
       ${lcUploadRow()}
       <div class="rbk-row"><button id="lcGoStyle" class="pomo-btn pomo-btn-primary">Soi văn phong và đề xuất sửa</button></div>
       <div id="lcOutStyle"></div>
     </div>
 
     <div id="lcP-log" style="display:none;">
-      <p class="ctdt-meta">Lưu các phiên bản bài viết theo thời gian ngay trong trình duyệt của bạn (không gửi đi đâu). Ngăn tính phần thay đổi giữa các bản và xuất báo cáo quá trình viết. Báo cáo này do bạn tự tạo, không có bên thứ ba xác thực, nên hãy kèm lịch sử phiên bản của Word hoặc Google Docs. Xóa dữ liệu trình duyệt sẽ mất các bản đã lưu.</p>
+      <p class="ctdt-meta"><b>Cách dùng:</b> (1) Đặt tên tài liệu và nhãn cho phiên bản. (2) Dán bản đang viết hiện tại và bấm "Lưu phiên bản". Làm lại sau mỗi lần sửa lớn. (3) Khi cần giải trình, bấm "Xuất báo cáo". Ngăn lưu các phiên bản bài viết theo thời gian ngay trong trình duyệt của bạn (không gửi đi đâu). Ngăn tính phần thay đổi giữa các bản và xuất báo cáo quá trình viết. Báo cáo này do bạn tự tạo, không có bên thứ ba xác thực, nên hãy kèm lịch sử phiên bản của Word hoặc Google Docs. Xóa dữ liệu trình duyệt sẽ mất các bản đã lưu.</p>
       <div class="rbk-row"><label>Tên tài liệu: <input id="lcLogName" class="rbk-input" style="width:260px;" placeholder="Báo cáo đề tài..."></label>
         <label>Nhãn phiên bản: <input id="lcLogLabel" class="rbk-input" style="width:220px;" placeholder="Nháp phần mở đầu"></label></div>
-      <textarea id="lcLogText" class="rbk-input" rows="9" placeholder="Dán bản hiện tại của bài..."></textarea>
+      <textarea id="lcLogText" class="rbk-input" rows="9" placeholder="Dán bản nháp hiện tại (đoạn tài liệu bạn đang viết)..."></textarea>
       ${lcUploadRow()}
       <div class="rbk-row"><button id="lcSaveVer" class="pomo-btn pomo-btn-primary">Lưu phiên bản</button>
         <button id="lcExport" class="pomo-btn pomo-btn-secondary">Xuất báo cáo (.txt)</button>
@@ -4916,7 +5139,7 @@ function renderIntegrity() {
 function initIntegrity() {
   const $ = (id) => document.getElementById(id);
   if (!$("lcP-compare")) return;
-  const panels = ["compare", "refs", "style", "log", "guide"];
+  const panels = ["start", "compare", "refs", "style", "log", "guide"];
   const showTab = (t) => {
     document.querySelectorAll("[data-lc-tab]").forEach((b) => b.classList.toggle("rbk-tab-on", b.getAttribute("data-lc-tab") === t));
     panels.forEach((p) => { $("lcP-" + p).style.display = p === t ? "" : "none"; });
@@ -4937,29 +5160,104 @@ function initIntegrity() {
     if (srcCount >= 5) return;
     srcCount++;
     const div = document.createElement("div");
-    div.innerHTML = `<b>Nguồn ${srcCount}</b><textarea class="rbk-input lc-src" rows="6" placeholder="Dán nội dung nguồn ${srcCount} (bài báo, giáo trình...)"></textarea>${lcUploadRow()}`;
+    div.innerHTML = `<b>Nguồn đối chiếu ${srcCount} (Tài liệu bạn đã đọc hoặc muốn so sánh)</b><textarea class="rbk-input lc-src" rows="6" placeholder="Dán nội dung nguồn đối chiếu ${srcCount} (bài báo, giáo trình, chương sách...)"></textarea>${lcUploadRow()}`;
     $("lcSources").appendChild(div);
     attachAll(div);
   };
   addSource();
   $("lcAddSrc").addEventListener("click", addSource);
 
+  // --- Ví dụ mẫu ---
+  const loadSample = () => {
+    $("lcDraft").value = LC_SAMPLE_DRAFT;
+    const first = document.querySelector(".lc-src");
+    if (first) first.value = LC_SAMPLE_SRC;
+    showTab("compare");
+    $("lcGoCompare").click();
+  };
+  $("lcSampleBtn").addEventListener("click", loadSample);
+  $("lcSampleBtn2").addEventListener("click", loadSample);
+
+  // --- So sánh theo câu, tô màu, loại trừ có lý do ---
+  let cmp = null;
+  const openAct = (i) => {
+    const sp = cmp.spans[i], e = lcEff(sp, cmp.srcEx), box = $("lcAct");
+    if (!e.level && !sp.ex) return;
+    box.style.display = "";
+    const head = `<div class="rbk-who">Câu này giống nguồn đối chiếu ${cmp.srcNames[e.src >= 0 ? e.src : 0].idx}: ${Math.round(e.sim * 100)}% (${LC_LEVEL_NAME[e.level] || "đã loại trừ"})</div><div class="rbk-hit">${rbkEsc(sp.text)}</div>`;
+    if (sp.ex) {
+      box.innerHTML = head + `<p>Đã loại trừ. Lý do: <b>${rbkEsc(sp.ex.reason)}</b>${sp.ex.note ? ". " + rbkEsc(sp.ex.note) : ""}</p><div class="rbk-row"><button id="lcUndo" class="pomo-btn pomo-btn-primary">Đánh dấu lại là trùng lặp</button><button id="lcCloseAct" class="pomo-btn pomo-btn-secondary">Đóng</button></div>`;
+      $("lcUndo").addEventListener("click", () => { sp.ex = null; box.style.display = "none"; refreshCompare(); });
+    } else {
+      box.innerHTML = head + `<div class="rbk-row"><label>Lý do loại trừ: <select id="lcReason">${LC_REASONS.map((r) => `<option>${rbkEsc(r)}</option>`).join("")}</select></label>
+        <input id="lcReasonNote" class="rbk-input" style="width:260px;" placeholder="Mô tả thêm (không bắt buộc)"></div>
+        <div class="rbk-row"><button id="lcDoEx" class="pomo-btn pomo-btn-primary">Loại trừ câu này</button><button id="lcCloseAct" class="pomo-btn pomo-btn-secondary">Đóng</button></div>`;
+      $("lcDoEx").addEventListener("click", () => { sp.ex = { reason: $("lcReason").value, note: $("lcReasonNote").value.trim() }; box.style.display = "none"; refreshCompare(); });
+    }
+    $("lcCloseAct").addEventListener("click", () => { box.style.display = "none"; });
+  };
+  const refreshCompare = () => {
+    const sm = lcSummary(cmp);
+    const srcRows = cmp.srcNames.map((s, i) => {
+      const n = cmp.spans.filter((sp) => sp.sims[i] >= 0.5).length;
+      return `<tr><td>Nguồn đối chiếu ${s.idx}</td><td>${rbkEsc(s.name)}</td><td>${n}</td><td><label><input type="checkbox" data-srcex="${i}" ${cmp.srcEx[i] ? "checked" : ""}> Loại nguồn này khỏi phép tính</label></td></tr>`;
+    }).join("");
+    $("lcSum").innerHTML = `<div class="rbk-card">
+      <p><b>Điểm trùng lặp: ${sm.pct.toFixed(1)}%</b> (số từ thuộc các câu giống nguồn từ 50% trở lên, chia tổng số từ của bản nháp: ${sm.flaggedW}/${cmp.total} từ).</p>
+      <p>Mức cao (đỏ): ${sm.lv[3]} câu | Trung bình (cam): ${sm.lv[2]} câu | Thấp (vàng): ${sm.lv[1]} câu | Đã loại trừ (xanh): ${sm.exN} câu</p>
+      <p class="tkb-note">Điểm này chỉ nói về mức giống với những nguồn bạn đã dán và thay đổi theo thao tác loại trừ của bạn, nên không phải kết luận về đạo văn. Giống nhau không đồng nghĩa với đạo văn: trích dẫn đúng, thuật ngữ và quy trình chuẩn cũng bị tính.</p></div>
+      <table class="rbk-tbl"><tr><th>Nguồn</th><th>Nội dung (đầu nguồn)</th><th>Số câu giống từ 50%</th><th>Tùy chọn</th></tr>${srcRows}</table>
+      <p class="tkb-note">Ví dụ nên loại nguồn khỏi phép tính: nguồn đó là tài liệu do chính bạn viết trước đây.</p>`;
+    $("lcText").innerHTML = lcColoredHtml(cmp, "ui");
+    $("lcSum").querySelectorAll("[data-srcex]").forEach((c) => c.addEventListener("change", () => { cmp.srcEx[+c.getAttribute("data-srcex")] = c.checked; refreshCompare(); }));
+  };
+  const buildCompare = () => {
+    $("lcOutCompare").innerHTML = `<h3 class="rbk-h">Kết quả so sánh</h3><div id="lcAnomBox"></div><div id="lcSum"></div>
+      <h3 class="rbk-h">Bản nháp (câu giống được tô màu)</h3>${LC_LEGEND_HTML}
+      <p class="tkb-note"><b>Bấm vào câu được tô màu</b> để xem chi tiết và loại trừ (ví dụ câu đã ghi nguồn trích dẫn). Điểm tính lại ngay.</p>
+      <div id="lcAct" class="rbk-panel" style="display:none;"></div>
+      <div class="lc-text" id="lcText"></div>
+      <div class="rbk-row"><button id="lcDlHtml" class="pomo-btn pomo-btn-secondary">Tải báo cáo chi tiết (.html)</button><button id="lcDlTxt" class="pomo-btn pomo-btn-secondary">Tải báo cáo tóm tắt (.txt)</button></div>
+      <h3 class="rbk-h">Các đoạn giống liền mạch dài nhất</h3><div id="lcTop"></div>`;
+    $("lcAnomBox").innerHTML = lcAnomHtml(cmp.anom);
+    $("lcText").addEventListener("click", (e) => {
+      const el = e.target.closest ? e.target.closest(".lc-s") : null;
+      if (el) openAct(+el.getAttribute("data-si"));
+    });
+    $("lcDlHtml").addEventListener("click", () => lcDownload("bao-cao-chi-tiet.html", "text/html", lcReportHtml(cmp, lcSummary(cmp))));
+    $("lcDlTxt").addEventListener("click", () => lcDownload("bao-cao-tom-tat.txt", "text/plain", lcReportTxt(cmp, lcSummary(cmp))));
+    const top = cmp.ranges.slice().sort((a, b) => b.words - a.words).slice(0, 10);
+    $("lcTop").innerHTML = top.length ? `<ol class="rbk-qs">${top.map((x) => `<li><b>${x.words} từ, nguồn đối chiếu ${cmp.srcNames[x.si].idx}:</b> ${rbkEsc(x.text)}</li>`).join("")}</ol>` : "<p>Không có đoạn nào giống liền mạch từ " + cmp.n + " từ trở lên.</p>";
+  };
   $("lcGoCompare").addEventListener("click", () => {
-    const draft = $("lcDraft").value;
-    const srcs = Array.from(document.querySelectorAll(".lc-src")).map((t) => t.value).filter((v) => v.trim());
+    const draftRaw = $("lcDraft").value;
     const out = $("lcOutCompare");
-    if (draft.trim().length < 100) { out.innerHTML = '<p class="rbk-miss">Hãy dán bản nháp (ít nhất vài câu).</p>'; return; }
-    if (!srcs.length) { out.innerHTML = '<p class="rbk-miss">Hãy dán ít nhất một nguồn để so sánh.</p>'; return; }
-    const r = lcCompare(draft, srcs, { skipRefs: $("lcSkipRefs").checked });
-    const top = r.ranges.slice().sort((a, b) => b.words - a.words).slice(0, 10);
-    out.innerHTML = `<h3 class="rbk-h">Kết quả so sánh</h3>
-      <div class="rbk-card"><p><b>${r.pct.toFixed(1)}%</b> số từ của bản nháp nằm trong các đoạn giống nguồn từ ${r.n} từ liên tiếp trở lên (${r.hit}/${r.total} từ).</p>
-      <p>${r.per.map((c, i) => "Nguồn " + (i + 1) + ": " + (r.total ? ((c / r.total) * 100).toFixed(1) : 0) + "%").join(" | ")}</p>
-      <p class="tkb-note">Con số này chỉ nói về mức giống với những nguồn bạn đã dán. Giống nhau không đồng nghĩa với đạo văn: trích dẫn đúng, thuật ngữ và quy trình chuẩn cũng bị tính. Hãy xem từng đoạn.</p></div>
-      <h3 class="rbk-h">Bản nháp (đoạn giống được tô màu)</h3>
-      <div class="lc-text">${r.html}</div>
-      <h3 class="rbk-h">Các đoạn giống dài nhất</h3>
-      ${top.length ? `<ol class="rbk-qs">${top.map((x) => `<li><b>${x.words} từ, nguồn ${x.si + 1}:</b> ${rbkEsc(x.text)}</li>`).join("")}</ol>` : "<p>Không có đoạn nào giống từ " + r.n + " từ liên tiếp trở lên.</p>"}`;
+    const pairs = Array.from(document.querySelectorAll(".lc-src")).map((t, i) => ({ v: t.value, i })).filter((x) => x.v.trim());
+    if (draftRaw.trim().length < 100) { out.innerHTML = '<p class="rbk-miss">Hãy dán Bản nháp (đoạn tài liệu bạn đang viết), ít nhất vài câu.</p>'; return; }
+    if (!pairs.length) { out.innerHTML = '<p class="rbk-miss">Hãy dán ít nhất một Nguồn đối chiếu (tài liệu bạn đã đọc hoặc muốn so sánh).</p>'; return; }
+    const skipRefs = $("lcSkipRefs").checked;
+    const anom = [];
+    lcAnomalies(draftRaw).forEach((a) => anom.push(Object.assign({ where: "Bản nháp" }, a)));
+    pairs.forEach((p) => lcAnomalies(p.v).forEach((a) => anom.push(Object.assign({ where: "Nguồn đối chiếu " + (p.i + 1) }, a))));
+    let body = lcNorm(draftRaw);
+    if (skipRefs) body = lcCutRefs(body);
+    const lang = lcLang(body);
+    const spans = lcSentSpans(body);
+    if (!spans.length) { out.innerHTML = '<p class="rbk-miss">Chưa tách được câu nào từ bản nháp. Hãy kiểm tra lại nội dung đã dán.</p>'; return; }
+    lcSentSims(spans, pairs.map((p) => p.v), lang);
+    const ex = lcCompare(draftRaw, pairs.map((p) => p.v), { skipRefs });
+    cmp = { body, spans, lang, total: lcTokens(body).length, anom, ranges: ex.ranges, n: ex.n,
+      srcNames: pairs.map((p) => ({ idx: p.i + 1, name: lcNorm(p.v).replace(/\s+/g, " ").trim().slice(0, 70) + "..." })), srcEx: pairs.map(() => false) };
+    buildCompare();
+    refreshCompare();
+  });
+
+  $("lcGoAnom").addEventListener("click", () => {
+    const list = [];
+    lcAnomalies($("lcDraft").value).forEach((a) => list.push(Object.assign({ where: "Bản nháp" }, a)));
+    Array.from(document.querySelectorAll(".lc-src")).forEach((t, i) => lcAnomalies(t.value).forEach((a) => list.push(Object.assign({ where: "Nguồn đối chiếu " + (i + 1) }, a))));
+    $("lcOutAnom").innerHTML = (list.length ? lcAnomHtml(list) : '<div class="rbk-card"><p><b>Không thấy ký tự bất thường</b> trong văn bản đã dán.</p>') +
+      (list.length ? "" : '<p class="tkb-note">Ngăn chỉ kiểm tra ký tự trong văn bản. Ngăn không thấy được định dạng như chữ trắng trên nền trắng hay cỡ chữ siêu nhỏ, vì khi dán vào, định dạng đã mất.</p></div>');
   });
 
   $("lcGoRepeat").addEventListener("click", () => {
