@@ -815,6 +815,20 @@ table.tkb tbody tr:nth-child(even) td { background: #f7fbff; }
 .lc-legend { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
 .lc-key { display: inline-block; border: 1px solid #d3dde9; border-radius: 6px; padding: 3px 10px; font-size: 13px; background: #fff; }
 .lc-key.lc-lv1 { background: #fff3b0; } .lc-key.lc-lv2 { background: #ffd8a8; } .lc-key.lc-lv3 { background: #ffb3b3; } .lc-key.lc-ex { background: #bfdcff; }
+
+/* ===== Ngăn Công thức hóa học ===== */
+.cf-bar { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.cf-btn { border: 1px solid #cfe4f5; background: #fff; color: #16283e; border-radius: 8px; padding: 6px 10px; font-size: 14px; cursor: pointer; font-family: "Times New Roman", Times, serif; min-width: 34px; }
+.cf-btn:hover { background: #eef6ff; border-color: #0b3d91; }
+.cf-strong { background: #0b3d91; color: #fff; border-color: #0b3d91; font-family: inherit; font-weight: 600; }
+.cf-strong:hover { background: #0a3278; }
+.cf-group { margin: 8px 0; font-size: 13px; color: #3a5a80; }
+.cf-pal { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+.cf-ed { min-height: 180px; border: 1px solid #9fb8d4; border-radius: 10px; padding: 12px 14px; background: #fff; font-family: "Times New Roman", Times, serif; font-size: 17px; line-height: 1.7; outline: none; margin: 10px 0; }
+.cf-ed:focus { border-color: #0b3d91; box-shadow: 0 0 0 2px #d9e8fb; }
+.cf-ed:empty:before { content: attr(data-ph); color: #94a8bd; }
+.cf-prev { border: 1px solid #dbe6f2; border-radius: 10px; padding: 12px 14px; background: #fff; font-family: "Times New Roman", Times, serif; font-size: 17px; line-height: 1.7; white-space: pre-wrap; }
+.cf-code { background: #f4f8fc; border: 1px solid #dbe6f2; border-radius: 8px; padding: 10px 12px; font-size: 14px; line-height: 1.6; }
 </style>
 </head>
 <body>
@@ -5531,6 +5545,649 @@ function initIntegrity() {
 }
 
 /* =========================================================
+   NGĂN "CÔNG THỨC HÓA HỌC" (mặc định ẩn)
+   Sửa văn bản có công thức bị lỗi (vd. $CO_2$, \text{CH}_4, \ce{H2O}, CO2, Fe3+, m2 g-1)
+   thành chữ có chỉ số dưới/trên thật để dán vào Word; soạn nhanh bằng nút; xuất LaTeX sạch và file .docx.
+   Chạy hoàn toàn trên trình duyệt, bằng quy tắc (không dùng AI).
+   ========================================================= */
+const CF_EL = new Set(("H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs Ba La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb Lu Hf Ta W Re Os Ir Pt Au Hg Tl Pb Bi Po At Rn Fr Ra Ac Th Pa U Np Pu Am Cm Bk Cf Es Fm Md No Lr Rf Db Sg Bh Hs Mt Ds Rg Cn Nh Fl Mc Lv Ts Og").split(" "));
+const CF_STOP = new Set(["B2B", "B2C", "C2C", "P2P", "PS4", "PS5", "MP3", "MP4", "Y2K", "H1N1", "H5N1", "O2O"]);
+const CF_SUB = { "0": "₀", "1": "₁", "2": "₂", "3": "₃", "4": "₄", "5": "₅", "6": "₆", "7": "₇", "8": "₈", "9": "₉", "+": "₊", "-": "₋", "−": "₋", "=": "₌", "(": "₍", ")": "₎",
+  a: "ₐ", e: "ₑ", h: "ₕ", i: "ᵢ", j: "ⱼ", k: "ₖ", l: "ₗ", m: "ₘ", n: "ₙ", o: "ₒ", p: "ₚ", r: "ᵣ", s: "ₛ", t: "ₜ", u: "ᵤ", v: "ᵥ", x: "ₓ" };
+const CF_SUP = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹", "+": "⁺", "-": "⁻", "−": "⁻", "=": "⁼", "(": "⁽", ")": "⁾",
+  a: "ᵃ", b: "ᵇ", c: "ᶜ", d: "ᵈ", e: "ᵉ", f: "ᶠ", g: "ᵍ", h: "ʰ", i: "ⁱ", j: "ʲ", k: "ᵏ", l: "ˡ", m: "ᵐ", n: "ⁿ", o: "ᵒ", p: "ᵖ", r: "ʳ", s: "ˢ", t: "ᵗ", u: "ᵘ", v: "ᵛ", w: "ʷ", x: "ˣ", y: "ʸ", z: "ᶻ" };
+const CF_CMD = { alpha: "α", beta: "β", gamma: "γ", delta: "δ", epsilon: "ε", varepsilon: "ε", zeta: "ζ", eta: "η", theta: "θ", lambda: "λ", mu: "µ", nu: "ν", xi: "ξ", pi: "π", rho: "ρ", sigma: "σ", tau: "τ", phi: "φ", varphi: "φ", chi: "χ", psi: "ψ", omega: "ω",
+  Gamma: "Γ", Delta: "Δ", Theta: "Θ", Lambda: "Λ", Xi: "Ξ", Pi: "Π", Sigma: "Σ", Phi: "Φ", Psi: "Ψ", Omega: "Ω",
+  rightarrow: "→", to: "→", longrightarrow: "→", leftarrow: "←", leftrightarrow: "↔", Rightarrow: "⇒", Leftarrow: "⇐", Leftrightarrow: "⇔", rightleftharpoons: "⇌", leftrightarrows: "⇄", uparrow: "↑", downarrow: "↓",
+  times: "×", cdot: "·", pm: "±", mp: "∓", approx: "≈", neq: "≠", ne: "≠", leq: "≤", le: "≤", geq: "≥", ge: "≥", infty: "∞", circ: "°", degree: "°", sim: "∼", propto: "∝", partial: "∂", nabla: "∇",
+  sum: "∑", int: "∫", prod: "∏", AA: "Å", angstrom: "Å", ldots: "…", dots: "…", cdots: "⋯", bullet: "•", ll: "≪", gg: "≫", equiv: "≡", cdotp: "·", textdegree: "°", permil: "‰", lt: "<", gt: ">" };
+const CF_ARROWS = new Set(["rightarrow", "to", "longrightarrow", "leftarrow", "leftrightarrow", "Rightarrow", "Leftarrow", "Leftrightarrow", "rightleftharpoons", "leftrightarrows"]);
+const CF_REV = {};
+Object.keys(CF_CMD).forEach((k) => { if (!CF_REV[CF_CMD[k]]) CF_REV[CF_CMD[k]] = "\\" + k + " "; });
+CF_REV["°"] = "^{\\circ}"; CF_REV["×"] = "\\times "; CF_REV["µ"] = "\\mu "; CF_REV["μ"] = "\\mu "; CF_REV["→"] = "\\rightarrow "; CF_REV["·"] = "\\cdot ";
+
+function cfSupText(s) { return String(s).replace(/-/g, "\u2212"); }
+
+/* ---- Phân tích một công thức hóa học dạng chữ: CO2, SO42-, Fe3+, Ca(OH)2, CuSO4.5H2O, (Co,Cr,Fe)3O4 ... ---- */
+function cfChemParse(tok, force) {
+  if (!force && CF_STOP.has(tok)) return null;
+  let body = tok, charge = null, coef = "";
+  const c0 = body.match(/^(\d+)(?=[A-Z(\[])/);
+  if (c0) { coef = c0[1]; body = body.slice(coef.length); }
+  const mc = body.match(/^(.*?)\^(\{[^}]*\}|\d*[+\-−])$/);
+  if (mc && mc[1]) { body = mc[1]; charge = mc[2].replace(/[{}]/g, ""); }
+  else {
+    const m2 = body.match(/^(.*?)(\d*)([+\-−])$/);
+    if (m2 && m2[1]) {
+      let pre = m2[1]; const d = m2[2], sg = m2[3];
+      if (d.length >= 2) { charge = d.slice(-1) + sg; pre += d.slice(0, -1); }
+      else if (d.length === 1) {
+        if (/^[A-Z][a-z]?$/.test(pre) && CF_EL.has(pre)) charge = d + sg;
+        else { pre += d; charge = sg; }
+      } else charge = sg;
+      body = pre;
+    }
+  }
+  if (!body) return null;
+  const runs = [];
+  if (coef) runs.push({ s: coef });
+  let i = 0, evidence = !!charge, depth = 0, atoms = 0;
+  const subDigits = () => {
+    const dm = body.slice(i).match(/^\d+/);
+    if (!dm) return true;
+    if (dm[0] === "1") return false;
+    runs.push({ s: dm[0], d: "sub" }); i += dm[0].length; evidence = true; return true;
+  };
+  while (i < body.length) {
+    const ch = body[i];
+    if (/[A-Z]/.test(ch)) {
+      let sym = ch;
+      if (/[a-z]/.test(body[i + 1] || "")) sym += body[i + 1];
+      if (!CF_EL.has(sym)) { if (sym.length === 2 && CF_EL.has(ch)) sym = ch; else return null; }
+      if (/[a-z]/.test(body[i + sym.length] || "")) return null;
+      runs.push({ s: sym }); i += sym.length; atoms++;
+      if (!subDigits()) return null;
+    } else if (ch === "(" || ch === "[") { runs.push({ s: ch }); i++; depth++; evidence = true; }
+    else if (ch === ")" || ch === "]") {
+      if (depth <= 0) return null;
+      runs.push({ s: ch }); i++; depth--;
+      if (!subDigits()) return null;
+    } else if (ch === "," && depth > 0) { runs.push({ s: "," }); i++; }
+    else if (/[.·*]/.test(ch)) {
+      if (i === 0 || i === body.length - 1) return null;
+      runs.push({ s: "·" }); i++;
+      const cm = body.slice(i).match(/^\d+/);
+      if (cm) { runs.push({ s: cm[0] }); i += cm[0].length; }
+      if (!/[A-Z(\[]/.test(body[i] || "")) return null;
+      evidence = true;
+    } else return null;
+  }
+  if (depth !== 0 || !atoms) return null;
+  if (!force) {
+    if (!evidence) return null;
+    const onlyOne = runs.filter((r) => !r.d && /^[A-Z][a-z]?$/.test(r.s)).length === 1 && runs.every((r) => r.d || /^[A-Z][a-z]?$/.test(r.s) || r.s === coef);
+    if (onlyOne && !runs.some((r) => r.d === "sub")) {
+      const sym = runs.find((r) => /^[A-Z][a-z]?$/.test(r.s)).s;
+      if (sym.length === 1 && !["H", "O", "N", "S", "F"].includes(sym)) return null;
+    }
+  }
+  if (charge) runs.push({ s: cfSupText(charge), d: "sup" });
+  return runs;
+}
+
+/* Quét văn bản thường, tìm các cụm trông như công thức hóa học */
+function cfAutoChem(str, force) {
+  const segs = []; let buf = "", i = 0;
+  const flush = () => { if (buf) { segs.push({ k: "t", s: buf }); buf = ""; } };
+  const isAl = (ch) => /[\p{L}\p{N}]/u.test(ch);
+  while (i < str.length) {
+    const ch = str[i], prev = i > 0 ? str[i - 1] : "";
+    if (/[A-Z(\[\d]/.test(ch) && !(prev && isAl(prev))) {
+      let j = i;
+      while (j < str.length && j - i < 80 && /[A-Za-z0-9()\[\],·.*^{}+\-−]/.test(str[j])) j++;
+      let cand = str.slice(i, j), hit = null;
+      while (cand.length) {
+        const next = str[i + cand.length] || "";
+        if (!isAl(next)) { const runs = cfChemParse(cand, force); if (runs) { hit = { len: cand.length, runs }; break; } }
+        cand = cand.slice(0, -1);
+      }
+      if (hit) { flush(); segs.push({ k: "f", r: hit.runs, chem: true, src: str.slice(i, i + hit.len) }); i += hit.len; continue; }
+    }
+    buf += ch; i++;
+  }
+  flush();
+  return segs;
+}
+
+/* ---- Đơn vị và số mũ: m2 g-1 -> m² g⁻¹, x10-3 -> ×10⁻³ ---- */
+const CF_UNIT_POS = new Set(["m", "cm", "mm", "nm", "µm", "μm"]);
+function cfUnits(text) {
+  const segs = []; let last = 0;
+  const re = /(?<![\p{L}\p{N}_^])(?:([×x])\s?10\^?(-?\d{1,2})(?![\p{L}\p{N}.,])|(µm|μm|mmol|kJ|mol|mg|kg|µg|mL|mA|mV|min|cm|mm|nm|Hz|eV|m|g|L|s|h|A|V|W|K|J)(-?[1-3])(?![\p{L}\p{N}]))/gu;
+  let m;
+  while ((m = re.exec(text))) {
+    if (m[1]) {
+      if (m.index > last) segs.push({ k: "t", s: text.slice(last, m.index) });
+      segs.push({ k: "f", r: [{ s: "×10" }, { s: cfSupText(m[2]), d: "sup" }], chem: false, unit: true });
+    } else {
+      const unit = m[3], exp = m[4];
+      if (!(exp.startsWith("-") || CF_UNIT_POS.has(unit))) continue;
+      if (m.index > last) segs.push({ k: "t", s: text.slice(last, m.index) });
+      segs.push({ k: "f", r: [{ s: unit }, { s: cfSupText(exp), d: "sup" }], chem: false, unit: true });
+    }
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) segs.push({ k: "t", s: text.slice(last) });
+  return segs.length ? segs : [{ k: "t", s: text }];
+}
+
+/* ---- Phân tích LaTeX: CO_2, \text{CH}_4, \mathrm{SO_4^{2-}}, \ce{H2O}, \rightarrow ... ---- */
+function cfMerge(runs) {
+  const out = [];
+  runs.forEach((r) => { if (!r.s) return; const l = out[out.length - 1]; if (l && l.d === r.d) l.s += r.s; else out.push({ s: r.s, d: r.d }); });
+  return out;
+}
+function cfTex(src, notes) {
+  notes = notes || { complex: 0, unknown: [], ce: 0 };
+  const matchBrace = (s, i) => {
+    let depth = 0;
+    for (let k = i; k < s.length; k++) { if (s[k] === "\\") { k++; continue; } if (s[k] === "{") depth++; else if (s[k] === "}") { depth--; if (!depth) return k; } }
+    return -1;
+  };
+  const readArg = (s, i) => {
+    while (s[i] === " ") i++;
+    if (s[i] === "{") { const j = matchBrace(s, i); return j < 0 ? [s.slice(i + 1), s.length] : [s.slice(i + 1, j), j + 1]; }
+    if (s[i] === "\\") {
+      const m = s.slice(i).match(/^\\([A-Za-z]+|[\s\S])/); let ni = i + m[0].length;
+      if (/^\\[A-Za-z]+$/.test(m[0])) while (s[ni] === " ") ni++;
+      return [m[0], ni];
+    }
+    return [s[i] || "", i + 1];
+  };
+  const STYLE = new Set(["text", "mathrm", "textrm", "mathbf", "textbf", "mathit", "textit", "mathsf", "boldsymbol", "bm", "rm", "operatorname", "mathcal", "mathbb", "underline", "overline", "emph", "mbox", "hbox"]);
+  const SKIP1 = new Set(["hspace", "vspace", "kern", "label", "tag"]);
+  const parse = (s) => {
+    const res = []; let i = 0;
+    const add = (t, d) => { if (t) res.push({ s: d === "sup" ? cfSupText(t) : t, d }); };
+    while (i < s.length) {
+      const c = s[i];
+      if (c === "\\") {
+        const m = s.slice(i + 1).match(/^([A-Za-z]+|[\s\S])/);
+        if (!m) { i++; continue; }
+        const name = m[1]; i += 1 + name.length;
+        if (/^[A-Za-z]+$/.test(name)) while (s[i] === " ") i++;
+        if (CF_ARROWS.has(name)) add(" " + CF_CMD[name] + " ");
+        else if (STYLE.has(name)) { const [a, ni] = readArg(s, i); i = ni; parse(a).forEach((r) => add(r.s, r.d)); }
+        else if (name === "ce") { const [a, ni] = readArg(s, i); i = ni; notes.ce++; cfCeRuns(a).forEach((r) => add(r.s, r.d)); }
+        else if (name === "frac" || name === "dfrac" || name === "tfrac") {
+          const [a, i1] = readArg(s, i), [b, i2] = readArg(s, i1); i = i2; notes.complex++;
+          const A = parse(a).map((r) => r.s).join(""), B = parse(b).map((r) => r.s).join("");
+          add((A.length > 1 ? "(" + A + ")" : A) + "/" + (B.length > 1 ? "(" + B + ")" : B));
+        } else if (name === "sqrt") {
+          if (s[i] === "[") { const j = s.indexOf("]", i); i = j < 0 ? s.length : j + 1; }
+          const [a, ni] = readArg(s, i); i = ni; notes.complex++; add("√(" + parse(a).map((r) => r.s).join("") + ")");
+        } else if (name === "left" || name === "right") { if (s[i] === ".") i++; }
+        else if (SKIP1.has(name)) { const [, ni] = readArg(s, i); i = ni; }
+        else if (name === "begin" || name === "end") { const [, ni] = readArg(s, i); i = ni; notes.complex++; }
+        else if (name === "\\" ) add("\n");
+        else if (CF_CMD[name]) add(CF_CMD[name]);
+        else if (name === "," || name === ";" || name === ":" || name === " " || name === "quad" || name === "qquad") add(" ");
+        else if (name === "!") { /* bỏ */ }
+        else if (/^[%$_&#{}]$/.test(name)) add(name);
+        else { notes.unknown.push(name); add(name); }
+      } else if (c === "_" || c === "^") {
+        const d = c === "_" ? "sub" : "sup"; i++;
+        const [a, ni] = readArg(s, i); i = ni;
+        const t = parse(a).map((r) => r.s).join("");
+        if (d === "sup" && (t === "°" || t === "∘")) add("°"); else add(t, d);
+      } else if (c === "{") {
+        const j = matchBrace(s, i);
+        const inner = j < 0 ? s.slice(i + 1) : s.slice(i + 1, j); i = j < 0 ? s.length : j + 1;
+        parse(inner).forEach((r) => add(r.s, r.d));
+      } else if (c === "}") i++;
+      else if (c === "~") { add(" "); i++; }
+      else { add(c); i++; }
+    }
+    return cfMerge(res).map((r) => (r.d ? r : { s: r.s.replace(/ {2,}/g, " "), d: r.d }));
+  };
+  const runs = parse(String(src));
+  if (runs.length) { runs[0].s = runs[0].s.replace(/^\s+/, ""); runs[runs.length - 1].s = runs[runs.length - 1].s.replace(/\s+$/, ""); }
+  return runs.filter((r) => r.s);
+}
+function cfCeRuns(arg) {
+  const t = String(arg).replace(/<=>|<-->/g, "⇌").replace(/<->/g, "↔").replace(/-->|->/g, "→");
+  const runs = [];
+  cfAutoChem(t, true).forEach((g) => { if (g.k === "t") runs.push({ s: g.s }); else g.r.forEach((r) => runs.push(r)); });
+  return cfMerge(runs);
+}
+
+/* ---- Hàm chính: văn bản bị lỗi -> các đoạn (text / công thức) ---- */
+function cfFix(text, opts) {
+  opts = Object.assign({ auto: true, units: true, arrows: true }, opts || {});
+  const src = String(text).replace(/\r/g, "");
+  const notes = { complex: 0, unknown: [], ce: 0, math: 0, auto: 0, units: 0 };
+  const segs = [];
+  const plain = (s) => {
+    if (!s) return;
+    let t = s;
+    if (opts.arrows) t = t.replace(/<=>|<-->|⇌/g, "⇌").replace(/<->/g, "↔").replace(/-->|->/g, "→");
+    const parts = opts.auto ? cfAutoChem(t, false) : [{ k: "t", s: t }];
+    parts.forEach((p) => {
+      if (p.k === "f") { notes.auto++; segs.push(p); }
+      else if (opts.units) cfUnits(p.s).forEach((u) => { if (u.k === "f") notes.units++; segs.push(u); });
+      else segs.push(p);
+    });
+  };
+  const re = /\$\$([\s\S]+?)\$\$|\\\[([\s\S]+?)\\\]|\\\(([\s\S]+?)\\\)|\$(?=\S)([^$\n]*?\S)\$/g;
+  let last = 0, m;
+  while ((m = re.exec(src))) {
+    plain(src.slice(last, m.index));
+    const inner = m[1] || m[2] || m[3] || m[4];
+    const runs = cfTex(inner, notes);
+    notes.math++;
+    if (runs.length) segs.push({ k: "f", r: runs, chem: !!(notes.ce && /\\ce\s*\{/.test(inner)), src: inner, tex: true });
+    last = m.index + m[0].length;
+  }
+  plain(src.slice(last));
+  return { segs, notes };
+}
+
+/* ---- Xuất kết quả: HTML (chỉ số dưới/trên thật), Unicode, LaTeX, .docx ---- */
+function cfHtml(segs) {
+  const one = (r) => { const t = rbkEsc(r.d === "sup" ? cfSupText(r.s) : r.s); return r.d === "sub" ? "<sub>" + t + "</sub>" : r.d === "sup" ? "<sup>" + t + "</sup>" : t; };
+  let h = "";
+  segs.forEach((g) => { h += g.k === "t" ? rbkEsc(g.s) : g.r.map(one).join(""); });
+  return h.replace(/\n/g, "<br>");
+}
+function cfUniChars(s, d) {
+  const map = d === "sub" ? CF_SUB : CF_SUP; let o = "", lossy = false;
+  for (const ch of s) { if (map[ch]) o += map[ch]; else { o += ch; if (ch !== " ") lossy = true; } }
+  return { s: o, lossy };
+}
+function cfUni(segs) {
+  let out = "", lossy = 0;
+  segs.forEach((g) => {
+    if (g.k === "t") { out += g.s; return; }
+    g.r.forEach((r) => { if (!r.d) out += r.s; else { const u = cfUniChars(r.s, r.d); out += u.s; if (u.lossy) lossy++; } });
+  });
+  return { text: out, lossy };
+}
+function cfTexEsc(t) {
+  const SP = { "%": "\\%", "&": "\\&", "#": "\\#", "_": "\\_", "{": "\\{", "}": "\\}", "$": "\\$", " ": "\\ ", "\n": " " };
+  return Array.from(t).map((ch) => CF_REV[ch] || SP[ch] || ch).join("");
+}
+function cfTexMath(runs, rm) {
+  const body = runs.map((r) => r.d === "sub" ? "_{" + cfTexEsc(r.s) + "}" : r.d === "sup" ? "^{" + cfTexEsc(r.s.replace(/\u2212/g, "-")) + "}" : cfTexEsc(r.s)).join("");
+  return rm ? "\\mathrm{" + body + "}" : body;
+}
+function cfCeStr(runs) { return runs.map((r) => (r.d === "sup" ? "^{" + r.s.replace(/\u2212/g, "-") + "}" : r.s)).join(""); }
+function cfLatexFull(segs, mode) {
+  return segs.map((g) => {
+    if (g.k === "t") return g.s;
+    return "$" + (mode === "ce" && g.chem ? "\\ce{" + cfCeStr(g.r) + "}" : cfTexMath(g.r, true)) + "$";
+  }).join("");
+}
+function cfFormulaList(segs) {
+  const seen = new Set(), list = [];
+  segs.forEach((g) => {
+    if (g.k !== "f") return;
+    const html = cfHtml([g]);
+    if (seen.has(html) || list.length >= 60) return;
+    seen.add(html);
+    list.push({ html, mathrm: cfTexMath(g.r, true), plain: cfTexMath(g.r, false), uni: cfUni([g]).text });
+  });
+  return list;
+}
+
+/* ---- .docx: chỉ số dưới/trên thật, hoặc phương trình (OMML) ---- */
+function cfXmlEsc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+function cfMergeForEq(segs) {
+  const out = [];
+  for (let i = 0; i < segs.length; i++) {
+    const g = segs[i];
+    if (g.k !== "f") { out.push(g); continue; }
+    let runs = g.r.slice();
+    while (i + 2 < segs.length && segs[i + 1].k === "t" && /^[ \t]*[+=\-−→⇌↔⇒·][ \t]*$/.test(segs[i + 1].s) && segs[i + 2].k === "f") {
+      runs.push({ s: segs[i + 1].s }); runs = runs.concat(segs[i + 2].r); i += 2;
+    }
+    out.push({ k: "f", r: cfMerge(runs) });
+  }
+  return out;
+}
+function cfOmml(runs) {
+  const FONT = '<w:rPr><w:rFonts w:ascii="Cambria Math" w:hAnsi="Cambria Math"/><w:sz w:val="26"/><w:szCs w:val="26"/></w:rPr>';
+  const mr = (t) => '<m:r><m:rPr><m:sty m:val="p"/></m:rPr>' + FONT + '<m:t xml:space="preserve">' + cfXmlEsc(t) + "</m:t></m:r>";
+  const script = (base, sub, sup) => {
+    const e = "<m:e>" + mr(base) + "</m:e>";
+    if (sub !== null && sup !== null) return "<m:sSubSup>" + e + "<m:sub>" + mr(sub) + "</m:sub><m:sup>" + mr(sup) + "</m:sup></m:sSubSup>";
+    if (sub !== null) return "<m:sSub>" + e + "<m:sub>" + mr(sub) + "</m:sub></m:sSub>";
+    return "<m:sSup>" + e + "<m:sup>" + mr(sup) + "</m:sup></m:sSup>";
+  };
+  let out = "";
+  for (let i = 0; i < runs.length; i++) {
+    const r = runs[i], nx = runs[i + 1];
+    if (!r.d && nx && nx.d) {
+      const mm = r.s.match(/^([\s\S]*?)([A-Z][a-z]?|[\s\S])$/);
+      if (mm[1]) out += mr(mm[1]);
+      let sub = null, sup = null, j = i + 1;
+      while (j < runs.length && runs[j].d && !(runs[j].d === "sub" && sub !== null) && !(runs[j].d === "sup" && sup !== null)) {
+        if (runs[j].d === "sub") sub = runs[j].s; else sup = cfSupText(runs[j].s);
+        j++;
+      }
+      out += script(mm[2], sub, sup);
+      i = j - 1;
+    } else out += mr(r.s);
+  }
+  return "<m:oMath>" + out + "</m:oMath>";
+}
+function cfLoadJSZip() {
+  return window.JSZip ? Promise.resolve() : rbkLoadScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js");
+}
+async function cfBuildDocx(segs, mode) {
+  await cfLoadJSZip();
+  const rp = (extra) => '<w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman"/><w:sz w:val="26"/><w:szCs w:val="26"/>' + (extra || "") + "</w:rPr>";
+  const wr = (t, extra) => "<w:r>" + rp(extra) + '<w:t xml:space="preserve">' + cfXmlEsc(t) + "</w:t></w:r>";
+  const list = mode === "eq" ? cfMergeForEq(segs) : segs;
+  const paras = [""];
+  const put = (x) => { paras[paras.length - 1] += x; };
+  list.forEach((g) => {
+    if (g.k === "t") {
+      g.s.split("\n").forEach((line, j) => { if (j > 0) paras.push(""); if (line) put(wr(line)); });
+    } else if (mode === "eq") put(cfOmml(g.r));
+    else g.r.forEach((r) => put(wr(r.d === "sup" ? cfSupText(r.s) : r.s, r.d === "sub" ? '<w:vertAlign w:val="subscript"/>' : r.d === "sup" ? '<w:vertAlign w:val="superscript"/>' : "")));
+  });
+  const body = paras.map((p) => '<w:p><w:pPr><w:spacing w:after="120"/></w:pPr>' + p + "</w:p>").join("");
+  const doc = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math"><w:body>' + body +
+    '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1701" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr></w:body></w:document>';
+  const zip = new window.JSZip();
+  zip.file("[Content_Types].xml", '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
+  zip.file("_rels/.rels", '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
+  zip.file("word/document.xml", doc);
+  return zip.generateAsync({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+}
+function cfDownloadBlob(name, blob) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+/* ---- Sao chép: HTML (giữ chỉ số dưới/trên khi dán vào Word) + chữ thuần ---- */
+async function cfCopyRich(html, plain, btn, label) {
+  const done = () => { if (btn) { const old = btn.getAttribute("data-old") || btn.textContent; btn.setAttribute("data-old", old); btn.textContent = label || "Đã sao chép"; setTimeout(() => { btn.textContent = old; }, 2200); } };
+  try {
+    if (navigator.clipboard && window.ClipboardItem) {
+      await navigator.clipboard.write([new ClipboardItem({ "text/html": new Blob([html], { type: "text/html" }), "text/plain": new Blob([plain], { type: "text/plain" }) })]);
+      done(); return true;
+    }
+  } catch (e) { /* dùng cách dự phòng */ }
+  const div = document.createElement("div");
+  div.contentEditable = "true"; div.style.cssText = "position:fixed;left:-9999px;top:0;white-space:pre-wrap;";
+  div.innerHTML = html; document.body.appendChild(div);
+  const range = document.createRange(); range.selectNodeContents(div);
+  const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+  let ok = false; try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+  sel.removeAllRanges(); document.body.removeChild(div);
+  if (ok) done();
+  return ok;
+}
+function cfCopyText(txt, btn, label) {
+  return cfCopyRich(rbkEsc(txt).replace(/\n/g, "<br>"), txt, btn, label);
+}
+
+/* ---- Ô soạn thảo: làm sạch HTML và lấy chữ thuần ---- */
+function cfCleanHtml(root) {
+  const walk = (node) => {
+    let o = "";
+    node.childNodes.forEach((n) => {
+      if (n.nodeType === 3) o += rbkEsc(n.nodeValue);
+      else if (n.nodeType === 1) {
+        const t = n.tagName;
+        if (t === "BR") o += "<br>";
+        else if (t === "SUB" || t === "SUP") { const tg = t.toLowerCase(); o += "<" + tg + ">" + walk(n) + "</" + tg + ">"; }
+        else if (t === "DIV" || t === "P") { if (o && !o.endsWith("<br>")) o += "<br>"; o += walk(n); }
+        else o += walk(n);
+      }
+    });
+    return o;
+  };
+  return walk(root);
+}
+function cfPlainOf(root, uni) {
+  if (uni === undefined) uni = true;
+  const walk = (node, d) => {
+    let o = "";
+    node.childNodes.forEach((n) => {
+      if (n.nodeType === 3) o += d && uni ? cfUniChars(n.nodeValue, d).s : n.nodeValue;
+      else if (n.nodeType === 1) {
+        const t = n.tagName;
+        if (t === "BR") o += "\n";
+        else if (t === "SUB") o += walk(n, "sub");
+        else if (t === "SUP") o += walk(n, "sup");
+        else if (t === "DIV" || t === "P") { if (o && !o.endsWith("\n")) o += "\n"; o += walk(n, d); }
+        else o += walk(n, d);
+      }
+    });
+    return o;
+  };
+  return walk(root, null);
+}
+
+/* ---------------- Giao diện ngăn "Công thức hóa học" ---------------- */
+const CF_SAMPLE = "Khí $CO_2$ và $H_2S$ là hai khí thải chính; $\\text{CH}_4$ cũng đáng kể. Phản ứng: $\\ce{2H2 + O2 -> 2H2O}$. Ion $SO_4^{2-}$ và Fe3+ tồn tại trong dung dịch H2SO4 loãng. Diện tích bề mặt 1250 m2 g-1, dung lượng 85 mg g-1, mật độ dòng 10 mA cm-2. Vật liệu (Co,Cr,Fe,Mn,Ni)3O4 và Bi2S3/WO3 khử CO2 ở 25$^\\circ$C.";
+const CF_PROMPT = "Khi viết công thức hóa học, hãy dùng ký tự Unicode (ví dụ CO₂, H₂SO₄, Ca²⁺, SO₄²⁻, m² g⁻¹) và tuyệt đối không dùng LaTeX, dấu $, \\text, \\mathrm hay \\ce.";
+const CF_PAL_FORMULAS = ["H2O", "CO2", "H2S", "CH4", "NH3", "H2SO4", "HNO3", "HCl", "H3PO4", "NaOH", "Ca(OH)2", "CaCO3", "TiO2", "ZnO", "Fe2O3", "Al2O3", "SiO2", "O2", "N2", "H2"];
+const CF_PAL_IONS = ["H+", "OH-", "H3O+", "NH4+", "NO3-", "SO42-", "PO43-", "CO32-", "Na+", "Ca2+", "Cu2+", "Fe3+", "Al3+", "Zn2+"];
+const CF_PAL_SYMBOLS = ["→", "⇌", "↑", "↓", "Δ", "°C", "·", "×", "±", "≈", "≤", "≥", "µ", "α", "β", "λ", "θ", "σ", "π", "Å", "‰", "−"];
+const CF_PAL_UNITS = ["m2 g-1", "mg g-1", "mA cm-2", "mol L-1", "h-1", "s-1", "cm-1", "×10-3"];
+const CF_LEARN_ROWS = [
+  ["CO_2", "Chỉ số dưới: gạch dưới _ rồi số"], ["H_2SO_4", "Mỗi chỉ số dưới đi với đúng ký tự đứng sau _"], ["Ca(OH)_2", "Chỉ số sau ngoặc"],
+  ["Fe^{3+}", "Chỉ số trên: dấu mũ ^, dùng { } khi có nhiều ký tự"], ["SO_4^{2-}", "Vừa chỉ số dưới vừa chỉ số trên"], ["\\mathrm{CO_2}", "\\mathrm: ép in thẳng (đúng chuẩn công thức hóa học)"],
+  ["\\text{CH}_4", "\\text{...}: chữ thường trong công thức"], ["\\ce{H2O}", "\\ce (gói mhchem): tự đặt chỉ số, chuẩn hóa học (Overleaf, KaTeX)"], ["\\ce{SO4^2-}", "\\ce tự nhận ion"],
+  ["A \\rightarrow B", "Mũi tên phản ứng"], ["A \\rightleftharpoons B", "Cân bằng thuận nghịch"], ["10^{-3}", "Số mũ âm"], ["m^2\\,g^{-1}", "Đơn vị; \\, là khoảng cách nhỏ"], ["25^\\circ C", "Độ C"], ["\\Delta H", "Chữ Hy Lạp: \\alpha \\beta \\Delta \\lambda"], ["\\frac{a}{b}", "Phân số (ngăn này chỉ đổi được thành a/b; hãy dùng phương trình của Word)"],
+];
+
+const CF_LEARN_HTML = () => `
+<div class="rbk-card"><h4>Vì sao dán từ AI vào Word lại hiện $...$ và hỏng công thức</h4>
+  <p>Khi AI (Gemini, ChatGPT, Copilot...) viết công thức, nó viết bằng <b>mã LaTeX</b>, ví dụ <code>$CO_2$</code>. Trang web chat tự "vẽ" mã đó thành công thức đẹp trên màn hình, nhưng khi bạn sao chép, bạn chỉ lấy được <b>mã</b>. Word không tự hiểu LaTeX trong văn bản thường nên in nguyên mã ra, kể cả dấu $.</p>
+  <p>MathType và trình soạn phương trình của Word thì <b>có hiểu LaTeX</b> và chuyển thành công thức. Đó là lý do bạn dán vào MathType thì đẹp rồi chép ra Word thì ổn.</p></div>
+<div class="rbk-card"><h4>4 cách để có công thức đẹp trong Word</h4>
+  <table class="rbk-tbl"><tr><th>Cách</th><th>Hợp với</th><th>Cách làm</th><th>Ưu và nhược</th></tr>
+    <tr><td><b>1. Ngăn này</b> (chữ có chỉ số dưới/trên thật)</td><td>Công thức hóa học, ion, đơn vị lẫn trong đoạn văn</td><td>Tab 1: dán, bấm Sửa, bấm Sao chép, dán vào Word</td><td>Nhanh nhất. Không phải đối tượng phương trình nên không sửa được bằng MathType.</td></tr>
+    <tr><td><b>2. Phương trình của Word + LaTeX</b></td><td>Phân số, tích phân, ma trận, hệ phương trình</td><td>Trong Word nhấn Alt + = để mở ô phương trình, dán mã LaTeX (không có dấu $), nhấn Enter. Nếu không tự đổi, vào tab Equation, nhóm Conversions và chọn chuyển LaTeX sang Professional (tên nút tùy phiên bản Word).</td><td>Miễn phí, có sẵn. Cần mã LaTeX sạch: tab 1 có bảng LaTeX từng công thức.</td></tr>
+    <tr><td><b>3. MathType</b></td><td>Khi khoa hoặc thầy cô yêu cầu dùng MathType</td><td>Dán LaTeX vào cửa sổ MathType (bật dịch TeX trong phần Translators), rồi chép ra Word</td><td>Đẹp, đồng nhất nhưng tốn thời gian và là phần mềm trả phí.</td></tr>
+    <tr><td><b>4. Bảo AI xuất Unicode ngay từ đầu</b></td><td>Muốn tránh LaTeX hoàn toàn</td><td>Dùng câu lệnh mẫu bên dưới</td><td>Không cần sửa, nhưng phông chữ có thể lệch hàng ở một số font. Nên chạy qua tab 1 để có chỉ số dưới thật.</td></tr>
+  </table>
+  <p><b>Câu lệnh mẫu để gửi AI:</b></p>
+  <div class="cf-code" id="cfPromptBox">${rbkEsc(CF_PROMPT)}</div>
+  <div class="rbk-row"><button id="cfCopyPrompt" class="pomo-btn pomo-btn-secondary">Sao chép câu lệnh</button></div></div>
+<div class="rbk-card"><h4>LaTeX cơ bản cho hóa học: gõ gì, ra gì</h4>
+  <table class="rbk-tbl"><tr><th>Gõ</th><th>Ra</th><th>Ý nghĩa</th></tr>${CF_LEARN_ROWS.map((r) => `<tr><td><code>${rbkEsc(r[0])}</code></td><td>${cfHtml(cfFix("$" + r[0] + "$").segs)}</td><td>${rbkEsc(r[1])}</td></tr>`).join("")}</table>
+  <p class="tkb-note">Ba dạng hay gặp: <code>$CO_2$</code> (ký hiệu toán, chữ nghiêng), <code>\\mathrm{CO_2}</code> (in thẳng) và <code>\\ce{CO2}</code> (gói mhchem, chuẩn hóa học). Muốn học đầy đủ, xem tài liệu của Overleaf (mục Learn) và gói mhchem.</p></div>
+<div class="rbk-card"><h4>Quy tắc trình bày công thức hóa học</h4>
+  <ul>
+    <li>Công thức hóa học in <b>thẳng</b>, không nghiêng. Chữ nghiêng dành cho biến số (T, p, c), còn đơn vị in thẳng.</li>
+    <li>Số nguyên tử viết <b>chỉ số dưới</b>: H₂O. Điện tích viết <b>chỉ số trên</b>, <b>số trước dấu</b>: SO₄²⁻, Fe³⁺ (không viết Fe⁺³). Không viết chỉ số 1.</li>
+    <li>Dấu trừ của điện tích và số mũ dùng dấu trừ thật (−), không dùng gạch nối (-).</li>
+    <li>Trạng thái chất (s), (l), (g), (aq) in thẳng, viết thường.</li>
+    <li>Đơn vị: m² g⁻¹, mA cm⁻², mol L⁻¹. Cách một khoảng giữa số và đơn vị. Cách viết 25 °C hay 25°C tùy quy định của trường hoặc tạp chí.</li>
+    <li>Cách trình bày cụ thể có thể khác theo hướng dẫn của khoa hoặc tạp chí. Hãy kiểm tra yêu cầu của nơi bạn nộp bài.</li></ul></div>
+<div class="rbk-card"><h4>Hỏi nhanh</h4>
+  <ul>
+    <li><b>Vì sao dán từ Gemini vào MathType được nhưng Copilot thì MathType tự tắt?</b> Mình không kiểm tra được từ đây. Có thể Copilot đưa vào bộ nhớ tạm một định dạng phức tạp hơn mà MathType xử lý bị lỗi. Cách vòng: dán vào Notepad (chữ thuần) rồi chép lại, hoặc dùng tab 1 của ngăn này.</li>
+    <li><b>Ngăn này có tạo ra công thức giống MathType không?</b> Không tạo được đối tượng MathType. Ngăn tạo (a) chữ có chỉ số dưới/trên thật và (b) file .docx có phương trình của Word. Cả hai sao chép sang bài Word được. Độ đẹp còn tùy phông chữ và cách bạn thích, hãy thử cả hai.</li>
+    <li><b>Phương trình phức tạp có chuyển được không?</b> Phân số, căn, tích phân chỉ chuyển được thành dạng chữ đơn giản (a/b, √(...)), ngăn sẽ báo. Hãy dùng cách 2 ở trên.</li>
+    <li><b>Dữ liệu của tôi có được lưu không?</b> Không. Mọi thứ chạy trên máy bạn. Chỉ khi xuất .docx, trình duyệt tải thêm một thư viện nén file lần đầu.</li></ul></div>`;
+
+function renderChemFormula() {
+  const pal = (arr, kind) => arr.map((x) => {
+    const html = kind === "sym" ? rbkEsc(x) : cfHtml(cfFix(x, { auto: true, units: kind === "unit", arrows: false }).segs);
+    return `<button type="button" class="cf-btn" data-ins="${rbkEsc(html)}" title="Chèn ${rbkEsc(x)}">${html}</button>`;
+  }).join("");
+  return `
+  <div class="rbk-wrap">
+    <div class="rbk-tabs">
+      <button class="rbk-tab rbk-tab-on" data-cf-tab="fix">1. Sửa công thức bị lỗi</button>
+      <button class="rbk-tab" data-cf-tab="ed">2. Soạn công thức nhanh</button>
+      <button class="rbk-tab" data-cf-tab="learn">3. Học LaTeX và hỏi nhanh</button>
+    </div>
+
+    <div id="cfP-fix">
+      <p class="ctdt-meta"><b>Cách dùng:</b> (1) Dán văn bản bị lỗi (chép từ AI, PDF, Word...) vào ô bên dưới. (2) Bấm "Sửa công thức". (3) Bấm "Sao chép để dán vào Word" rồi dán vào Word: công thức có chỉ số dưới và trên thật, không còn dấu $ hay \\text{...}. Văn bản chỉ xử lý trên máy bạn.</p>
+      <p><button id="cfSample" class="pomo-btn pomo-btn-secondary">Dùng ví dụ mẫu</button></p>
+      <textarea id="cfIn" class="rbk-input" rows="8" placeholder="Dán văn bản bị lỗi, ví dụ: Khí $CO_2$ và $H_2S$, ion SO42-, 1250 m2 g-1..."></textarea>
+      <div class="rbk-row">
+        <label><input type="checkbox" id="cfOptAuto" checked> Tự nhận diện công thức trong văn bản thường (CO2, H2SO4, Fe3+...)</label>
+        <label><input type="checkbox" id="cfOptUnits" checked> Định dạng đơn vị (m2 g-1, x10-3)</label>
+        <label><input type="checkbox" id="cfOptArrows" checked> Đổi mũi tên (-> thành →)</label>
+      </div>
+      <div class="rbk-row"><button id="cfGo" class="pomo-btn pomo-btn-primary">Sửa công thức</button></div>
+      <div id="cfOut"></div>
+    </div>
+
+    <div id="cfP-ed" style="display:none;">
+      <p class="ctdt-meta"><b>Cách dùng:</b> (1) Gõ hoặc dán vào khung soạn thảo. Dán vào đây sẽ tự sửa công thức. (2) Bôi đen ký tự rồi bấm <b>x₂</b> (chỉ số dưới) hoặc <b>xⁿ</b> (chỉ số trên), hoặc bấm nút công thức, ion, ký hiệu, đơn vị để chèn nhanh. Gõ nhanh xong bấm "Tự định dạng công thức". (3) Bấm "Sao chép để dán vào Word". Phím tắt như Word: Ctrl + = (chỉ số dưới), Ctrl + Shift + = (chỉ số trên); nếu trình duyệt phóng to thì hãy dùng nút.</p>
+      <div class="cf-bar">
+        <button type="button" class="cf-btn cf-cmd" data-cmd="subscript" title="Chỉ số dưới (Ctrl + =)">x<sub>2</sub></button>
+        <button type="button" class="cf-btn cf-cmd" data-cmd="superscript" title="Chỉ số trên (Ctrl + Shift + =)">x<sup>n</sup></button>
+        <button type="button" class="cf-btn cf-cmd" data-cmd="undo" title="Hoàn tác">Hoàn tác</button>
+        <button type="button" class="cf-btn cf-cmd" data-cmd="redo" title="Làm lại">Làm lại</button>
+        <button type="button" id="cfAutoFmt" class="cf-btn cf-strong">Tự định dạng công thức</button>
+      </div>
+      <div class="cf-group"><b>Công thức thường gặp</b><div class="cf-pal">${pal(CF_PAL_FORMULAS, "f")}</div></div>
+      <div class="cf-group"><b>Ion</b><div class="cf-pal">${pal(CF_PAL_IONS, "f")}</div></div>
+      <div class="cf-group"><b>Ký hiệu</b><div class="cf-pal">${pal(CF_PAL_SYMBOLS, "sym")}</div></div>
+      <div class="cf-group"><b>Đơn vị</b><div class="cf-pal">${pal(CF_PAL_UNITS, "unit")}</div></div>
+      <div id="cfEd" class="cf-ed" contenteditable="true" spellcheck="false" data-ph="Gõ hoặc dán nội dung vào đây..."></div>
+      <div class="rbk-row">
+        <button id="cfEdCopy" class="pomo-btn pomo-btn-primary">Sao chép để dán vào Word</button>
+        <button id="cfEdCopyUni" class="pomo-btn pomo-btn-secondary">Sao chép dạng chữ Unicode</button>
+        <button id="cfEdToFix" class="pomo-btn pomo-btn-secondary">Chuyển sang tab 1 (để xuất LaTeX, .docx)</button>
+        <button id="cfEdClear" class="pomo-btn pomo-btn-secondary">Xóa</button>
+        <span id="cfEdMsg" class="rbk-prog"></span>
+      </div>
+      <p class="tkb-note">Nên dùng nút "Sao chép" ở trên thay vì Ctrl + C, vì nút này chỉ chép chỉ số dưới và trên, không kèm kiểu chữ của trang web. Khi dán vào Word, nếu thấy chữ lạ phông, bấm biểu tượng Paste Options và chọn Merge Formatting.</p>
+    </div>
+
+    <div id="cfP-learn" style="display:none;">${CF_LEARN_HTML()}</div>
+  </div>`;
+}
+
+function cfRender(res, root) {
+  const segs = res.segs, n = res.notes;
+  const html = cfHtml(segs);
+  const uni = cfUni(segs);
+  const list = cfFormulaList(segs);
+  const total = segs.filter((g) => g.k === "f").length;
+  const warn = [];
+  if (n.complex) warn.push(n.complex + " chỗ có phân số, căn hoặc cấu trúc phức tạp đã chuyển thành dạng chữ đơn giản. Với phương trình phức tạp, hãy dùng cách 2 ở tab 3 (phương trình của Word + LaTeX).");
+  if (n.unknown.length) warn.push("Lệnh LaTeX chưa hỗ trợ (giữ lại dạng chữ): " + Array.from(new Set(n.unknown)).slice(0, 8).join(", ") + ".");
+  if (uni.lossy) warn.push(uni.lossy + " chỗ có ký tự không có dạng chỉ số Unicode nên giữ nguyên trong bản chữ Unicode. Bản dán vào Word (chỉ số dưới/trên thật) không bị ảnh hưởng.");
+  const rows = list.map((x, i) => `<tr><td>${x.html}</td><td><code>${rbkEsc(x.mathrm)}</code></td><td><code>${rbkEsc(x.plain)}</code></td><td><button class="pomo-btn pomo-btn-secondary" style="padding:3px 9px;font-size:12px;" data-cfrow="${i}">Chép</button></td></tr>`).join("");
+  return `
+    <h3 class="rbk-h">Kết quả</h3>
+    <div class="rbk-card"><p>Đã xử lý <b>${total}</b> công thức và đơn vị: ${n.math} từ mã LaTeX, ${n.auto} tự nhận diện trong văn bản thường, ${n.units} đơn vị hoặc số mũ.</p>
+      ${warn.length ? `<ul>${warn.map((w) => `<li>${rbkEsc(w)}</li>`).join("")}</ul>` : ""}
+      <p class="tkb-note">Ngăn dùng quy tắc, nên có thể bỏ sót hoặc đổi nhầm vài chỗ (ví dụ mã sản phẩm giống công thức). Hãy đọc lại, và tắt các tùy chọn tự nhận diện nếu cần.</p></div>
+    <div class="rbk-card"><h4>1. Dán vào Word (chỉ số dưới và trên thật)</h4>
+      <div class="cf-prev" id="cfPrev">${html}</div>
+      <div class="rbk-row"><button id="cfCopyRich" class="pomo-btn pomo-btn-primary">Sao chép để dán vào Word</button></div>
+      <p class="tkb-note">Dán vào Word xong, nếu thấy chữ lạ phông, bấm biểu tượng Paste Options và chọn Merge Formatting (hợp nhất định dạng).</p></div>
+    <div class="rbk-card"><h4>2. Chữ Unicode (dán vào nơi chỉ nhận chữ thuần: Zalo, Facebook, Excel...)</h4>
+      <textarea id="cfUni" class="rbk-input" rows="5" readonly>${rbkEsc(uni.text)}</textarea>
+      <div class="rbk-row"><button id="cfCopyUni" class="pomo-btn pomo-btn-secondary">Sao chép chữ Unicode</button></div></div>
+    <div class="rbk-card"><h4>3. LaTeX sạch (dán vào phương trình của Word hoặc MathType)</h4>
+      ${rows ? `<table class="rbk-tbl"><tr><th>Công thức</th><th>LaTeX in thẳng</th><th>LaTeX gọn</th><th></th></tr>${rows}</table>
+      <p class="tkb-note">Trong Word: nhấn Alt + =, dán mã (không có dấu $), nhấn Enter. Dùng "LaTeX gọn" nếu Word không hiểu \\mathrm.</p>` : "<p>Chưa có công thức nào.</p>"}
+      <p><b>Toàn bộ văn bản với mã LaTeX trong dấu $</b> (dùng cho Overleaf, Markdown):
+        <select id="cfTexMode"><option value="mathrm">\\mathrm (in thẳng)</option><option value="ce">\\ce (gói mhchem)</option></select></p>
+      <textarea id="cfTexAll" class="rbk-input" rows="5" readonly>${rbkEsc(cfLatexFull(segs, "mathrm"))}</textarea>
+      <div class="rbk-row"><button id="cfCopyTex" class="pomo-btn pomo-btn-secondary">Sao chép</button></div></div>
+    <div class="rbk-card"><h4>4. File Word (.docx)</h4>
+      <p>Tải file rồi chép nội dung sang bài của bạn. Hai kiểu:</p>
+      <div class="rbk-row"><button id="cfDocSub" class="pomo-btn pomo-btn-secondary">Tải .docx (chỉ số dưới/trên)</button>
+        <button id="cfDocEq" class="pomo-btn pomo-btn-secondary">Tải .docx (phương trình của Word)</button><span id="cfDocMsg" class="rbk-prog"></span></div>
+      <p class="tkb-note">Kiểu "phương trình" dùng công thức Office Math của Word (chữ thẳng, phông Cambria Math), gần với cách MathType hiển thị hơn nhưng không phải đối tượng MathType. Hãy thử cả hai xem kiểu nào bạn thấy đẹp hơn.</p></div>`;
+}
+
+function initChemFormula() {
+  const $ = (id) => document.getElementById(id);
+  if (!$("cfP-fix")) return;
+  const panels = ["fix", "ed", "learn"];
+  const showTab = (t) => {
+    document.querySelectorAll("[data-cf-tab]").forEach((b) => b.classList.toggle("rbk-tab-on", b.getAttribute("data-cf-tab") === t));
+    panels.forEach((p) => { $("cfP-" + p).style.display = p === t ? "" : "none"; });
+  };
+  document.querySelectorAll("[data-cf-tab]").forEach((b) => b.addEventListener("click", () => showTab(b.getAttribute("data-cf-tab"))));
+
+  // ---- Tab 1 ----
+  let cur = null;
+  const run = () => {
+    const txt = $("cfIn").value;
+    if (!txt.trim()) { $("cfOut").innerHTML = '<p class="rbk-miss">Hãy dán văn bản cần sửa vào ô bên trên.</p>'; return; }
+    cur = cfFix(txt, { auto: $("cfOptAuto").checked, units: $("cfOptUnits").checked, arrows: $("cfOptArrows").checked });
+    $("cfOut").innerHTML = cfRender(cur, $("cfOut"));
+    const segs = cur.segs;
+    $("cfCopyRich").addEventListener("click", () => cfCopyRich("<span>" + cfHtml(segs) + "</span>", cfUni(segs).text, $("cfCopyRich"), "Đã sao chép, hãy dán vào Word"));
+    $("cfCopyUni").addEventListener("click", () => cfCopyText(cfUni(segs).text, $("cfCopyUni"), "Đã sao chép"));
+    $("cfCopyTex").addEventListener("click", () => cfCopyText($("cfTexAll").value, $("cfCopyTex"), "Đã sao chép"));
+    $("cfTexMode").addEventListener("change", () => { $("cfTexAll").value = cfLatexFull(segs, $("cfTexMode").value); });
+    const list = cfFormulaList(segs);
+    $("cfOut").querySelectorAll("[data-cfrow]").forEach((b) => b.addEventListener("click", () => cfCopyText(list[+b.getAttribute("data-cfrow")].mathrm, b, "Đã chép")));
+    const doc = async (mode, name) => {
+      $("cfDocMsg").textContent = "Đang tạo file...";
+      try { cfDownloadBlob(name, await cfBuildDocx(segs, mode)); $("cfDocMsg").textContent = "Đã tạo file " + name + "."; }
+      catch (e) { $("cfDocMsg").textContent = "Không tạo được file (kiểm tra kết nối mạng để tải thư viện nén)."; }
+    };
+    $("cfDocSub").addEventListener("click", () => doc("sub", "cong-thuc-chi-so.docx"));
+    $("cfDocEq").addEventListener("click", () => doc("eq", "cong-thuc-phuong-trinh.docx"));
+  };
+  $("cfGo").addEventListener("click", run);
+  $("cfSample").addEventListener("click", () => { $("cfIn").value = CF_SAMPLE; run(); });
+
+  // ---- Tab 2: soạn nhanh ----
+  const ed = $("cfEd");
+  const insert = (html) => {
+    ed.focus();
+    let ok = false;
+    try { ok = document.execCommand("insertHTML", false, html); } catch (e) { ok = false; }
+    if (!ok) {
+      const sel = window.getSelection();
+      const range = sel && sel.rangeCount ? sel.getRangeAt(0) : null;
+      const tmp = document.createElement("div"); tmp.innerHTML = html;
+      if (range && ed.contains(range.commonAncestorContainer)) { range.deleteContents(); const frag = document.createDocumentFragment(); while (tmp.firstChild) frag.appendChild(tmp.firstChild); range.insertNode(frag); }
+      else ed.insertAdjacentHTML("beforeend", html);
+    }
+  };
+  const keepSel = (e) => e.preventDefault();
+  document.querySelectorAll("#cfP-ed .cf-btn").forEach((b) => b.addEventListener("mousedown", keepSel));
+  document.querySelectorAll("#cfP-ed [data-ins]").forEach((b) => b.addEventListener("click", () => insert(b.getAttribute("data-ins"))));
+  document.querySelectorAll("#cfP-ed .cf-cmd").forEach((b) => b.addEventListener("click", () => { ed.focus(); try { document.execCommand(b.getAttribute("data-cmd")); } catch (e) { /* bỏ qua */ } }));
+  $("cfAutoFmt").addEventListener("click", () => { const t = cfPlainOf(ed, false); ed.innerHTML = cfHtml(cfFix(t).segs); });
+  ed.addEventListener("paste", (e) => {
+    const cd = e.clipboardData || window.clipboardData;
+    if (!cd) return;
+    e.preventDefault();
+    insert(cfHtml(cfFix(cd.getData("text/plain")).segs));
+  });
+  ed.addEventListener("keydown", (e) => {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    if (e.key === "=" && !e.shiftKey) { e.preventDefault(); try { document.execCommand("subscript"); } catch (x) { /* bỏ qua */ } }
+    else if (e.key === "+" || (e.key === "=" && e.shiftKey)) { e.preventDefault(); try { document.execCommand("superscript"); } catch (x) { /* bỏ qua */ } }
+  });
+  const msg = (m) => { $("cfEdMsg").textContent = m; };
+  $("cfEdCopy").addEventListener("click", async () => {
+    const ok = await cfCopyRich("<span>" + cfCleanHtml(ed) + "</span>", cfPlainOf(ed, true), $("cfEdCopy"), "Đã sao chép, hãy dán vào Word");
+    if (!ok) msg("Trình duyệt chặn sao chép. Hãy bôi đen nội dung và nhấn Ctrl + C.");
+  });
+  $("cfEdCopyUni").addEventListener("click", () => cfCopyText(cfPlainOf(ed, true), $("cfEdCopyUni"), "Đã sao chép"));
+  $("cfEdToFix").addEventListener("click", () => { $("cfIn").value = cfPlainOf(ed, false); showTab("fix"); run(); });
+  $("cfEdClear").addEventListener("click", () => { ed.innerHTML = ""; msg(""); });
+
+  // ---- Tab 3 ----
+  $("cfCopyPrompt").addEventListener("click", () => cfCopyText(CF_PROMPT, $("cfCopyPrompt"), "Đã sao chép"));
+}
+
+/* =========================================================
    NGĂN "HÓA PHÂN TÍCH"
    ========================================================= */
 
@@ -6790,6 +7447,16 @@ const SUBJECTS = [
     desc: "So sánh với nguồn, kiểm tra tài liệu tham khảo, soi văn phong và sửa bài, hồ sơ quá trình viết, sổ tay tránh bị lừa",
     render: renderIntegrity,
     afterRender: initIntegrity,
+  },
+  {
+    id: "cong-thuc-hoa-hoc",
+    hocKy: null,
+    nhomMon: "Tiện ích",
+    icon: "⚗️",
+    title: "Công Thức Hóa Học",
+    desc: "Sửa công thức bị lỗi khi chép từ AI ($CO_2$, \\ce{H2O}) thành chỉ số dưới/trên thật để dán vào Word, soạn nhanh bằng nút, học LaTeX",
+    render: renderChemFormula,
+    afterRender: initChemFormula,
   },
   {
     id: "thcn-nc",
