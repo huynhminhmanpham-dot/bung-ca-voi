@@ -839,8 +839,11 @@ table.tkb tbody tr:nth-child(even) td { background: #f7fbff; }
 .cf-rx-up { align-self: end; }
 .cf-rx-dn { align-self: start; }
 .cf-rx-arr { align-self: stretch; position: relative; border-top: 1.5px solid #16283e; margin: 3px 0; min-width: 44px; height: 0; }
-.cf-rx-r::after { content: ""; position: absolute; right: -1px; top: -5px; border-left: 8px solid #16283e; border-top: 4.5px solid transparent; border-bottom: 4.5px solid transparent; }
-.cf-rx-l::before { content: ""; position: absolute; left: -1px; top: -5px; border-right: 8px solid #16283e; border-top: 4.5px solid transparent; border-bottom: 4.5px solid transparent; }
+.cf-rx-r::after, .cf-rx-b::after { content: ""; position: absolute; right: -1px; top: -5px; border-left: 8px solid #16283e; border-top: 4.5px solid transparent; border-bottom: 4.5px solid transparent; }
+.cf-rx-l::before, .cf-rx-b::before { content: ""; position: absolute; left: -1px; top: -5px; border-right: 8px solid #16283e; border-top: 4.5px solid transparent; border-bottom: 4.5px solid transparent; }
+.cf-rx-e { border-top: 0; height: 7px; margin: 6px 0; background: linear-gradient(#16283e, #16283e) 0 0 / 100% 1.5px no-repeat, linear-gradient(#16283e, #16283e) 0 100% / 100% 1.5px no-repeat; }
+.cf-rx-e::before { content: ""; position: absolute; right: -1px; top: -4px; border-left: 8px solid #16283e; border-top: 4px solid transparent; }
+.cf-rx-e::after { content: ""; position: absolute; left: -1px; bottom: -4px; border-right: 8px solid #16283e; border-bottom: 4px solid transparent; }
 .cf-rx-g { border-top: 0; height: auto; text-align: center; font-size: 1.5em; line-height: 1; min-width: 36px; }
 .cf-btn.cf-on { background: #0b3d91; color: #fff; border-color: #0b3d91; }
 .cf-rxcols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0; }
@@ -5576,10 +5579,10 @@ const CF_SUP = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "
   a: "ᵃ", b: "ᵇ", c: "ᶜ", d: "ᵈ", e: "ᵉ", f: "ᶠ", g: "ᵍ", h: "ʰ", i: "ⁱ", j: "ʲ", k: "ᵏ", l: "ˡ", m: "ᵐ", n: "ⁿ", o: "ᵒ", p: "ᵖ", r: "ʳ", s: "ˢ", t: "ᵗ", u: "ᵘ", v: "ᵛ", w: "ʷ", x: "ˣ", y: "ʸ", z: "ᶻ" };
 const CF_CMD = { alpha: "α", beta: "β", gamma: "γ", delta: "δ", epsilon: "ε", varepsilon: "ε", zeta: "ζ", eta: "η", theta: "θ", lambda: "λ", mu: "µ", nu: "ν", xi: "ξ", pi: "π", rho: "ρ", sigma: "σ", tau: "τ", phi: "φ", varphi: "φ", chi: "χ", psi: "ψ", omega: "ω",
   Gamma: "Γ", Delta: "Δ", Theta: "Θ", Lambda: "Λ", Xi: "Ξ", Pi: "Π", Sigma: "Σ", Phi: "Φ", Psi: "Ψ", Omega: "Ω",
-  rightarrow: "→", to: "→", longrightarrow: "→", leftarrow: "←", leftrightarrow: "↔", Rightarrow: "⇒", Leftarrow: "⇐", Leftrightarrow: "⇔", rightleftharpoons: "⇌", leftrightarrows: "⇄", uparrow: "↑", downarrow: "↓",
+  rightarrow: "→", to: "→", longrightarrow: "→", leftarrow: "←", leftrightarrow: "↔", Rightarrow: "⇒", Leftarrow: "⇐", Leftrightarrow: "⇔", rightleftharpoons: "⇌", leftrightarrows: "⇄", rightleftarrows: "⇄", leftrightharpoons: "⇋", longleftarrow: "←", longleftrightarrow: "↔", Longrightarrow: "⇒", uparrow: "↑", downarrow: "↓",
   times: "×", cdot: "·", pm: "±", mp: "∓", approx: "≈", neq: "≠", ne: "≠", leq: "≤", le: "≤", geq: "≥", ge: "≥", infty: "∞", circ: "°", degree: "°", sim: "∼", propto: "∝", partial: "∂", nabla: "∇",
   sum: "∑", int: "∫", prod: "∏", AA: "Å", angstrom: "Å", ldots: "…", dots: "…", cdots: "⋯", bullet: "•", ll: "≪", gg: "≫", equiv: "≡", cdotp: "·", textdegree: "°", permil: "‰", lt: "<", gt: ">" };
-const CF_ARROWS = new Set(["rightarrow", "to", "longrightarrow", "leftarrow", "leftrightarrow", "Rightarrow", "Leftarrow", "Leftrightarrow", "rightleftharpoons", "leftrightarrows"]);
+const CF_ARROWS = new Set(["rightarrow", "to", "longrightarrow", "leftarrow", "leftrightarrow", "Rightarrow", "Leftarrow", "Leftrightarrow", "rightleftharpoons", "leftrightarrows", "rightleftarrows", "leftrightharpoons", "longleftarrow", "longleftrightarrow", "Longrightarrow"]);
 const CF_REV = {};
 Object.keys(CF_CMD).forEach((k) => { if (!CF_REV[CF_CMD[k]]) CF_REV[CF_CMD[k]] = "\\" + k + " "; });
 CF_REV["°"] = "^{\\circ}"; CF_REV["×"] = "\\times "; CF_REV["µ"] = "\\mu "; CF_REV["μ"] = "\\mu "; CF_REV["→"] = "\\rightarrow "; CF_REV["·"] = "\\cdot ";
@@ -5589,6 +5592,7 @@ function cfSupText(s) { return String(s).replace(/-/g, "\u2212"); }
 /* ---- Phân tích một công thức hóa học dạng chữ: CO2, SO42-, Fe3+, Ca(OH)2, CuSO4.5H2O, (Co,Cr,Fe)3O4 ... ---- */
 function cfChemParse(tok, force) {
   if (!force && CF_STOP.has(tok)) return null;
+  tok = tok.replace(/_\{?(\d+)\}?/g, "$1");
   let body = tok, charge = null, coef = "";
   const c0 = body.match(/^(\d+)(?=[A-Z(\[])/);
   if (c0) { coef = c0[1]; body = body.slice(coef.length); }
@@ -5663,7 +5667,7 @@ function cfAutoChem(str, force) {
     const ch = str[i], prev = i > 0 ? str[i - 1] : "";
     if (/[A-Z(\[\d]/.test(ch) && !(prev && isAl(prev))) {
       let j = i;
-      while (j < str.length && j - i < 80 && /[A-Za-z0-9()\[\],·.*^{}+\-−]/.test(str[j])) j++;
+      while (j < str.length && j - i < 80 && /[A-Za-z0-9()\[\],·.*^{}+\-−_]/.test(str[j])) j++;
       let cand = str.slice(i, j), hit = null;
       while (cand.length) {
         const next = str[i + cand.length] || "";
@@ -5781,7 +5785,34 @@ function cfCeRuns(arg) {
 }
 
 /* ---- Mũi tên có điều kiện: \xrightarrow[dưới]{trên}, \ce{A ->[trên][dưới] B} ---- */
-const CF_XARROWS = { xrightarrow: "→", xleftarrow: "←", xrightleftharpoons: "⇌", xleftrightarrow: "↔", xlongequal: "=", xRightarrow: "⇒" };
+const CF_XARROWS = { xrightarrow: "→", xleftarrow: "←", xrightleftharpoons: "⇌", xleftrightarrow: "↔", xlongequal: "=", xRightarrow: "⇒", xrightleftarrows: "⇄" };
+const CF_OVER_ARROW = { rightarrow: "→", longrightarrow: "→", to: "→", leftarrow: "←", longleftarrow: "←", leftrightarrow: "↔", longleftrightarrow: "↔", rightleftharpoons: "⇌", leftrightarrows: "⇄", rightleftarrows: "⇄", Rightarrow: "⇒", Longrightarrow: "⇒" };
+function cfParseOver(t, i) {
+  const m = /^\\(overset|underset|stackrel)\s*/.exec(t.slice(i)); if (!m) return null;
+  let p = i + m[0].length;
+  if (t[p] !== "{") return null;
+  let q = cfMatchBrace(t, p, "{", "}"); if (q < 0) return null;
+  const a = t.slice(p + 1, q); p = q + 1; while (t[p] === " ") p++;
+  if (t[p] !== "{") return null;
+  q = cfMatchBrace(t, p, "{", "}"); if (q < 0) return null;
+  const b = t.slice(p + 1, q).trim(), end = q + 1;
+  let inner; const am = /^\\([A-Za-z]+)\s*$/.exec(b);
+  if (am && CF_OVER_ARROW[am[1]]) inner = { dir: CF_OVER_ARROW[am[1]], up: "", dn: "" };
+  else if (/^\\(overset|underset|stackrel)/.test(b)) { inner = cfParseOver(b, 0); if (!inner || inner.end !== b.length) return null; }
+  else return null;
+  const up = m[1] === "underset" ? inner.up : [a, inner.up].filter(Boolean).join(" \\\\ "), dn = m[1] === "underset" ? [a, inner.dn].filter(Boolean).join(" \\\\ ") : inner.dn;
+  return { end, dir: inner.dir, up, dn };
+}
+function cfNormOver(inner) {
+  const re = /\\(overset|underset|stackrel)(?![A-Za-z])/g; let out = "", last = 0, m;
+  while ((m = re.exec(inner))) {
+    const r = cfParseOver(inner, m.index); if (!r) continue;
+    const cmd = Object.keys(CF_XARROWS).find((k) => CF_XARROWS[k] === r.dir) || "xrightarrow";
+    out += inner.slice(last, m.index) + "\\" + cmd + (r.dn ? "[" + r.dn + "]" : "") + "{" + r.up + "}";
+    last = r.end; re.lastIndex = r.end;
+  }
+  return out + inner.slice(last);
+}
 function cfMatchBrace(s, i, o, c) {
   let d = 0;
   for (let k = i; k < s.length; k++) { if (s[k] === "\\") { k++; continue; } if (s[k] === o) d++; else if (s[k] === c) { d--; if (!d) return k; } }
@@ -5797,6 +5828,7 @@ function cfRunsAuto(runs) {
 }
 function cfRx(inner, notes, display) {
   const items = [];
+  if (/\\(overset|underset|stackrel)(?![A-Za-z])/.test(inner)) inner = cfNormOver(inner);
   const mc = inner.match(/^\s*\\ce\s*\{([\s\S]*)\}\s*$/);
   if (mc && /(<=>|<-->|<->|-->|->)\s*\[/.test(mc[1])) {
     const t = mc[1], re2 = /(<=>|<-->|<->|-->|->)(?=\s*\[)/g;
@@ -5818,7 +5850,7 @@ function cfRx(inner, notes, display) {
     if (found) { items.push({ t: "r", r: cfCeRuns(t.slice(last).trim()) }); return { k: "rx", items, display, src: inner, tex: true }; }
     items.length = 0;
   }
-  const re = /\\(xrightarrow|xleftarrow|xrightleftharpoons|xleftrightarrow|xlongequal|xRightarrow)(?![A-Za-z])/g;
+  const re = /\\(xrightarrow|xleftarrow|xrightleftharpoons|xleftrightarrow|xlongequal|xRightarrow|xrightleftarrows)(?![A-Za-z])/g;
   let last = 0, m, found = false;
   while ((m = re.exec(inner))) {
     let i = m.index + m[0].length, below = "", above = "";
@@ -5855,7 +5887,8 @@ function cfRxCols(g) {
   return g.items.map((it) => {
     if (it.t === "r") return { top: [], mid: it.r, bot: [] };
     const k = Math.min(40, Math.max(3, Math.ceil(Math.max(lmax(it.up), lmax(it.dn)) / 2.2)));
-    const shaft = it.dir === "→" ? "—".repeat(k) + "→" : it.dir === "←" ? "←" + "—".repeat(k) : it.dir;
+    const bar = "—".repeat(k);
+    const shaft = it.dir === "→" ? bar + "→" : it.dir === "←" ? "←" + bar : it.dir === "↔" ? "←" + bar + "→" : it.dir === "⇌" ? bar + "⇀\n↽" + bar : it.dir === "⇒" ? "═".repeat(k) + "⇒" : it.dir;
     return { top: it.up, mid: [{ s: shaft }], bot: it.dn };
   });
 }
@@ -5870,8 +5903,8 @@ function cfColsTable(cols, one) {
 function cfRxTable(g, one) { return cfColsTable(cfRxCols(g), one); }
 
 /* ---- Mũi tên có điều kiện trong khung soạn thảo (tối đa 5 dòng trên và 5 dòng dưới) ---- */
-const CF_RX_DIRS = ["→", "⇌", "←", "↔"];
-const CF_RX_CMD = { "→": "xrightarrow", "←": "xleftarrow", "⇌": "xrightleftharpoons", "↔": "xleftrightarrow", "=": "xlongequal", "⇒": "xRightarrow" };
+const CF_RX_DIRS = ["→", "←", "↔", "⇌"];
+const CF_RX_CMD = { "→": "xrightarrow", "←": "xleftarrow", "⇌": "xrightleftharpoons", "↔": "xleftrightarrow", "=": "xlongequal", "⇒": "xRightarrow", "⇄": "xrightleftarrows" };
 function cfRxLines(t) { return String(t || "").split("\n").map((x) => x.trim()).filter(Boolean).slice(0, 5); }
 function cfLinesToRuns(text) {
   const out = [];
@@ -5887,7 +5920,7 @@ function cfRunsToSrc(runs) { return runs.map((r) => (r.d === "sub" ? r.s : r.d =
 function cfRxEditorHtml(dir, up, dn) {
   const esc = (t) => rbkEsc(t).replace(/"/g, "&quot;").replace(/\n/g, "&#10;");
   const hl = (t) => cfRxLines(t).map((l) => '<span class="cf-rx-l">' + cfHtml(cfFix(l, { auto: true, units: true, arrows: false }).segs) + "</span>").join("");
-  const glyph = dir === "→" ? "r" : dir === "←" ? "l" : "g";
+  const glyph = dir === "→" ? "r" : dir === "←" ? "l" : dir === "↔" ? "b" : dir === "⇌" ? "e" : "g";
   return '<span class="cf-rx" contenteditable="false" data-dir="' + dir + '" data-up="' + esc(cfRxLines(up).join("\n")) + '" data-dn="' + esc(cfRxLines(dn).join("\n")) + '" title="Bấm để sửa mũi tên"><span class="cf-rx-up">' + hl(up) + '</span><span class="cf-rx-arr cf-rx-' + glyph + '">' + (glyph === "g" ? dir : "") + '</span><span class="cf-rx-dn">' + hl(dn) + "</span></span>";
 }
 function cfRxFromEl(el) {
@@ -6026,11 +6059,44 @@ function cfSuggest(w) {
   return out.slice(0, 14);
 }
 
+/* ---- LaTeX trần (không có dấu $), ví dụ [\mathrm{Cu(NH_3)_4}]^{2+} dán từ AI/Google ---- */
+const CF_BARE_CMD = /^\\(?:mathrm|textrm|text|mathbf|mathit|bf|rm|ce|overset|underset|stackrel|xrightarrow|xleftarrow|xrightleftharpoons|xleftrightarrow|rightarrow|longrightarrow|leftarrow|leftrightarrow|rightleftharpoons|leftrightarrows|Rightarrow|Delta|circ|cdot|times)(?![A-Za-z])/;
+function cfWrapBare(t) {
+  let out = "", i = 0;
+  while (i < t.length) {
+    let st = -1;
+    if (t[i] === "\\" && CF_BARE_CMD.test(t.slice(i))) st = i;
+    else if ((t[i] === "[" || t[i] === "(") && t[i + 1] === "\\" && CF_BARE_CMD.test(t.slice(i + 1))) st = i;
+    if (st < 0) { out += t[i]; i++; continue; }
+    let j = st, stray = 0;
+    while (j < t.length) {
+      const c = t[j];
+      if (c === "\\") { const m = /^\\[A-Za-z]+/.exec(t.slice(j)); if (!m) break; j += m[0].length; continue; }
+      if (c === "{") { const k = cfMatchBrace(t, j, "{", "}"); if (k < 0) break; j = k + 1; continue; }
+      if (c === "}") { stray = 1; break; }
+      if (/[A-Za-z0-9()\[\]+\-−_^]/.test(c)) { j++; continue; }
+      break;
+    }
+    let span = t.slice(st, j);
+    const bal = (o, c) => span.split(o).length - span.split(c).length;
+    while (/[)\]]$/.test(span) && bal(span.slice(-1) === ")" ? "(" : "[", span.slice(-1)) < 0) { span = span.slice(0, -1); j--; }
+    out += "$" + span + "$"; i = j + (stray ? 1 : 0);
+  }
+  return out;
+}
+function cfWrapBareAll(src) {
+  if (!/\\[A-Za-z]/.test(src)) return src;
+  const re = /\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\)|\$(?=\S)[^$\n]*?\S\$/g;
+  let out = "", last = 0, m;
+  while ((m = re.exec(src))) { out += cfWrapBare(src.slice(last, m.index)) + m[0]; last = m.index + m[0].length; }
+  return out + cfWrapBare(src.slice(last));
+}
+
 /* ---- Hàm chính: văn bản bị lỗi -> các đoạn (text / công thức) ---- */
 function cfFix(text, opts) {
   opts = Object.assign({ auto: true, units: true, arrows: true }, opts || {});
-  const src = String(text).replace(/\r/g, "");
-  const notes = { complex: 0, unknown: [], ce: 0, math: 0, auto: 0, units: 0 };
+  const src = cfWrapBareAll(String(text).replace(/\r/g, ""));
+  const notes = { complex: 0, unknown: [], ce: 0, math: 0, auto: 0, units: 0, leftover: [] };
   const segs = [];
   const plain = (s) => {
     if (!s) return;
@@ -6056,6 +6122,11 @@ function cfFix(text, opts) {
     last = m.index + m[0].length;
   }
   plain(src.slice(last));
+  segs.forEach((g) => {
+    if (g.k !== "t" || notes.leftover.length >= 5) return;
+    const lm = /\\[A-Za-z]+|[A-Za-z0-9)\]]_\{?\w|\^\{[^}]*\}/.exec(g.s);
+    if (lm) notes.leftover.push(g.s.slice(Math.max(0, lm.index - 12), lm.index + 24).replace(/\s+/g, " "));
+  });
   return { segs: opts.ital ? cfItalic(segs, opts.ital === "f" ? "f" : "fn") : segs, notes };
 }
 
@@ -6443,6 +6514,7 @@ function cfRender(res, root) {
   const warn = [];
   if (n.complex) warn.push(n.complex + " chỗ có phân số, căn hoặc cấu trúc phức tạp đã chuyển thành dạng chữ đơn giản. Với phương trình phức tạp, hãy dùng cách 2 ở tab 3 (phương trình của Word + LaTeX).");
   if (n.rx) warn.push(n.rx + " phương trình có mũi tên kèm điều kiện: khi dán vào Word, phần điều kiện nằm trên và dưới mũi tên (dạng bảng nhỏ, không viền). Muốn thành đối tượng phương trình của Word, hãy tải .docx (phương trình của Word) ở mục 4.");
+  if (n.leftover && n.leftover.length) warn.push("Còn sót mã LaTeX chưa xử lý được ở: " + n.leftover.map((x) => "“…" + x + "…”").join("; ") + ". Hãy bọc đoạn đó trong dấu $...$ rồi bấm lại, hoặc sửa tay.");
   if (n.unknown.length) warn.push("Lệnh LaTeX chưa hỗ trợ (giữ lại dạng chữ): " + Array.from(new Set(n.unknown)).slice(0, 8).join(", ") + ".");
   if (uni.lossy) warn.push(uni.lossy + " chỗ có ký tự không có dạng chỉ số Unicode nên giữ nguyên trong bản chữ Unicode. Bản dán vào Word (chỉ số dưới/trên thật) không bị ảnh hưởng.");
   const rows = list.map((x, i) => `<tr><td>${x.html}</td><td><code>${rbkEsc(x.mathrm)}</code></td><td><code>${rbkEsc(x.plain)}</code></td><td><button class="pomo-btn pomo-btn-secondary" style="padding:3px 9px;font-size:12px;" data-cfrow="${i}">Chép</button></td></tr>`).join("");
