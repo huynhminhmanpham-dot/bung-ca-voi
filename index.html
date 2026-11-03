@@ -833,6 +833,19 @@ table.tkb tbody tr:nth-child(even) td { background: #f7fbff; }
 .cf-chip small { font-family: system-ui, sans-serif; font-size: 11px; color: #5b7a9a; }
 .cf-chip:hover, .cf-chip:focus { background: #e3f0ff; border-color: #0b3d91; outline: none; }
 .cf-chip:first-child { border-color: #0b3d91; }
+.cf-rx { display: inline-grid; grid-template-rows: 1fr auto 1fr; justify-items: center; vertical-align: middle; margin: 0 6px; padding: 0 3px; cursor: pointer; user-select: none; border-radius: 6px; }
+.cf-rx:hover { background: #eef6ff; }
+.cf-rx-up, .cf-rx-dn { display: flex; flex-direction: column; align-items: center; font-size: 0.85em; line-height: 1.25; white-space: nowrap; }
+.cf-rx-up { align-self: end; }
+.cf-rx-dn { align-self: start; }
+.cf-rx-arr { align-self: stretch; position: relative; border-top: 1.5px solid #16283e; margin: 3px 0; min-width: 44px; height: 0; }
+.cf-rx-r::after { content: ""; position: absolute; right: -1px; top: -5px; border-left: 8px solid #16283e; border-top: 4.5px solid transparent; border-bottom: 4.5px solid transparent; }
+.cf-rx-l::before { content: ""; position: absolute; left: -1px; top: -5px; border-right: 8px solid #16283e; border-top: 4.5px solid transparent; border-bottom: 4.5px solid transparent; }
+.cf-rx-g { border-top: 0; height: auto; text-align: center; font-size: 1.5em; line-height: 1; min-width: 36px; }
+.cf-btn.cf-on { background: #0b3d91; color: #fff; border-color: #0b3d91; }
+.cf-rxcols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0; }
+.cf-rxcols label { font-size: 13px; color: #3a5a80; display: flex; flex-direction: column; gap: 4px; }
+@media (max-width: 560px) { .cf-rxcols { grid-template-columns: 1fr; } }
 .cf-code { background: #f4f8fc; border: 1px solid #dbe6f2; border-radius: 8px; padding: 10px 12px; font-size: 14px; line-height: 1.6; }
 </style>
 </head>
@@ -5813,51 +5826,92 @@ function cfRx(inner, notes, display) {
     if (inner[i] === "[") { const j = cfMatchBrace(inner, i, "[", "]"); if (j < 0) continue; below = inner.slice(i + 1, j); i = j + 1; while (inner[i] === " ") i++; }
     if (inner[i] === "{") { const j = cfMatchBrace(inner, i, "{", "}"); if (j < 0) continue; above = inner.slice(i + 1, j); i = j + 1; }
     found = true;
-    items.push({ t: "r", r: cfTex(inner.slice(last, m.index), notes) });
+    items.push({ t: "r", r: cfRunsAuto(cfTex(inner.slice(last, m.index), notes)) });
     items.push({ t: "a", dir: CF_XARROWS[m[1]], up: cfRunsAuto(cfTex(above, notes)), dn: cfRunsAuto(cfTex(below, notes)) });
     last = i; re.lastIndex = i;
   }
   if (!found) return null;
-  items.push({ t: "r", r: cfTex(inner.slice(last), notes) });
+  items.push({ t: "r", r: cfRunsAuto(cfTex(inner.slice(last), notes)) });
   return { k: "rx", items, display, src: inner, tex: true };
 }
+function cfSplitLines(runs) {
+  const lines = [[]];
+  runs.forEach((r) => { r.s.split("\n").forEach((p, i) => { if (i) lines.push([]); if (p) lines[lines.length - 1].push({ s: p, d: r.d }); }); });
+  return lines.filter((l) => l.length);
+}
 function cfRxArrowFlat(it) {
-  const d = it.dir;
+  const d = it.dir, fl = (rs) => rs.map((r) => ({ s: r.s.replace(/\s*\n\s*/g, "; "), d: r.d }));
   if (!it.up.length && !it.dn.length) return [{ s: " " + d + " " }];
   const out = [{ s: " " + (d === "←" ? "←[" : d === "→" ? "—[" : d + "[") }];
-  it.up.forEach((r) => out.push(r));
+  fl(it.up).forEach((r) => out.push(r));
   if (it.up.length && it.dn.length) out.push({ s: "; " });
-  it.dn.forEach((r) => out.push(r));
+  fl(it.dn).forEach((r) => out.push(r));
   out.push({ s: "]" + (d === "→" ? "→" : d === "←" ? "—" : "") + " " });
   return out;
 }
 function cfRxFlat(g) { let out = []; g.items.forEach((it) => { out = out.concat(it.t === "r" ? it.r : cfRxArrowFlat(it)); }); return cfMerge(out); }
 function cfRxCols(g) {
-  const plen = (rs) => rs.reduce((n, r) => n + r.s.length, 0);
+  const lmax = (rs) => rs.map((r) => r.s).join("").split("\n").reduce((n, l) => Math.max(n, l.length), 0);
   return g.items.map((it) => {
     if (it.t === "r") return { top: [], mid: it.r, bot: [] };
-    const k = Math.min(40, Math.max(3, Math.ceil(Math.max(plen(it.up), plen(it.dn)) / 2.2)));
+    const k = Math.min(40, Math.max(3, Math.ceil(Math.max(lmax(it.up), lmax(it.dn)) / 2.2)));
     const shaft = it.dir === "→" ? "—".repeat(k) + "→" : it.dir === "←" ? "←" + "—".repeat(k) : it.dir;
     return { top: it.up, mid: [{ s: shaft }], bot: it.dn };
   });
 }
-function cfRxTable(g, one) {
-  const cols = cfRxCols(g), h = (rs) => rs.map(one).join("");
+function cfColsTable(cols, one) {
+  const h = (x) => (typeof x === "string" ? x : x.map(one).join("").replace(/\n/g, "<br>"));
   const td = (inner, small) => '<td align="center" style="text-align:center;white-space:nowrap;padding:0 4px;' + (small ? "font-size:0.9em;" : "") + '">' + inner + "</td>";
   return '<table border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin:4px 0;">' +
     "<tr>" + cols.map((c) => td(h(c.top), true)).join("") + "</tr>" +
     "<tr>" + cols.map((c) => td(h(c.mid))).join("") + "</tr>" +
     "<tr>" + cols.map((c) => td(h(c.bot), true)).join("") + "</tr></table>";
 }
+function cfRxTable(g, one) { return cfColsTable(cfRxCols(g), one); }
+
+/* ---- Mũi tên có điều kiện trong khung soạn thảo (tối đa 5 dòng trên và 5 dòng dưới) ---- */
+const CF_RX_DIRS = ["→", "⇌", "←", "↔"];
+const CF_RX_CMD = { "→": "xrightarrow", "←": "xleftarrow", "⇌": "xrightleftharpoons", "↔": "xleftrightarrow", "=": "xlongequal", "⇒": "xRightarrow" };
+function cfRxLines(t) { return String(t || "").split("\n").map((x) => x.trim()).filter(Boolean).slice(0, 5); }
+function cfLinesToRuns(text) {
+  const out = [];
+  cfRxLines(text).forEach((ln, i) => {
+    if (i) out.push({ s: "\n" });
+    cfFix(ln, { auto: true, units: true, arrows: false }).segs.forEach((g) => {
+      if (g.k === "t") out.push({ s: g.s }); else (g.k === "rx" ? cfRxFlat(g) : g.r).forEach((r) => out.push(r));
+    });
+  });
+  return cfMerge(out);
+}
+function cfRunsToSrc(runs) { return runs.map((r) => (r.d === "sub" ? r.s : r.d === "sup" ? "^{" + r.s.replace(/\u2212/g, "-") + "}" : r.s)).join(""); }
+function cfRxEditorHtml(dir, up, dn) {
+  const esc = (t) => rbkEsc(t).replace(/"/g, "&quot;").replace(/\n/g, "&#10;");
+  const hl = (t) => cfRxLines(t).map((l) => '<span class="cf-rx-l">' + cfHtml(cfFix(l, { auto: true, units: true, arrows: false }).segs) + "</span>").join("");
+  const glyph = dir === "→" ? "r" : dir === "←" ? "l" : "g";
+  return '<span class="cf-rx" contenteditable="false" data-dir="' + dir + '" data-up="' + esc(cfRxLines(up).join("\n")) + '" data-dn="' + esc(cfRxLines(dn).join("\n")) + '" title="Bấm để sửa mũi tên"><span class="cf-rx-up">' + hl(up) + '</span><span class="cf-rx-arr cf-rx-' + glyph + '">' + (glyph === "g" ? dir : "") + '</span><span class="cf-rx-dn">' + hl(dn) + "</span></span>";
+}
+function cfRxFromEl(el) {
+  return { k: "rx", display: false, items: [{ t: "a", dir: el.getAttribute("data-dir") || "→", up: cfLinesToRuns(el.getAttribute("data-up")), dn: cfLinesToRuns(el.getAttribute("data-dn")) }] };
+}
 
 /* ---- Chữ nghiêng nhẹ giống MathType (tùy chọn): công thức và tên hóa học ---- */
 const CF_NAMES_EN = ["carbon dioxide", "carbon monoxide", "hydrogen sulfide", "hydrogen peroxide", "sulfur dioxide", "nitrogen dioxide", "sulfuric acid", "nitric acid", "hydrochloric acid", "acetic acid", "methane", "ethane", "ethylene", "acetylene", "ammonia", "methanol", "ethanol", "benzene", "biogas", "hydrogen", "oxygen", "nitrogen", "glucose", "calcium carbonate", "sodium chloride", "sodium hydroxide", "titanium dioxide", "zinc oxide"];
-function cfItalic(segs) {
+function cfItalic(segs, mode) {
   const names = CF_NAMES_EN.slice().sort((a, b) => b.length - a.length);
   const re = new RegExp("(?<![\\p{L}\\p{N}])(" + names.join("|") + ")(?![\\p{L}\\p{N}])", "giu");
   const out = [];
   segs.forEach((g) => {
+    if (g.k === "f" && g.unit) { out.push(g); return; }
+    if (g.k === "f" && g.chem && g.r.length) {
+      const txt = g.r.map((r) => r.s).join(""), inner = txt.slice(1, -1);
+      const bal = (inner.match(/\(/g) || []).length === (inner.match(/\)/g) || []).length;
+      if (txt[0] === "(" && txt[txt.length - 1] === ")" && bal && !g.r[0].d && !g.r[g.r.length - 1].d) {
+        const r2 = g.r.map((r) => Object.assign({}, r)); r2[0].s = r2[0].s.slice(1); r2[r2.length - 1].s = r2[r2.length - 1].s.slice(0, -1);
+        out.push({ k: "t", s: "(" }, Object.assign({}, g, { r: r2.filter((r) => r.s), it: true }), { k: "t", s: ")" }); return;
+      }
+    }
     if (g.k !== "t") { out.push(Object.assign({}, g, { it: true })); return; }
+    if (mode === "f") { out.push(g); return; }
     let last = 0, m; re.lastIndex = 0;
     while ((m = re.exec(g.s))) {
       if (m.index > last) out.push({ k: "t", s: g.s.slice(last, m.index) });
@@ -6002,7 +6056,7 @@ function cfFix(text, opts) {
     last = m.index + m[0].length;
   }
   plain(src.slice(last));
-  return { segs: opts.ital ? cfItalic(segs) : segs, notes };
+  return { segs: opts.ital ? cfItalic(segs, opts.ital === "f" ? "f" : "fn") : segs, notes };
 }
 
 /* ---- Xuất kết quả: HTML (chỉ số dưới/trên thật), Unicode, LaTeX, .docx ---- */
@@ -6011,7 +6065,8 @@ function cfHtml(segs, o) {
   const one = (r) => { const t = rbkEsc(r.d === "sup" ? cfSupText(r.s) : r.s); return r.d === "sub" ? "<sub>" + t + "</sub>" : r.d === "sup" ? "<sup>" + t + "</sup>" : t; };
   let h = "";
   segs.forEach((g) => {
-    if (g.k === "rx" && o.table && g.display) { h += cfRxTable(g, one); return; }
+    if (g.k === "rx" && o.table && g.display) { h += cfRxTable(g, g.it ? (r) => "<i>" + one(r) + "</i>" : one); return; }
+    if (g.k === "rx" && o.editor) { h += g.items.map((it) => (it.t === "r" ? it.r.map(one).join("") : cfRxEditorHtml(it.dir, cfRunsToSrc(it.up), cfRunsToSrc(it.dn)))).join(" "); return; }
     const part = g.k === "t" ? rbkEsc(g.s) : (g.k === "rx" ? cfRxFlat(g) : g.r).map(one).join("");
     h += g.it ? "<i>" + part + "</i>" : part;
   });
@@ -6044,7 +6099,8 @@ function cfRxTex(g, rm) {
   return g.items.map((it) => {
     if (it.t === "r") return it.r.length ? cfTexMath(it.r, rm) : "";
     if (!it.up.length && !it.dn.length) return PLAIN[it.dir] || "\\rightarrow ";
-    return "\\" + (CMD[it.dir] || "xrightarrow") + (it.dn.length ? "[" + cfTexMath(it.dn, true) + "]" : "") + "{" + cfTexMath(it.up, true) + "}";
+    const ml = (rs) => cfSplitLines(rs).map((l) => cfTexMath(l, true)).join(" \\\\ ");
+    return "\\" + (CMD[it.dir] || "xrightarrow") + (it.dn.length ? "[" + ml(it.dn) + "]" : "") + "{" + ml(it.up) + "}";
   }).filter(Boolean).join(" ");
 }
 function cfCeStr(runs) { return runs.map((r) => (r.d === "sup" ? "^{" + r.s.replace(/\u2212/g, "-") + "}" : r.s)).join(""); }
@@ -6115,7 +6171,8 @@ function cfRxOmml(g) {
   const gc = (chr, pos, inner) => '<m:groupChr><m:groupChrPr><m:chr m:val="' + chr + '"/><m:pos m:val="' + pos + '"/><m:vertJc m:val="bot"/></m:groupChrPr><m:e>' + inner + "</m:e></m:groupChr>";
   return g.items.map((it) => {
     if (it.t === "r") return cfOmmlBody(it.r);
-    const up = cfOmmlBody(it.up), dn = cfOmmlBody(it.dn);
+    const ml = (rs) => { const ls = cfSplitLines(rs); return ls.length > 1 ? "<m:eqArr>" + ls.map((l) => "<m:e>" + cfOmmlBody(l) + "</m:e>").join("") + "</m:eqArr>" : cfOmmlBody(rs); };
+    const up = ml(it.up), dn = ml(it.dn);
     if (!it.up.length && !it.dn.length) return cfMr(it.dir);
     if (it.up.length && it.dn.length) return "<m:limUpp><m:e>" + gc(it.dir, "top", dn) + "</m:e><m:lim>" + up + "</m:lim></m:limUpp>";
     return it.up.length ? gc(it.dir, "bot", up) : gc(it.dir, "top", dn);
@@ -6128,11 +6185,14 @@ async function cfBuildDocx(segs, mode) {
   await cfLoadJSZip();
   const rp = (extra, it) => '<w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman"/>' + (it ? "<w:i/><w:iCs/>" : "") + '<w:sz w:val="26"/><w:szCs w:val="26"/>' + (extra || "") + "</w:rPr>";
   const wr = (t, extra, it) => "<w:r>" + rp(extra, it) + '<w:t xml:space="preserve">' + cfXmlEsc(t) + "</w:t></w:r>";
-  const rr = (r, it) => wr(r.d === "sup" ? cfSupText(r.s) : r.s, r.d === "sub" ? '<w:vertAlign w:val="subscript"/>' : r.d === "sup" ? '<w:vertAlign w:val="superscript"/>' : "", it);
+  const rr = (r, it) => {
+    const ex = r.d === "sub" ? '<w:vertAlign w:val="subscript"/>' : r.d === "sup" ? '<w:vertAlign w:val="superscript"/>' : "";
+    return (r.d === "sup" ? cfSupText(r.s) : r.s).split("\n").map((ln, i) => (i ? "<w:r><w:br/></w:r>" : "") + (ln ? wr(ln, ex, it) : "")).join("");
+  };
   const rxTable = (g) => {
     const cols = cfRxCols(g);
-    const wid = cols.map((c) => 260 + 135 * Math.max(...["top", "mid", "bot"].map((k) => c[k].reduce((n, r) => n + r.s.length, 0))));
-    const tc = (rs, w) => '<w:tc><w:tcPr><w:tcW w:w="' + w + '" w:type="dxa"/><w:noWrap/><w:vAlign w:val="center"/></w:tcPr><w:p><w:pPr><w:spacing w:after="0"/><w:jc w:val="center"/></w:pPr>' + rs.map((r) => rr(r)).join("") + "</w:p></w:tc>";
+    const wid = cols.map((c) => 260 + 135 * Math.max(...["top", "mid", "bot"].map((k) => c[k].map((r) => r.s).join("").split("\n").reduce((n, l) => Math.max(n, l.length), 0))));
+    const tc = (rs, w) => '<w:tc><w:tcPr><w:tcW w:w="' + w + '" w:type="dxa"/><w:noWrap/><w:vAlign w:val="center"/></w:tcPr><w:p><w:pPr><w:spacing w:after="0"/><w:jc w:val="center"/></w:pPr>' + rs.map((r) => rr(r, g.it)).join("") + "</w:p></w:tc>";
     const row = (k) => "<w:tr>" + cols.map((c, i) => tc(c[k], wid[i])).join("") + "</w:tr>";
     return '<w:tbl><w:tblPr><w:tblW w:w="' + wid.reduce((a, b) => a + b, 0) + '" w:type="dxa"/><w:jc w:val="center"/><w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>' + wid.map((w) => '<w:gridCol w:w="' + w + '"/>').join("") + "</w:tblGrid>" + row("top") + row("mid") + row("bot") + "</w:tbl>";
   };
@@ -6188,11 +6248,14 @@ function cfCopyText(txt, btn, label) {
 }
 
 /* ---- Ô soạn thảo: làm sạch HTML và lấy chữ thuần ---- */
+function cfIsRx(n) { return n.nodeType === 1 && n.classList && n.classList.contains("cf-rx"); }
 function cfCleanHtml(root) {
+  const rxs = [];
   const walk = (node) => {
     let o = "";
     node.childNodes.forEach((n) => {
       if (n.nodeType === 3) o += rbkEsc(n.nodeValue.replace(/\u200b/g, ""));
+      else if (cfIsRx(n)) { rxs.push(cfRxFromEl(n)); o += "\u0001" + (rxs.length - 1) + "\u0002"; }
       else if (n.nodeType === 1) {
         const t = n.tagName;
         if (t === "BR") o += "<br>";
@@ -6203,7 +6266,20 @@ function cfCleanHtml(root) {
     });
     return o;
   };
-  return walk(root);
+  const html = walk(root);
+  if (!rxs.length) return html;
+  const one = (r) => { const t = rbkEsc(r.d === "sup" ? cfSupText(r.s) : r.s); return r.d === "sub" ? "<sub>" + t + "</sub>" : r.d === "sup" ? "<sup>" + t + "</sup>" : t; };
+  let out = "", prevPlain = false;
+  html.split("<br>").forEach((ln) => {
+    if (!/\u0001/.test(ln)) { if (prevPlain) out += "<br>"; out += ln; prevPlain = true; return; }
+    const cols = [];
+    ln.split(/\u0001(\d+)\u0002/).forEach((p, i) => {
+      if (i % 2) cfRxCols(rxs[+p]).forEach((c) => cols.push(c));
+      else if (p.trim()) cols.push({ top: "", mid: p.trim(), bot: "" });
+    });
+    out += cfColsTable(cols, one); prevPlain = false;
+  });
+  return out;
 }
 function cfPlainOf(root, uni) {
   if (uni === undefined) uni = true;
@@ -6211,6 +6287,14 @@ function cfPlainOf(root, uni) {
     let o = "";
     node.childNodes.forEach((n) => {
       if (n.nodeType === 3) o += d && uni ? cfUniChars(n.nodeValue.replace(/\u200b/g, ""), d).s : n.nodeValue.replace(/\u200b/g, "");
+      else if (cfIsRx(n)) {
+        if (uni) o += cfUni([cfRxFromEl(n)]).text.replace(/^ +| +$/g, " ");
+        else {
+          const dir = n.getAttribute("data-dir") || "→", ml = (t) => cfRxLines(t).join(" \\\\ ");
+          const up = n.getAttribute("data-up"), dn = n.getAttribute("data-dn");
+          o += "\u0001" + (up || dn ? "\\" + (CF_RX_CMD[dir] || "xrightarrow") + (dn ? "[" + ml(dn) + "]" : "") + "{" + ml(up) + "}" : "\\rightarrow ") + "\u0002";
+        }
+      }
       else if (n.nodeType === 1) {
         const t = n.tagName;
         if (t === "BR") o += "\n";
@@ -6222,7 +6306,9 @@ function cfPlainOf(root, uni) {
     });
     return o;
   };
-  return walk(root, null);
+  const out = walk(root, null);
+  if (uni || !/\u0001/.test(out)) return out;
+  return out.split("\n").map((l) => (/\u0001/.test(l) ? "$$" + l.replace(/[\u0001\u0002]/g, "") + "$$" : l)).join("\n");
 }
 
 /* ---------------- Giao diện ngăn "Công thức hóa học" ---------------- */
@@ -6294,7 +6380,6 @@ function renderChemFormula() {
         <label><input type="checkbox" id="cfOptAuto" checked> Tự nhận diện công thức trong văn bản thường (CO2, H2SO4, Fe3+...)</label>
         <label><input type="checkbox" id="cfOptUnits" checked> Định dạng đơn vị (m2 g-1, x10-3)</label>
         <label><input type="checkbox" id="cfOptArrows" checked> Đổi mũi tên (-> thành →)</label>
-        <label><input type="checkbox" id="cfOptItal"> Chữ nghiêng nhẹ giống MathType (công thức và tên hóa học như methane, carbon dioxide)</label>
       </div>
       <div class="rbk-row"><button id="cfGo" class="pomo-btn pomo-btn-primary">Sửa công thức</button></div>
       <div id="cfOut"></div>
@@ -6308,6 +6393,25 @@ function renderChemFormula() {
         <button type="button" class="cf-btn cf-cmd" data-cmd="undo" title="Hoàn tác">Hoàn tác</button>
         <button type="button" class="cf-btn cf-cmd" data-cmd="redo" title="Làm lại">Làm lại</button>
         <button type="button" id="cfAutoFmt" class="cf-btn cf-strong">Tự định dạng công thức</button>
+        <button type="button" id="cfRxBtn" class="cf-btn cf-strong" title="Mũi tên có chữ trên và dưới">Mũi tên điều kiện</button>
+      </div>
+      <div id="cfRxPanel" class="rbk-card" style="display:none;">
+        <h4 id="cfRxTitle">Mũi tên có điều kiện</h4>
+        <div class="cf-group"><b>Kiểu mũi tên</b><div class="cf-pal" id="cfRxDirs">${CF_RX_DIRS.map((d) => `<button type="button" class="cf-btn" data-rxdir="${d}">${d}</button>`).join("")}</div></div>
+        <div class="cf-rxcols">
+          <label>Phía trên mũi tên (tối đa 5 dòng, mỗi dòng một điều kiện)<textarea id="cfRxUp" class="rbk-input" rows="5" placeholder="Ví dụ: t°"></textarea></label>
+          <label>Phía dưới mũi tên (tối đa 5 dòng)<textarea id="cfRxDn" class="rbk-input" rows="5" placeholder="Ví dụ: xúc tác Ni/Al2O3"></textarea></label>
+        </div>
+        <div class="cf-group"><b>Chèn nhanh vào ô đang gõ</b><div class="cf-pal">${["t°", "Δ", "xúc tác", "p", "as", "H2SO4 đặc", "OH-", "H+"].map((q) => `<button type="button" class="cf-btn" data-rxq="${rbkEsc(q)}">${cfHtml(cfFix(q, { auto: true, units: false, arrows: false }).segs)}</button>`).join("")}</div></div>
+        <div class="cf-group"><b>Xem trước</b></div>
+        <div id="cfRxPrev" class="cf-prev" style="text-align:center;"></div>
+        <p class="tkb-note">Công thức trong chữ (Al2O3, OH-, Fe3+...) tự được định dạng. Bấm vào mũi tên đã chèn trong khung soạn thảo để sửa lại.</p>
+        <div class="rbk-row">
+          <button type="button" id="cfRxIns" class="pomo-btn pomo-btn-primary">Chèn vào khung soạn thảo</button>
+          <button type="button" id="cfRxDel" class="pomo-btn pomo-btn-secondary" style="display:none;">Xóa mũi tên này</button>
+          <button type="button" id="cfRxClose" class="pomo-btn pomo-btn-secondary">Đóng</button>
+          <span id="cfRxMsg" class="rbk-prog"></span>
+        </div>
       </div>
       <div class="cf-group"><b>Công thức thường gặp</b><div class="cf-pal">${pal(CF_PAL_FORMULAS, "f")}</div></div>
       <div class="cf-group"><b>Ion</b><div class="cf-pal">${pal(CF_PAL_IONS, "f")}</div></div>
@@ -6351,6 +6455,17 @@ function cfRender(res, root) {
       <div class="cf-prev" id="cfPrev">${html}</div>
       <div class="rbk-row"><button id="cfCopyRich" class="pomo-btn pomo-btn-primary">Sao chép để dán vào Word</button></div>
       <p class="tkb-note">Dán vào Word xong, nếu thấy chữ lạ phông, bấm biểu tượng Paste Options và chọn Merge Formatting (hợp nhất định dạng).</p></div>
+    <div class="rbk-card"><h4>Chữ nghiêng nhẹ giống MathType (chọn 1 trong 2 kiểu)</h4>
+      <p class="tkb-note" style="margin-left:0;">Kết quả ở mục 1 là chữ thẳng. Hai ngăn dưới đây là bản nghiêng: mỗi ngăn có nút sao chép để dán vào Word và nút tải .docx riêng.</p>
+      <div class="cf-rxcols">
+        <div class="rbk-card" style="margin:0;"><b>Kiểu 1: chỉ nghiêng công thức hóa học</b>
+          <div class="cf-prev" id="cfPrevI1">${cfHtml(cfItalic(segs, "f"), { table: true })}</div>
+          <div class="rbk-row"><button id="cfCopyI1" class="pomo-btn pomo-btn-primary">Sao chép kiểu 1</button><button id="cfDocI1" class="pomo-btn pomo-btn-secondary">Tải .docx</button></div></div>
+        <div class="rbk-card" style="margin:0;"><b>Kiểu 2: nghiêng cả tên hóa học và công thức</b>
+          <div class="cf-prev" id="cfPrevI2">${cfHtml(cfItalic(segs, "fn"), { table: true })}</div>
+          <div class="rbk-row"><button id="cfCopyI2" class="pomo-btn pomo-btn-primary">Sao chép kiểu 2</button><button id="cfDocI2" class="pomo-btn pomo-btn-secondary">Tải .docx</button></div></div>
+      </div>
+      <p class="tkb-note">Tên hóa học được nhận khi là tên tiếng Anh thường gặp (methane, carbon dioxide, ammonia...); tên tiếng Việt như "metan" chưa được nhận. Quy ước IUPAC in thẳng cả hai, hãy hỏi giảng viên nếu cần theo chuẩn.</p></div>
     <div class="rbk-card"><h4>2. Chữ Unicode (dán vào nơi chỉ nhận chữ thuần: Zalo, Facebook, Excel...)</h4>
       <textarea id="cfUni" class="rbk-input" rows="5" readonly>${rbkEsc(uni.text)}</textarea>
       <div class="rbk-row"><button id="cfCopyUni" class="pomo-btn pomo-btn-secondary">Sao chép chữ Unicode</button></div></div>
@@ -6383,11 +6498,20 @@ function initChemFormula() {
   const run = () => {
     const txt = $("cfIn").value;
     if (!txt.trim()) { $("cfOut").innerHTML = '<p class="rbk-miss">Hãy dán văn bản cần sửa vào ô bên trên.</p>'; return; }
-    cur = cfFix(txt, { auto: $("cfOptAuto").checked, units: $("cfOptUnits").checked, arrows: $("cfOptArrows").checked, ital: $("cfOptItal").checked });
+    cur = cfFix(txt, { auto: $("cfOptAuto").checked, units: $("cfOptUnits").checked, arrows: $("cfOptArrows").checked });
     $("cfOut").innerHTML = cfRender(cur, $("cfOut"));
     const segs = cur.segs;
     $("cfCopyRich").addEventListener("click", () => cfCopyRich("<span>" + cfHtml(segs, { table: true }) + "</span>", cfUni(segs).text, $("cfCopyRich"), "Đã sao chép, hãy dán vào Word"));
     $("cfCopyUni").addEventListener("click", () => cfCopyText(cfUni(segs).text, $("cfCopyUni"), "Đã sao chép"));
+    [["I1", "f"], ["I2", "fn"]].forEach(([id, mode]) => {
+      const sg = cfItalic(segs, mode);
+      $("cfCopy" + id).addEventListener("click", () => cfCopyRich("<span>" + cfHtml(sg, { table: true }) + "</span>", cfUni(sg).text, $("cfCopy" + id), "Đã sao chép, hãy dán vào Word"));
+      $("cfDoc" + id).addEventListener("click", async () => {
+        $("cfDocMsg").textContent = "Đang tạo file...";
+        try { const nm = "cong-thuc-nghieng-kieu-" + id.slice(1) + ".docx"; cfDownloadBlob(nm, await cfBuildDocx(sg, "sub")); $("cfDocMsg").textContent = "Đã tạo file " + nm + "."; }
+        catch (e) { $("cfDocMsg").textContent = "Không tạo được file (kiểm tra kết nối mạng để tải thư viện nén)."; }
+      });
+    });
     $("cfCopyTex").addEventListener("click", () => cfCopyText($("cfTexAll").value, $("cfCopyTex"), "Đã sao chép"));
     $("cfTexMode").addEventListener("change", () => { $("cfTexAll").value = cfLatexFull(segs, $("cfTexMode").value); });
     const list = cfFormulaList(segs);
@@ -6421,12 +6545,12 @@ function initChemFormula() {
   document.querySelectorAll("#cfP-ed .cf-btn").forEach((b) => b.addEventListener("mousedown", keepSel));
   document.querySelectorAll("#cfP-ed [data-ins]").forEach((b) => b.addEventListener("click", () => insert(b.getAttribute("data-ins"))));
   document.querySelectorAll("#cfP-ed .cf-cmd").forEach((b) => b.addEventListener("click", () => { ed.focus(); try { document.execCommand(b.getAttribute("data-cmd")); } catch (e) { /* bỏ qua */ } }));
-  $("cfAutoFmt").addEventListener("click", () => { const t = cfPlainOf(ed, false); ed.innerHTML = cfHtml(cfFix(t).segs); });
+  $("cfAutoFmt").addEventListener("click", () => { const t = cfPlainOf(ed, false); ed.innerHTML = cfHtml(cfFix(t).segs, { editor: true }); });
   ed.addEventListener("paste", (e) => {
     const cd = e.clipboardData || window.clipboardData;
     if (!cd) return;
     e.preventDefault();
-    insert(cfHtml(cfFix(cd.getData("text/plain")).segs));
+    insert(cfHtml(cfFix(cd.getData("text/plain")).segs, { editor: true }));
   });
   ed.addEventListener("keydown", (e) => {
     if (!(e.ctrlKey || e.metaKey)) return;
@@ -6494,6 +6618,54 @@ function initChemFormula() {
     if (e.key === "Tab" && !e.shiftKey && !e.ctrlKey && !e.altKey && sugList.length && sugBox.style.display !== "none") { e.preventDefault(); applySug(0); }
   });
   sugOn.addEventListener("change", () => { if (!sugOn.checked) hideSug(); else showSug(); });
+  // ---- Mũi tên có điều kiện (tối đa 5 dòng trên, 5 dòng dưới) ----
+  const rxPanel = $("cfRxPanel"), rxUp = $("cfRxUp"), rxDn = $("cfRxDn");
+  let rxDir = "→", rxEditing = null, rxLastTa = rxUp, savedRange = null;
+  const saveRange = () => { const sel = window.getSelection(); if (sel && sel.rangeCount && ed.contains(sel.anchorNode)) savedRange = sel.getRangeAt(0).cloneRange(); };
+  ["keyup", "mouseup", "input", "blur"].forEach((ev) => ed.addEventListener(ev, saveRange));
+  const rxLimit = (ta) => { const l = ta.value.split("\n"); if (l.length > 5) { ta.value = l.slice(0, 5).join("\n"); $("cfRxMsg").textContent = "Tối đa 5 dòng mỗi phía."; } };
+  const rxPreview = () => {
+    document.querySelectorAll("#cfRxDirs [data-rxdir]").forEach((b) => b.classList.toggle("cf-on", b.getAttribute("data-rxdir") === rxDir));
+    const box = $("cfRxPrev"); box.innerHTML = '<span class="cf-rxwrap" style="font-size:19px;">' + cfRxEditorHtml(rxDir, rxUp.value, rxDn.value) + "</span>";
+  };
+  const rxOpen = (el) => {
+    rxEditing = el || null;
+    rxDir = el ? el.getAttribute("data-dir") || "→" : "→";
+    rxUp.value = el ? el.getAttribute("data-up") || "" : ""; rxDn.value = el ? el.getAttribute("data-dn") || "" : "";
+    $("cfRxTitle").textContent = el ? "Sửa mũi tên" : "Mũi tên có điều kiện";
+    $("cfRxIns").textContent = el ? "Cập nhật mũi tên" : "Chèn vào khung soạn thảo";
+    $("cfRxDel").style.display = el ? "" : "none"; $("cfRxMsg").textContent = "";
+    rxPanel.style.display = ""; rxPreview();
+    if (!el) saveRange();
+    rxUp.focus();
+  };
+  const rxClose = () => { rxPanel.style.display = "none"; rxEditing = null; };
+  $("cfRxBtn").addEventListener("click", () => rxOpen(null));
+  $("cfRxClose").addEventListener("click", rxClose);
+  document.querySelectorAll("#cfRxDirs [data-rxdir]").forEach((b) => b.addEventListener("click", () => { rxDir = b.getAttribute("data-rxdir"); rxPreview(); }));
+  [rxUp, rxDn].forEach((ta) => { ta.addEventListener("focus", () => { rxLastTa = ta; }); ta.addEventListener("input", () => { rxLimit(ta); rxPreview(); }); ta.addEventListener("keydown", (e) => { if (e.key === "Escape") rxClose(); }); });
+  document.querySelectorAll("#cfRxPanel [data-rxq]").forEach((b) => b.addEventListener("click", () => {
+    const ta = rxLastTa, q = b.getAttribute("data-rxq");
+    const cur = ta.value.split("\n"); const last = cur.length - 1;
+    cur[last] = cur[last] ? cur[last] + (/[,;]\s*$/.test(cur[last]) ? " " : ", ") + q : q;
+    ta.value = cur.join("\n"); rxLimit(ta); rxPreview(); ta.focus();
+  }));
+  $("cfRxIns").addEventListener("click", () => {
+    if (!cfRxLines(rxUp.value).length && !cfRxLines(rxDn.value).length && !window.confirm("Chưa nhập chữ nào trên hoặc dưới mũi tên. Vẫn chèn mũi tên trơn?")) return;
+    const html = cfRxEditorHtml(rxDir, rxUp.value, rxDn.value);
+    if (rxEditing && ed.contains(rxEditing)) {
+      const tmp = document.createElement("div"); tmp.innerHTML = html;
+      rxEditing.parentNode.replaceChild(tmp.firstChild, rxEditing); rxEditing = null; $("cfEdMsg").textContent = "Đã cập nhật mũi tên.";
+    } else {
+      const sel = window.getSelection(); sel.removeAllRanges();
+      if (savedRange && ed.contains(savedRange.startContainer)) sel.addRange(savedRange);
+      else { const r = document.createRange(); r.selectNodeContents(ed); r.collapse(false); sel.addRange(r); }
+      insert(html + "&#8203;");
+    }
+    rxClose();
+  });
+  $("cfRxDel").addEventListener("click", () => { if (rxEditing && rxEditing.parentNode) rxEditing.parentNode.removeChild(rxEditing); rxClose(); });
+  ed.addEventListener("click", (e) => { const el = e.target && e.target.closest ? e.target.closest(".cf-rx") : null; if (el && ed.contains(el)) rxOpen(el); });
   const msg = (m) => { $("cfEdMsg").textContent = m; };
   $("cfEdCopy").addEventListener("click", async () => {
     const ok = await cfCopyRich("<span>" + cfCleanHtml(ed) + "</span>", cfPlainOf(ed, true), $("cfEdCopy"), "Đã sao chép, hãy dán vào Word");
