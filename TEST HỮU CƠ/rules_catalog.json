@@ -1,0 +1,1475 @@
+[
+ {
+  "id": "R_RAD_CL",
+  "chuong_nguon": "C7,C8",
+  "ten": "Thế gốc tự do bằng Cl2/hv",
+  "khoa_tac_nhan_regex": [
+   "cl2",
+   "hv|as$|as;|uv|130|ánh|anh"
+  ],
+  "loai_tru_regex": [
+   "febr3|fecl3|alcl3"
+  ],
+  "chat_dau_can_co_SMARTS": "[CX4;!H0]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Cl2 + ánh sáng tạo gốc Cl•. Cl• ít chọn lọc nên thế vào mọi vị trí C-H (cho hỗn hợp); nếu có H ở vị trí benzyl/allyl thì thế ở đó vì gốc bền hơn.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": "xu_ly_bang_ham:radical"
+ },
+ {
+  "id": "R_RAD_BR",
+  "chuong_nguon": "C7,C8",
+  "ten": "Thế gốc tự do bằng Br2/hv",
+  "khoa_tac_nhan_regex": [
+   "br2",
+   "hv|as$|as;|uv|ánh|anh"
+  ],
+  "loai_tru_regex": [
+   "febr3|fecl3|alcl3|ch3cooh|oh-"
+  ],
+  "chat_dau_can_co_SMARTS": "[CX4;!H0]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Br2 + ánh sáng: Br• chọn lọc cao, thế vào C có bậc cao nhất (bậc 3 > bậc 2 > bậc 1); vị trí benzyl/allyl được ưu tiên hơn cả.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": "xu_ly_bang_ham:radical"
+ },
+ {
+  "id": "R_ALK_HBR",
+  "chuong_nguon": "nền",
+  "ten": "Cộng HX vào anken (Markovnikov)",
+  "khoa_tac_nhan_regex": [
+   "^h(br|cl|i)$"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX3;!$(C=O)]=[CX3]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "H+ cộng vào C có nhiều H hơn, X- vào C có nhiều nhóm thế hơn (carbocation bậc cao bền hơn).",
+  "quy_uoc_de": null,
+  "mau_phan_ung": "xu_ly_bang_ham:addition"
+ },
+ {
+  "id": "R_ALK_HBR_PER",
+  "chuong_nguon": "nền",
+  "ten": "Cộng HBr có peoxit (ngược Markovnikov)",
+  "khoa_tac_nhan_regex": [
+   "hbr",
+   "peoxit|peroxit|peroxide|roor|h2o2"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX3]=[CX3]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Có peoxit: cơ chế gốc tự do, Br• cộng vào C ít nhóm thế hơn, tạo gốc bậc cao bền hơn. Chỉ đúng với HBr.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": "xu_ly_bang_ham:addition"
+ },
+ {
+  "id": "R_ALK_H2O",
+  "chuong_nguon": "C9",
+  "ten": "Hiđrat hóa anken (H2O/H2SO4)",
+  "khoa_tac_nhan_regex": [
+   "h2o",
+   "h2so4|h3po4|h\\+"
+  ],
+  "loai_tru_regex": [
+   "b2h6|bh3|hgso4|lialh4|o3|kmno4"
+  ],
+  "chat_dau_can_co_SMARTS": "[CX3;!$(C=O)]=[CX3]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Cộng nước theo Markovnikov, OH vào C nhiều nhóm thế hơn.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": "xu_ly_bang_ham:addition"
+ },
+ {
+  "id": "R_ALK_HYDROB",
+  "chuong_nguon": "C6,C9",
+  "ten": "Hiđrobo hóa – oxi hóa anken",
+  "khoa_tac_nhan_regex": [
+   "b2h6|bh3|bhr2",
+   "h2o2"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX3;!$(C=O)]=[CX3]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Cộng ngược Markovnikov: B vào C ít nhóm thế, sau đó H2O2/OH- thay B bằng OH; cho ancol bậc thấp.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": "xu_ly_bang_ham:addition"
+ },
+ {
+  "id": "R_ALK_H2",
+  "chuong_nguon": "nền",
+  "ten": "Hiđro hóa anken/ankin (H2/Ni, Pt, Pd)",
+  "khoa_tac_nhan_regex": [
+   "h2",
+   "ni|pt|pd"
+  ],
+  "loai_tru_regex": [
+   "baso4|lindlar|nh3|ch3cho|nh2|nhch|rnh2|n2h4|ketone|=o"
+  ],
+  "chat_dau_can_co_SMARTS": "[CX3,CX2;!$(C=O)]=,#[CX3,CX2]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Cộng H2 vào nối đôi/ba trên xúc tác kim loại, thành ankan.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX3:1]=[CX3:2]>>[C:1][C:2]",
+   "[CX2:1]#[CX2:2]>>[C:1][C:2]"
+  ]
+ },
+ {
+  "id": "R_ALK_BR2",
+  "chuong_nguon": "C6",
+  "ten": "Cộng Br2/CCl4",
+  "khoa_tac_nhan_regex": [
+   "br2",
+   "ccl4"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX3]=[CX3]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Br2 cộng trans vào nối đôi tạo dẫn xuất dibrom vic.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX3:1]=[CX3:2]>>[C:1](Br)[C:2]Br"
+  ]
+ },
+ {
+  "id": "R_ALKYNE_BR2",
+  "chuong_nguon": "C6",
+  "ten": "Cộng Br2/CCl4 vào ankin",
+  "khoa_tac_nhan_regex": [
+   "br2",
+   "ccl4"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX2]#[CX2]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Mol đầu cho dibromanken (trans); dư Br2 cho tetrabromua.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX2:1]#[CX2:2]>>[C:1](Br)=[C:2]Br"
+  ]
+ },
+ {
+  "id": "R_ALK_CLEAVE_RED",
+  "chuong_nguon": "C10,C9",
+  "ten": "Ozon phân anken (khử: Zn/H3O+ hoặc Zn/CH3COOH)",
+  "khoa_tac_nhan_regex": [
+   "o3",
+   "zn|dms|me2s|\\(ch3\\)2s"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX3;!$(C=O)]=[CX3]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Cắt nối đôi C=C, mỗi C thành C=O: anđehit nếu còn H, xeton nếu không còn H.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": "xu_ly_bang_ham:cleave_alkene"
+ },
+ {
+  "id": "R_ALK_CLEAVE_O3_H2O",
+  "chuong_nguon": "C10",
+  "ten": "Ozon phân anken (O3 rồi H2O)",
+  "khoa_tac_nhan_regex": [
+   "o3",
+   "h2o$|h2o;|h2o\\b"
+  ],
+  "loai_tru_regex": [
+   "zn"
+  ],
+  "chat_dau_can_co_SMARTS": "[CX3;!$(C=O)]=[CX3]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Cắt nối đôi C=C; theo cách ghi của đề, bước 2 là H2O (không có Zn) thì xem như xử lý khử.",
+  "quy_uoc_de": "Sách khác có thể coi H2O/H2O2 cho axit; đề yêu cầu ghi rõ có Zn hay không.",
+  "mau_phan_ung": "xu_ly_bang_ham:cleave_alkene"
+ },
+ {
+  "id": "R_ALK_KMNO4",
+  "chuong_nguon": "nền,C9",
+  "ten": "KMnO4 nóng cắt mạch anken",
+  "khoa_tac_nhan_regex": [
+   "kmno4",
+   "t|nong|nóng|dd"
+  ],
+  "loai_tru_regex": [
+   "h2so4.*ch3|cn"
+  ],
+  "chat_dau_can_co_SMARTS": "[CX3;!$(C=O)]=[CX3]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "KMnO4 nóng, đậm đặc cắt C=C: C còn H thành axit (C=CH2 thành CO2), C không còn H thành xeton.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": "xu_ly_bang_ham:cleave_alkene"
+ },
+ {
+  "id": "R_YNE_LINDLAR",
+  "chuong_nguon": "C6",
+  "ten": "Hiđro hóa ankin bằng Pd/BaSO4 (Lindlar) cho cis-anken",
+  "khoa_tac_nhan_regex": [
+   "h2",
+   "baso4|lindlar|pd.*(s|quinolin)"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX2]#[CX2]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Xúc tác bị đầu độc dừng ở anken, cộng cùng phía nên cho dạng cis.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": "xu_ly_bang_ham:yne_ene"
+ },
+ {
+  "id": "R_YNE_NA_NH3",
+  "chuong_nguon": "C6",
+  "ten": "Khử ankin bằng Na/NH3 lỏng cho trans-anken",
+  "khoa_tac_nhan_regex": [
+   "na",
+   "nh3"
+  ],
+  "loai_tru_regex": [
+   "nanh2"
+  ],
+  "chat_dau_can_co_SMARTS": "[CX2]#[CX2]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Khử qua gốc anion, cộng ngược phía nên cho dạng trans.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": "xu_ly_bang_ham:yne_ene"
+ },
+ {
+  "id": "R_YNE_H2O",
+  "chuong_nguon": "C6",
+  "ten": "Hiđrat hóa ankin (HgSO4/H2SO4)",
+  "khoa_tac_nhan_regex": [
+   "hgso4"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX2]#[CX2]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Cộng nước theo Markovnikov cho enol, enol chuyển vị thành xeton (axetilen cho anđehit axetic).",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CH1:1]#[CH1:2]>>[CH3:1][CH1:2]=O",
+   "[#6:1][CX2;H0:2]#[CH1:3]>>[#6:1][C:2](=O)[CH3:3]",
+   "[#6;!$([CH1]):1][C;H0:2]#[C;H0:4][#6:5]>>[#6:1][C:2](=O)[CH2:4][#6:5]"
+  ]
+ },
+ {
+  "id": "R_YNE_HYDROB",
+  "chuong_nguon": "C6",
+  "ten": "Hiđrobo hóa – oxi hóa ankin đầu mạch",
+  "khoa_tac_nhan_regex": [
+   "bh3|bhr2|b2h6",
+   "h2o2"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX2]#[CX2;H1]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Cộng ngược Markovnikov, enol chuyển thành anđehit (ankin đầu mạch cho anđehit).",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[#6:1][CX2:2]#[CH1:3]>>[#6:1][CH2:2][CH1:3]=O"
+  ]
+ },
+ {
+  "id": "R_YNE_HX",
+  "chuong_nguon": "C6",
+  "ten": "Cộng HX vào ankin (1 mol): halogenanken",
+  "khoa_tac_nhan_regex": [
+   "^h(cl|br|i)$"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX2]#[CX2]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Cộng theo Markovnikov, X vào C bậc cao hơn; dư HX cho gem-dihalogenua.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[#6:1][CX2;H0:2]#[CH1:3]>>[#6:1][C:2](Cl)=[CH2:3]"
+  ]
+ },
+ {
+  "id": "R_YNE_HX_DU",
+  "chuong_nguon": "C6",
+  "ten": "Cộng HX dư vào ankin: gem-dihalogenua",
+  "khoa_tac_nhan_regex": [
+   "^h(cl|br|i)(du|dư|excess|\\(2)"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX2]#[CX2]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Mol thứ hai cộng tiếp vào C đã có X (Markovnikov), cho hai halogen cùng một C.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[#6:1][CX2;H0:2]#[CH1:3]>>[#6:1][C:2](Cl)(Cl)[CH3:3]",
+   "[#6:1][CX2;H0:2]#[CX2;H0:3][#6:4]>>[#6:1][C:2](Cl)(Cl)[CH2:3][#6:4]"
+  ]
+ },
+ {
+  "id": "R_YNE_ACID",
+  "chuong_nguon": "C6",
+  "ten": "Ankin đầu mạch có tính axit (NaNH2)",
+  "khoa_tac_nhan_regex": [
+   "nanh2|na/nh3.*lỏng"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX2;H1]#[CX2]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Liên kết ≡C-H có tính axit (sp) nên bị bazơ mạnh tách H+ cho muối axetilua.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[#6:1]#[CH1:2]>>[#6:1]#[C-:2]",
+   "[CH1:1]#[CH1:2]>>[CH1:1]#[C-:2]"
+  ]
+ },
+ {
+  "id": "R_YNE_ALKYL",
+  "chuong_nguon": "C6",
+  "ten": "Ankyl hóa axetilua bằng halogenua ankyl",
+  "khoa_tac_nhan_regex": [
+   "nanh2|na"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX2;H1]#[CX2]",
+  "can_tac_chat_thu_hai": true,
+  "giai_thich": "Ion axetilua là tác nhân ái nhân (SN2), tấn công halogenua ankyl bậc 1 để nối thêm mạch cacbon.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[#6:1]#[CH1:2].[CH3,CH2;X4:3][Cl,Br,I]>>[#6:1]#[C:2][C:3]",
+   "[CH1:1]#[CH1:2].[CH3,CH2;X4:3][Cl,Br,I]>>[CH1:1]#[C:2][C:3]"
+  ]
+ },
+ {
+  "id": "R_YNE_OX",
+  "chuong_nguon": "C6",
+  "ten": "Oxi hóa ankin bằng KMnO4/t° hoặc O3 rồi H2O",
+  "khoa_tac_nhan_regex": [
+   "kmno4|o3"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX2]#[CX2]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Cắt nối ba: mỗi C thành axit cacboxylic; ankin đầu mạch cho thêm CO2.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": "xu_ly_bang_ham:cleave_alkyne"
+ },
+ {
+  "id": "R_EAS_NITRO",
+  "chuong_nguon": "C7",
+  "ten": "Nitro hóa (HNO3/H2SO4)",
+  "khoa_tac_nhan_regex": [
+   "hno3"
+  ],
+  "loai_tru_regex": [
+   "nano2|ch3cooh"
+  ],
+  "chat_dau_can_co_SMARTS": "c",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Tác nhân điện tử NO2+ thế vào nhân thơm. Nhóm thế sẵn có quyết định vị trí.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": "xu_ly_bang_ham:eas"
+ },
+ {
+  "id": "R_EAS_SULFO",
+  "chuong_nguon": "C7",
+  "ten": "Sunfo hóa (H2SO4 đặc)",
+  "khoa_tac_nhan_regex": [
+   "h2so4"
+  ],
+  "loai_tru_regex": [
+   "hno3|180|170|140|thuy|h3o|ch3cooh|ete|khan|/ho|kmno4|cro|cr2o7|mgbr|mgcl|ch3|^h2so4;h2o"
+  ],
+  "chat_dau_can_co_SMARTS": "c",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Tác nhân SO3/HSO3+ thế vào nhân thơm (phản ứng thuận nghịch).",
+  "quy_uoc_de": "Slide phenol: ~20°C cho ortho, ~100°C cho para.",
+  "mau_phan_ung": "xu_ly_bang_ham:eas"
+ },
+ {
+  "id": "R_EAS_HALO",
+  "chuong_nguon": "C7",
+  "ten": "Halogen hóa nhân thơm (X2 + xúc tác axit Lewis)",
+  "khoa_tac_nhan_regex": [
+   "(cl2|br2)",
+   "fe|alcl3|zncl2|febr3|xt"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "c",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "X2 phân cực bởi axit Lewis thành X+ thế vào nhân thơm (không dùng ánh sáng).",
+  "quy_uoc_de": null,
+  "mau_phan_ung": "xu_ly_bang_ham:eas"
+ },
+ {
+  "id": "R_EAS_FC_ALKYL",
+  "chuong_nguon": "C7",
+  "ten": "Ankyl hóa Friedel-Crafts (R-X/AlCl3)",
+  "khoa_tac_nhan_regex": [
+   "alcl3|axitlewis|acidlewis|febr3|fecl3|bf3|zncl2"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "c",
+  "can_tac_chat_thu_hai": true,
+  "giai_thich": "Cacbocation R+ thế vào nhân thơm; nhóm ankyl đẩy điện tử nên dễ thế nhiều lần.",
+  "quy_uoc_de": "Thực tế vòng bị khử hoạt hóa mạnh (NO2, C=O...) thường không tham gia F-C; đề vẫn có thể cho đáp án thế vào meta.",
+  "mau_phan_ung": "xu_ly_bang_ham:eas"
+ },
+ {
+  "id": "R_EAS_FC_ACYL",
+  "chuong_nguon": "C7,C9",
+  "ten": "Axyl hóa Friedel-Crafts (RCOCl hoặc anhydrit/AlCl3)",
+  "khoa_tac_nhan_regex": [
+   "alcl3|axitlewis|acidlewis"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "c",
+  "can_tac_chat_thu_hai": true,
+  "giai_thich": "Cation acylium RCO+ thế vào nhân thơm cho ceton thơm; nhóm axyl hút điện tử nên chỉ thế một lần.",
+  "quy_uoc_de": "Thực tế vòng bị khử hoạt hóa mạnh (NO2, CHO...) thường không tham gia F-C; đề vẫn có thể cho đáp án thế vào meta.",
+  "mau_phan_ung": "xu_ly_bang_ham:eas"
+ },
+ {
+  "id": "R_PHENOL_BR_H2O",
+  "chuong_nguon": "C9",
+  "ten": "Phenol + Br2/H2O: 2,4,6-tribromphenol",
+  "khoa_tac_nhan_regex": [
+   "br2",
+   "h2o"
+  ],
+  "loai_tru_regex": [
+   "ccl4"
+  ],
+  "chat_dau_can_co_SMARTS": "[OX2H]c",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "OH rất mạnh đẩy điện tử, nước làm phân cực Br2 nên thế cả 3 vị trí o, p.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": "xu_ly_bang_ham:eas"
+ },
+ {
+  "id": "R_PHENOL_BR_CCL4",
+  "chuong_nguon": "C9",
+  "ten": "Phenol + Br2/CCl4 (0°C): 4-bromphenol",
+  "khoa_tac_nhan_regex": [
+   "br2",
+   "ccl4"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[OX2H]c",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Dung môi không phân cực, nhiệt độ thấp: chỉ thế một lần, ưu tiên para (theo slide).",
+  "quy_uoc_de": null,
+  "mau_phan_ung": "xu_ly_bang_ham:eas"
+ },
+ {
+  "id": "R_PHENOL_HNO3_LOANG",
+  "chuong_nguon": "C9",
+  "ten": "Phenol + HNO3 loãng: o- và p-nitrophenol",
+  "khoa_tac_nhan_regex": [
+   "hno3",
+   "loang|loãng|dilute"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[OX2H]c",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "OH định hướng o/p; axit loãng chỉ nitro hóa một lần.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": "xu_ly_bang_ham:eas"
+ },
+ {
+  "id": "R_PHENOL_HNO3_DAC",
+  "chuong_nguon": "C9",
+  "ten": "Phenol + HNO3 đặc: 2,4,6-trinitrophenol (axit picric)",
+  "khoa_tac_nhan_regex": [
+   "hno3",
+   "dac|đặc|conc|dd$|đđ|ññ"
+  ],
+  "loai_tru_regex": [
+   "loang|loãng"
+  ],
+  "chat_dau_can_co_SMARTS": "[OX2H]c",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Axit đặc nitro hóa cả 3 vị trí o, p.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": "xu_ly_bang_ham:eas"
+ },
+ {
+  "id": "R_ACID_PHENOL",
+  "chuong_nguon": "C9",
+  "ten": "Phenol có tính axit: phản ứng với NaOH",
+  "khoa_tac_nhan_regex": [
+   "naoh|koh"
+  ],
+  "loai_tru_regex": [
+   "nahco3"
+  ],
+  "chat_dau_can_co_SMARTS": "[OX2H]c",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Phenol axit mạnh hơn nước (nhờ liên hợp +C của anion phenolat) nên tác dụng với bazơ mạnh cho muối phenolat.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[OX2H:1][c:2]>>[O-:1][c:2]"
+  ]
+ },
+ {
+  "id": "R_PHENOL_NAHCO3",
+  "chuong_nguon": "C9",
+  "ten": "Phenol không phản ứng với NaHCO3",
+  "khoa_tac_nhan_regex": [
+   "nahco3"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[OX2H]c",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Phenol yếu hơn axit cacbonic nên không đẩy được CO2 khỏi NaHCO3.",
+  "quy_uoc_de": "Đáp án là 'không phản ứng'.",
+  "mau_phan_ung": [
+   "[OX2H:1][c:2]>>[OX2H:1][c:2]"
+  ]
+ },
+ {
+  "id": "R_WILLIAMSON_ARYL",
+  "chuong_nguon": "C9",
+  "ten": "Ete hóa phenol bằng halogenua ankyl (Williamson)",
+  "khoa_tac_nhan_regex": [
+   "naoh|koh|oh-"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[OX2H]c",
+  "can_tac_chat_thu_hai": true,
+  "giai_thich": "Phenolat là tác nhân ái nhân (SN2) tấn công halogenua ankyl cho aryl ete.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[OX2H:1][c:2].[CX4:3][Cl,Br,I]>>[O:1]([c:2])[C:3]"
+  ]
+ },
+ {
+  "id": "R_SN_OH",
+  "chuong_nguon": "C8",
+  "ten": "Thế ái nhân bằng OH- (NaOH/KOH loãng, dd)",
+  "khoa_tac_nhan_regex": [
+   "naoh|koh",
+   "dd|aq|h2o|loang|loãng"
+  ],
+  "loai_tru_regex": [
+   "etoh|ancol|dmso|alc|nahco3|ruou|rượu"
+  ],
+  "chat_dau_can_co_SMARTS": "[CX4][Cl,Br,I]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "OH- thay halogen (SN2/SN1) cho ancol.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX4:1][Cl,Br,I]>>[C:1][OH]"
+  ]
+ },
+ {
+  "id": "R_SN_CN",
+  "chuong_nguon": "C8",
+  "ten": "Tạo nitril (KCN/NaCN)",
+  "khoa_tac_nhan_regex": [
+   "kcn|nacn|cn-"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX4][Cl,Br,I]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "CN- là tác nhân ái nhân, thay halogen và nối thêm một carbon; nitril thủy phân thành axit.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX4:1][Cl,Br,I]>>[C:1]C#N"
+  ]
+ },
+ {
+  "id": "R_SN_NH3",
+  "chuong_nguon": "C8",
+  "ten": "Amoniac giải halogenua ankyl",
+  "khoa_tac_nhan_regex": [
+   "nh3"
+  ],
+  "loai_tru_regex": [
+   "ch3cocl|lialh4|nano2|agnh3|ag\\(nh3|ag\\(nh|h2.*ni"
+  ],
+  "chat_dau_can_co_SMARTS": "[CX4][Cl,Br,I]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "NH3 thay halogen cho amin bậc 1 (thực tế lẫn amin bậc cao do thế nhiều lần).",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX4:1][Cl,Br,I]>>[C:1][NH2]"
+  ]
+ },
+ {
+  "id": "R_E2",
+  "chuong_nguon": "C8",
+  "ten": "Tách loại HX (KOH/EtOH, OH-/DMSO, nhiệt): quy tắc Zaitsev",
+  "khoa_tac_nhan_regex": [
+   "koh|naoh|oh-|etok|etona|ona",
+   "etoh|ancol|dmso|alc|ruou|rượu|t$|^t"
+  ],
+  "loai_tru_regex": [
+   "dd"
+  ],
+  "chat_dau_can_co_SMARTS": "[CX4][Cl,Br,I]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Bazơ mạnh kèm đun nóng tách H ở C bên cạnh, tạo anken nhiều nhóm thế nhất (Zaitsev).",
+  "quy_uoc_de": null,
+  "mau_phan_ung": "xu_ly_bang_ham:elim_halide"
+ },
+ {
+  "id": "R_ALKYNE_FROM_DIHALIDE",
+  "chuong_nguon": "C6",
+  "ten": "Dihalogenua + bazơ mạnh tạo ankin",
+  "khoa_tac_nhan_regex": [
+   "koh/etoh|nanh2"
+  ],
+  "loai_tru_regex": [
+   "^$"
+  ],
+  "chat_dau_can_co_SMARTS": "[CX4]([Br,Cl])[CX4][Br,Cl]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Tách hai phân tử HX liên tiếp từ dihalogenua cho ankin.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[C:1]([Br,Cl])[C:2][Br,Cl]>>[C:1]#[C:2]"
+  ]
+ },
+ {
+  "id": "R_GRIGNARD_FORM",
+  "chuong_nguon": "C8",
+  "ten": "Tạo tác chất Grignard (Mg/ete khan)",
+  "khoa_tac_nhan_regex": [
+   "^mg",
+   "ete|eter|ether"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[#6;$([CX4]),c][Cl,Br,I]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Mg chèn vào liên kết C-X trong ete khan cho R-MgX; nguyên tử C trở thành tác nhân ái nhân và bazơ mạnh.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": "xu_ly_bang_ham:grignard_form"
+ },
+ {
+  "id": "R_GRIGNARD_ADD",
+  "chuong_nguon": "C10,C8",
+  "ten": "Grignard cộng vào C=O / CO2 / epoxit, rồi H3O+",
+  "khoa_tac_nhan_regex": [
+   "h3o\\+|h\\+|h2o"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[Mg]",
+  "can_tac_chat_thu_hai": true,
+  "giai_thich": "R- tấn công C của C=O (cộng AN); bước H3O+ proton hóa ancolat. CO2 cho axit, HCHO cho ancol bậc 1, anđehit khác cho ancol bậc 2, xeton cho bậc 3, epoxit thêm 2 C và cho ancol bậc 1.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": "xu_ly_bang_ham:grignard_add"
+ },
+ {
+  "id": "R_GRIGNARD_H2O",
+  "chuong_nguon": "C8",
+  "ten": "Grignard bị proton hóa bởi H2O/ancol/axit (H linh động)",
+  "khoa_tac_nhan_regex": [
+   "^h2o$"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[Mg]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "R-MgX là bazơ rất mạnh, lấy H linh động (H2O, ROH, RCOOH, NH3, ankin đầu mạch) cho ankan R-H.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[#6:1][Mg][Cl,Br,I]>>[#6:1]"
+  ]
+ },
+ {
+  "id": "R_OX_PCC",
+  "chuong_nguon": "C9",
+  "ten": "PCC/CH2Cl2: oxi hóa ancol dừng ở anđehit/xeton",
+  "khoa_tac_nhan_regex": [
+   "pcc"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX4;H1,H2][OX2H]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "PCC là chất oxi hóa êm: ancol bậc 1 thành anđehit (không lên axit), ancol bậc 2 thành xeton.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX4;H1,H2:1][OX2H:2]>>[C:1]=[O:2]"
+  ]
+ },
+ {
+  "id": "R_OX_STRONG",
+  "chuong_nguon": "C9",
+  "ten": "K2Cr2O7, Na2Cr2O7, H2CrO4, KMnO4: oxi hóa ancol",
+  "khoa_tac_nhan_regex": [
+   "cr2o7|h2cro4|kmno4|cro3|jones"
+  ],
+  "loai_tru_regex": [
+   "pcc"
+  ],
+  "chat_dau_can_co_SMARTS": "[CX4;H1,H2][OX2H]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Chất oxi hóa mạnh: ancol bậc 1 lên axit, ancol bậc 2 thành xeton, ancol bậc 3 không bị oxi hóa.",
+  "quy_uoc_de": "Với anken/ankin, các chất này cắt mạch (xem luật KMnO4).",
+  "mau_phan_ung": [
+   "[CX4;H2:1][OX2H:2]>>[C:1](=[O:2])O",
+   "[CX4;H1:1]([#6:3])([#6:4])[OX2H:2]>>[C:1](=[O:2])([#6:3])[#6:4]"
+  ]
+ },
+ {
+  "id": "R_OX_ALDEHYDE_STRONG",
+  "chuong_nguon": "C10",
+  "ten": "Oxi hóa anđehit lên axit",
+  "khoa_tac_nhan_regex": [
+   "cr2o7|h2cro4|kmno4|cro3"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX3;H1](=O)[#6]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Anđehit còn H ở C=O rất dễ bị oxi hóa thành axit.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX3;H1:1](=[O:2])[#6:3]>>[C:1](=[O:2])([#6:3])O"
+  ]
+ },
+ {
+  "id": "R_TOLLENS",
+  "chuong_nguon": "C10",
+  "ten": "Thuốc thử Tollens [Ag(NH3)2]+/NH3: anđehit lên muối cacboxylat",
+  "khoa_tac_nhan_regex": [
+   "ag\\(nh3\\)2|agnh|ag\\(nh3|\\[ag"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX3;H1](=O)[#6]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Anđehit khử Ag+ thành Ag, tự bị oxi hóa thành axit (dạng muối amoni trong NH3). Xeton không phản ứng.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX3;H1:1](=[O:2])[#6:3]>>[C:1](=[O:2])([#6:3])[O-]"
+  ]
+ },
+ {
+  "id": "R_DEHYDR_ALC",
+  "chuong_nguon": "C9",
+  "ten": "Tách nước nội phân tử (H2SO4 đặc, 170°C)",
+  "khoa_tac_nhan_regex": [
+   "h2so4|h\\+|h3po4",
+   "170|180|h\\+,?tc?$|so4,?tc?$|h\\+;?t"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX4][OX2H]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Tách H2O tạo anken, theo Zaitsev.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": "xu_ly_bang_ham:dehydrate"
+ },
+ {
+  "id": "R_ETHER_140",
+  "chuong_nguon": "C9",
+  "ten": "Tách nước liên phân tử (H2SO4 đặc, 140°C): ete",
+  "khoa_tac_nhan_regex": [
+   "h2so4",
+   "140"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX4;H2][OX2H]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Hai phân tử ancol bậc 1 tách một H2O thành ete đối xứng.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX4:1][OX2H].[CX4:2][OX2H]>>[C:1]O[C:2]"
+  ]
+ },
+ {
+  "id": "R_ESTER",
+  "chuong_nguon": "C9",
+  "ten": "Este hóa (RCOOH + R'OH, H2SO4)",
+  "khoa_tac_nhan_regex": [
+   "h2so4|h\\+"
+  ],
+  "loai_tru_regex": [
+   "cr2o7|kmno4|170|140|hno3|br2|alcl3"
+  ],
+  "chat_dau_can_co_SMARTS": "[CX3](=O)[OX2H]",
+  "can_tac_chat_thu_hai": true,
+  "giai_thich": "Axit và ancol tách nước cho este (thuận nghịch, xúc tác axit).",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX3:1](=[O:2])[OX2H:4].[OX2H:5][#6:3]>>[C:1](=[O:2])[O:5][#6:3]"
+  ]
+ },
+ {
+  "id": "R_ROH_PX",
+  "chuong_nguon": "C8",
+  "ten": "Ancol + PX3, PX5, SOCl2 (pyridin): R-X, không chuyển vị",
+  "khoa_tac_nhan_regex": [
+   "pbr3|pcl3|pcl5|socl2"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX4][OX2H]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Tác nhân biến OH thành nhóm đi tốt, X- thế bằng SN2; pyridin trung hòa HCl; ít chuyển vị cacbocation.",
+  "quy_uoc_de": "Br dùng cho PBr3; Cl dùng cho SOCl2, PCl3, PCl5.",
+  "mau_phan_ung": [
+   "[CX4:1][OX2H]>>[C:1]Cl"
+  ]
+ },
+ {
+  "id": "R_ROH_HX",
+  "chuong_nguon": "C8",
+  "ten": "Ancol + HX (H2SO4)",
+  "khoa_tac_nhan_regex": [
+   "hbr|hcl|hi"
+  ],
+  "loai_tru_regex": [
+   "mg|socl2|pbr3"
+  ],
+  "chat_dau_can_co_SMARTS": "[CX4][OX2H]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Ancol bị proton hóa rồi bị X- thế (bậc 3 > bậc 2 > bậc 1).",
+  "quy_uoc_de": "Đề thường bỏ qua chuyển vị cacbocation.",
+  "mau_phan_ung": [
+   "[CX4:1][OX2H]>>[C:1]Br"
+  ]
+ },
+ {
+  "id": "R_ROH_BASE",
+  "chuong_nguon": "C9",
+  "ten": "Ancol + KOH/Na: tạo ancolat",
+  "khoa_tac_nhan_regex": [
+   "^(koh|na|naoh)$"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX4][OX2H]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Ancol có H linh động (rất yếu), với Na tạo ancolat; với KOH/NaOH cân bằng lệch trái.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[OX2H:1][CX4:2]>>[O-:1][C:2]"
+  ]
+ },
+ {
+  "id": "R_WILLIAMSON",
+  "chuong_nguon": "C9",
+  "ten": "Ete hóa Williamson (ancolat + R'X)",
+  "khoa_tac_nhan_regex": [
+   "^"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[OX1-][CX4]",
+  "can_tac_chat_thu_hai": true,
+  "giai_thich": "Ancolat là tác nhân ái nhân SN2, thế halogenua ankyl bậc 1 cho ete.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[OX1-:1][CX4:2].[CX4:3][Cl,Br,I]>>[O+0:1]([C:2])[C:3]"
+  ]
+ },
+ {
+  "id": "R_CARB_NABH4",
+  "chuong_nguon": "C10",
+  "ten": "NaBH4 / LiAlH4: khử anđehit, xeton thành ancol",
+  "khoa_tac_nhan_regex": [
+   "nabh4|lialh4"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX3;!$(C-[OX2,NX3,Cl,Br])]=O",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "H- tấn công C=O (AN), sau đó H2O/H3O+ proton hóa: anđehit cho ancol bậc 1, xeton cho bậc 2.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX3;!$(C-[OX2,NX3,Cl,Br]):1]=[O:2]>>[C:1][O:2]"
+  ]
+ },
+ {
+  "id": "R_LIALH4_ESTER",
+  "chuong_nguon": "C9,C10",
+  "ten": "LiAlH4 khử este thành hai ancol",
+  "khoa_tac_nhan_regex": [
+   "lialh4"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX3](=O)[OX2][#6]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "LiAlH4 mạnh khử este: phần axyl thành ancol bậc 1, phần ancol được giải phóng.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX3:1](=[O:2])[OX2:3][#6:4]>>[C:1][O:2].[O:3][#6:4]"
+  ]
+ },
+ {
+  "id": "R_LIALH4_ACID",
+  "chuong_nguon": "C9,C10",
+  "ten": "LiAlH4 khử axit cacboxylic thành ancol bậc 1",
+  "khoa_tac_nhan_regex": [
+   "lialh4"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX3](=O)[OX2H]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "LiAlH4 khử được axit; NaBH4 thì không.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX3:1](=[O:2])[OX2H:3]>>[C:1][O:2]"
+  ]
+ },
+ {
+  "id": "R_LIALH4_AMIDE",
+  "chuong_nguon": "C11",
+  "ten": "LiAlH4 khử amit thành amin",
+  "khoa_tac_nhan_regex": [
+   "lialh4"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX3](=O)[NX3]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "C=O của amit bị khử hoàn toàn thành CH2, thu amin (cùng bậc).",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX3:1](=[O])[NX3:3]>>[C:1][N:3]"
+  ]
+ },
+ {
+  "id": "R_LIALH4_NITRILE",
+  "chuong_nguon": "C11",
+  "ten": "LiAlH4 khử nitril thành amin bậc 1",
+  "khoa_tac_nhan_regex": [
+   "lialh4"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX2]#N",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "C≡N bị khử thành CH2-NH2: thêm một carbon vào amin.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX2:1]#[N:2]>>[CH2:1][N:2]"
+  ]
+ },
+ {
+  "id": "R_CARB_HCN",
+  "chuong_nguon": "C10",
+  "ten": "Cộng HCN: xianhiđrin",
+  "khoa_tac_nhan_regex": [
+   "hcn"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX3;!$(C-[OX2,NX3])]=O",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "CN- tấn công C=O (AN), proton hóa cho α-hiđroxinitril; là chất trung gian để điều chế axit, amin bậc 1.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX3;!$(C-[OX2,NX3,Cl]):1]=[O:2]>>[C:1]([O:2])C#N"
+  ]
+ },
+ {
+  "id": "R_CARB_OXIME",
+  "chuong_nguon": "C10",
+  "ten": "Cộng hiđroxylamin: oxim",
+  "khoa_tac_nhan_regex": [
+   "nh2oh"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX3;!$(C-[OX2,NX3])]=O",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Nhóm NH2 tấn công C=O rồi mất H2O cho C=N-OH.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX3;!$(C-[OX2,NX3,Cl]):1]=[O:2]>>[C:1]=NO"
+  ]
+ },
+ {
+  "id": "R_CARB_HYDRAZONE",
+  "chuong_nguon": "C10",
+  "ten": "Cộng hiđrazin: hiđrazon",
+  "khoa_tac_nhan_regex": [
+   "^(nh2nh2|hydrazin|hidrazin|h2nnh2)$"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX3;!$(C-[OX2,NX3])]=O",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Hiđrazin cho hiđrazon; có KOH đun nóng thì đi tiếp thành ankan (Wolff-Kishner).",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX3;!$(C-[OX2,NX3,Cl]):1]=[O:2]>>[C:1]=NN"
+  ]
+ },
+ {
+  "id": "R_CARB_WK",
+  "chuong_nguon": "C10",
+  "ten": "Wolff-Kishner (H2NNH2/KOH): C=O thành CH2",
+  "khoa_tac_nhan_regex": [
+   "nh2nh2|h2nnh2|hydrazin",
+   "koh"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX3;!$(C-[OX2,NX3])]=O",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Qua hiđrazon, loại N2 dưới KOH nóng: C=O thành CH2.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX3;!$(C-[OX2,NX3,Cl]):1]=[O]>>[C:1]"
+  ]
+ },
+ {
+  "id": "R_CARB_CLEMMENSEN",
+  "chuong_nguon": "C7,C10",
+  "ten": "Clemmensen (Zn(Hg)/HCl): C=O thành CH2",
+  "khoa_tac_nhan_regex": [
+   "zn\\(hg\\)|zn-hg|zn/hg"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX3;!$(C-[OX2,NX3])]=O",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Khử hoàn toàn C=O thành CH2 trong môi trường axit.",
+  "quy_uoc_de": "Đề có thể ghi Zn(Hg)/HCl hoặc Zn/Hg.",
+  "mau_phan_ung": [
+   "[CX3;!$(C-[OX2,NX3,Cl]):1]=[O]>>[C:1]"
+  ]
+ },
+ {
+  "id": "R_CARB_IMINE",
+  "chuong_nguon": "C10",
+  "ten": "Amin bậc 1 + anđehit/xeton: imin",
+  "khoa_tac_nhan_regex": [
+   ""
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX3;!$(C-[OX2,NX3])]=O",
+  "can_tac_chat_thu_hai": true,
+  "giai_thich": "Amin bậc 1 cộng AN vào C=O rồi mất H2O cho imin (C=N-R).",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX3;!$(C-[OX2,NX3,Cl]):1]=[O:2].[NX3;H2:3][#6:4]>>[C:1]=[N:3][#6:4]"
+  ]
+ },
+ {
+  "id": "R_CARB_ENAMINE",
+  "chuong_nguon": "C10",
+  "ten": "Amin bậc 2 + xeton có Hα: enamin",
+  "khoa_tac_nhan_regex": [
+   ""
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX3;!$(C-[OX2,NX3])](=O)[CX4;!H0]",
+  "can_tac_chat_thu_hai": true,
+  "giai_thich": "Amin bậc 2 không tạo được imin trung hòa nên mất Hα tạo enamin.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX3:1](=[O:2])[CX4;!H0:3].[NX3;H1:4]>>[C:1]([N:4])=[C:3]"
+  ]
+ },
+ {
+  "id": "R_CARB_ACETAL",
+  "chuong_nguon": "C10",
+  "ten": "Ancol dư + H+: axetal",
+  "khoa_tac_nhan_regex": [
+   "h\\+|hcl|h2so4"
+  ],
+  "loai_tru_regex": [
+   "cr2o7|kmno4|hno3"
+  ],
+  "chat_dau_can_co_SMARTS": "[CX3;!$(C-[OX2,NX3,Cl])]=O",
+  "can_tac_chat_thu_hai": true,
+  "giai_thich": "C=O cộng hai phân tử ancol (axit xúc tác, thuận nghịch) cho axetal/xetal.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX3;!$(C-[OX2,NX3,Cl]):1]=[O:2].[OX2H:3][CX4:4].[OX2H:5][CX4:6]>>[C:1]([O:3][C:4])[O:5][C:6]"
+  ]
+ },
+ {
+  "id": "R_CARB_ALPHA_HAL",
+  "chuong_nguon": "C10",
+  "ten": "Halogen hóa α của xeton (X2/CH3COOH hoặc H+)",
+  "khoa_tac_nhan_regex": [
+   "br2|cl2",
+   "ch3cooh|h\\+|acid"
+  ],
+  "loai_tru_regex": [
+   "oh-|naoh"
+  ],
+  "chat_dau_can_co_SMARTS": "[CX3](=O)[CX4;!H0]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Trong axit, enol hóa rồi cộng X2: H ở Cα bị thay bằng X.",
+  "quy_uoc_de": "Cl2 cho Cl; ở đây dùng Br2.",
+  "mau_phan_ung": [
+   "[CX3:1](=[O:2])[CX4;!H0:3]>>[C:1](=[O:2])[C:3]Br"
+  ]
+ },
+ {
+  "id": "R_CARB_HALOFORM",
+  "chuong_nguon": "C10",
+  "ten": "Phản ứng haloform (X2 dư/NaOH) của metyl xeton",
+  "khoa_tac_nhan_regex": [
+   "br2|cl2|i2",
+   "oh-|naoh|koh"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[#6][CX3](=O)[CH3]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Metyl xeton bị thế hết 3 H của CH3 rồi bị cắt: cho muối cacboxylat và CHX3.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[#6:1][C:2](=[O:3])[CH3:4]>>[#6:1][C:2](=[O:3])[O-].[C:4](Br)(Br)Br"
+  ]
+ },
+ {
+  "id": "R_NITRO_RED",
+  "chuong_nguon": "C11",
+  "ten": "Khử nitro thành amin (Fe, HCl hoặc Sn, HCl rồi OH-; hoặc H2/Ni)",
+  "khoa_tac_nhan_regex": [
+   "fe.*hcl|sn.*hcl|h2.*(ni|pd|pt)"
+  ],
+  "loai_tru_regex": [
+   "^$"
+  ],
+  "chat_dau_can_co_SMARTS": "[#6][N+](=O)[O-]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Nhóm NO2 bị khử qua nhiều bậc thành NH2 (trong HCl là muối, thêm OH- để thu amin).",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[#6:1][N+:2](=[O:3])[O-:4]>>[#6:1][NH2+0:2]"
+  ]
+ },
+ {
+  "id": "R_AMINE_ALKYLATION",
+  "chuong_nguon": "C11",
+  "ten": "Alkyl hóa amin bằng halogenua ankyl",
+  "khoa_tac_nhan_regex": [
+   "^$|ch3br|ch3i|rx|br|i"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[NX3;!$(NC=O)]",
+  "can_tac_chat_thu_hai": true,
+  "giai_thich": "Amin là tác nhân ái nhân SN2. Amin bậc 3 + RX cho muối amoni bậc 4.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX4:1][Cl,Br,I].[NX3;H2,H1;!$(NC=O):2]>>[C:1][N:2]",
+   "[CX4:1][Cl,Br,I:5].[NX3;H0;!$(NC=O):2]>>[C:1][N+:2].[Br-:5]"
+  ]
+ },
+ {
+  "id": "R_AMINE_ALKYLATION_REV",
+  "chuong_nguon": "C11",
+  "ten": "Halogenua ankyl + amin",
+  "khoa_tac_nhan_regex": [
+   "^$"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX4][Cl,Br,I]",
+  "can_tac_chat_thu_hai": true,
+  "giai_thich": "Như trên.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX4:1][Cl,Br,I].[NX3;H2,H1;!$(NC=O):2]>>[C:1][N:2]",
+   "[CX4:1][Cl,Br,I:5].[NX3;H0;!$(NC=O):2]>>[C:1][N+:2].[Br-:5]"
+  ]
+ },
+ {
+  "id": "R_ACYLATION",
+  "chuong_nguon": "C11,C10",
+  "ten": "Axyl hóa bằng clorua axit hoặc anhydrit",
+  "khoa_tac_nhan_regex": [
+   "^$|pyridin|rcocl"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": null,
+  "can_tac_chat_thu_hai": true,
+  "giai_thich": "Nhóm NH2, OH tấn công C=O của clorua axit/anhydrit (cộng-tách) cho amit hoặc este.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": "xu_ly_bang_ham:acyl"
+ },
+ {
+  "id": "R_SALT",
+  "chuong_nguon": "C11",
+  "ten": "Amin + axit cacboxylic (điều kiện thường): muối amoni",
+  "khoa_tac_nhan_regex": [
+   "^$"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[NX3;H2,H1,H0;!$(NC=O)]",
+  "can_tac_chat_thu_hai": true,
+  "giai_thich": "Amin là bazơ, axit cho H+: tạo muối amoni cacboxylat (không tạo amit ở nhiệt độ thường).",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[NX3;!$(NC=O):1].[CX3:2](=[O:3])[OX2H:4]>>[N+:1].[C:2](=[O:3])[O-:4]"
+  ]
+ },
+ {
+  "id": "R_HCL_AMINE",
+  "chuong_nguon": "C11",
+  "ten": "Amin + HX: muối amoni",
+  "khoa_tac_nhan_regex": [
+   "^h(cl|br)$"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[NX3;!$(NC=O);!$(N-a)]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Amin là bazơ nên nhận H+ cho muối amoni.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[NX3:1]>>[N+:1]"
+  ]
+ },
+ {
+  "id": "R_HOFMANN",
+  "chuong_nguon": "C11",
+  "ten": "Hofmann (Br2/NaOH): amit thành amin kém 1 carbon",
+  "khoa_tac_nhan_regex": [
+   "br2|cl2",
+   "naoh|ho-"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[#6][CX3](=O)[NH2]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Amit bậc 1 mất C=O thành CO2, N gắn vào gốc R: amin bậc 1 ít hơn một carbon.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[#6:1][CX3](=O)[NH2:3]>>[#6:1][N:3]"
+  ]
+ },
+ {
+  "id": "R_DIAZONIUM",
+  "chuong_nguon": "C11",
+  "ten": "Điazoni hóa amin thơm bậc 1 (NaNO2/H+, 0-5°C)",
+  "khoa_tac_nhan_regex": [
+   "nano2"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[c][NX3;H2]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Amin thơm bậc 1 + HNO2 lạnh cho muối điazoni (bền ở 0-5°C).",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[c:1][NX3;H2:2]>>[c:1][N+:2]#N"
+  ]
+ },
+ {
+  "id": "R_SANDMEYER_CL",
+  "chuong_nguon": "C8,C11",
+  "ten": "Sandmeyer: muối điazoni + CuCl",
+  "khoa_tac_nhan_regex": [
+   "cucl"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[c][N+]#N",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Cu(I) xúc tác thay N2+ bằng Cl.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[c:1][N+]#N>>[c:1]Cl"
+  ]
+ },
+ {
+  "id": "R_SANDMEYER_BR",
+  "chuong_nguon": "C8,C11",
+  "ten": "Sandmeyer: muối điazoni + CuBr",
+  "khoa_tac_nhan_regex": [
+   "cubr"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[c][N+]#N",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Cu(I) xúc tác thay N2+ bằng Br.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[c:1][N+]#N>>[c:1]Br"
+  ]
+ },
+ {
+  "id": "R_SANDMEYER_CN",
+  "chuong_nguon": "C11",
+  "ten": "Sandmeyer: muối điazoni + CuCN",
+  "khoa_tac_nhan_regex": [
+   "cucn"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[c][N+]#N",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Thay N2+ bằng CN; nitril thủy phân thành axit.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[c:1][N+]#N>>[c:1]C#N"
+  ]
+ },
+ {
+  "id": "R_DIAZ_I",
+  "chuong_nguon": "C8,C11",
+  "ten": "Muối điazoni + KI",
+  "khoa_tac_nhan_regex": [
+   "^ki$"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[c][N+]#N",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "I- thay N2+ (không cần Cu).",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[c:1][N+]#N>>[c:1]I"
+  ]
+ },
+ {
+  "id": "R_DIAZ_PHENOL",
+  "chuong_nguon": "C9",
+  "ten": "Thủy phân muối điazoni thành phenol",
+  "khoa_tac_nhan_regex": [
+   "h2o|40-50"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[c][N+]#N",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Đun ấm với nước: N2+ bị thay bằng OH.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[c:1][N+]#N>>[c:1]O"
+  ]
+ },
+ {
+  "id": "R_AZO",
+  "chuong_nguon": "C11",
+  "ten": "Ghép azo: điazoni + arene giàu điện tử",
+  "khoa_tac_nhan_regex": [
+   "^$"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[c][N+]#N",
+  "can_tac_chat_thu_hai": true,
+  "giai_thich": "Cation điazoni là tác nhân điện tử yếu, chỉ ghép với vòng giàu điện tử (phenol, anilin), thế ở vị trí para.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": "xu_ly_bang_ham:azo"
+ },
+ {
+  "id": "R_NITRILE_HYDR",
+  "chuong_nguon": "C8,C11",
+  "ten": "Thủy phân nitril thành axit (H3O+, nhiệt)",
+  "khoa_tac_nhan_regex": [
+   "h3o\\+"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX2]#N",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Nitril thủy phân qua amit thành axit cacboxylic.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[#6:1][CX2]#N>>[#6:1]C(=O)O"
+  ]
+ },
+ {
+  "id": "R_ACID_SOCL2",
+  "chuong_nguon": "C8,C10",
+  "ten": "Axit + SOCl2: clorua axit",
+  "khoa_tac_nhan_regex": [
+   "socl2"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX3](=O)[OX2H]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Nhóm OH của axit bị thay bằng Cl, tạo clorua axit hoạt động mạnh.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX3:1](=[O:2])[OX2H]>>[C:1](=[O:2])Cl"
+  ]
+ },
+ {
+  "id": "R_ACYLCHLORIDE_NH3",
+  "chuong_nguon": "C10,C11",
+  "ten": "Clorua axit + NH3: amit",
+  "khoa_tac_nhan_regex": [
+   "nh3"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX3](=O)Cl",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "NH3 tấn công C=O của clorua axit rồi tách HCl cho amit bậc 1.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX3:1](=[O:2])Cl>>[C:1](=[O:2])N"
+  ]
+ },
+ {
+  "id": "R_ARENE_SIDECHAIN_OX",
+  "chuong_nguon": "C7",
+  "ten": "KMnO4/t° oxi hóa mạch nhánh ankyl của aren",
+  "khoa_tac_nhan_regex": [
+   "kmno4"
+  ],
+  "loai_tru_regex": [
+   "^$"
+  ],
+  "chat_dau_can_co_SMARTS": "c[CX4;!H0]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Mạch nhánh có H benzyl bị cắt thành -COOH bất kể dài bao nhiêu; tert-butyl (không có H benzyl) không bị oxi hóa.",
+  "quy_uoc_de": "Đứng trước các luật KMnO4 khác khi chất đầu là aren.",
+  "mau_phan_ung": [
+   "[c:1][CX4;!H0]>>[c:1]C(=O)O"
+  ]
+ },
+ {
+  "id": "R_GRIG_ACIDH",
+  "chuong_nguon": "C8",
+  "ten": "Grignard lấy H linh động của ankin đầu mạch",
+  "khoa_tac_nhan_regex": [
+   ""
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX2;H1]#[CX2]",
+  "can_tac_chat_thu_hai": true,
+  "giai_thich": "R-MgX là bazơ rất mạnh: lấy H+ của ≡C-H (axit mạnh hơn ankan) cho ankan R-H và ankinyl magie.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX2;H1:1]#[C:2].[CH3:3][Mg:4][Br,Cl,I:5]>>[C:1](#[C:2])[Mg:4][*:5].[C:3]"
+  ]
+ },
+ {
+  "id": "R_IMINE_H2",
+  "chuong_nguon": "C11",
+  "ten": "Khử imin bằng H2/Ni, Pt, Pd: amin (amin hóa khử)",
+  "khoa_tac_nhan_regex": [
+   "h2",
+   "ni|pt|pd"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX3]=[NX2]",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "C=N bị hiđro hóa thành C-N: tổng hợp amin từ anđehit/xeton qua imin.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX3:1]=[NX2:2]>>[C:1][N:2]"
+  ]
+ },
+ {
+  "id": "R_CARB_NH3",
+  "chuong_nguon": "C10,C11",
+  "ten": "NH3 + anđehit/xeton: imin",
+  "khoa_tac_nhan_regex": [
+   "nh3"
+  ],
+  "loai_tru_regex": [
+   "ag"
+  ],
+  "chat_dau_can_co_SMARTS": "[CX3;!$(C-[OX2,NX3])]=O",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "NH3 cộng AN vào C=O rồi mất H2O cho imin N-H; khử tiếp cho amin bậc 1.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX3;!$(C-[OX2,NX3,Cl]):1]=[O]>>[C:1]=[NH]"
+  ]
+ },
+ {
+  "id": "R_CYCLOPROPANE_H2",
+  "chuong_nguon": "nền",
+  "ten": "Hiđro hóa xiclopropan (H2/Ni, 120°C): mở vòng",
+  "khoa_tac_nhan_regex": [
+   "h2",
+   "ni"
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX4;r3]1[CX4;r3][CX4;r3]1",
+  "can_tac_chat_thu_hai": false,
+  "giai_thich": "Vòng 3 cạnh căng nên H2/Ni đun nóng mở vòng thành ankan mạch hở.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[CX4:1]1[CX4:2][CX4:3]1>>[C:1][C:2][C:3]"
+  ]
+ },
+ {
+  "id": "R_DIELS_ALDER",
+  "chuong_nguon": "nền",
+  "ten": "Diels-Alder: đien + đienophin",
+  "khoa_tac_nhan_regex": [
+   ""
+  ],
+  "loai_tru_regex": [],
+  "chat_dau_can_co_SMARTS": "[CX3]=[CX3][CX3]=[CX3]",
+  "can_tac_chat_thu_hai": true,
+  "giai_thich": "[4+2]: đien liên hợp + anken (hút điện tử) tạo vòng 6 cạnh có một nối đôi mới.",
+  "quy_uoc_de": null,
+  "mau_phan_ung": [
+   "[C:1]=[C:2][C:3]=[C:4].[C:5]=[C:6]>>[C:1]1[C:2]=[C:3][C:4][C:6][C:5]1"
+  ]
+ }
+]
