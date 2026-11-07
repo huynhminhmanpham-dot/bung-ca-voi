@@ -827,6 +827,27 @@ table.tkb tbody tr:nth-child(even) td { background: #f7fbff; }
 .cf-ed { min-height: 180px; border: 1px solid #9fb8d4; border-radius: 10px; padding: 12px 14px; background: #fff; font-family: "Times New Roman", Times, serif; font-size: 17px; line-height: 1.7; outline: none; margin: 10px 0; }
 .cf-ed:focus { border-color: #0b3d91; box-shadow: 0 0 0 2px #d9e8fb; }
 .cf-ed:empty:before { content: attr(data-ph); color: #94a8bd; }
+.hl-scheme { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 10px 6px; background: #f7fbff; border: 1px solid #dbe6f2; border-radius: 10px; overflow-x: auto; }
+.hl-mol { display: inline-block; color: #16283e; }
+.hl-mol svg { max-width: 100%; height: auto; vertical-align: middle; }
+.hl-plus { margin: 0 4px; font-size: 20px; color: #16283e; }
+.hl-arrow { display: inline-flex; flex-direction: column; align-items: center; margin: 0 4px; min-width: 84px; font-size: 13px; color: #16283e; text-align: center; line-height: 1.35; }
+.hl-arrow-line { width: 100%; height: 0; border-top: 1.6px solid #16283e; margin: 4px 0; position: relative; }
+.hl-arrow-line::after { content: ""; position: absolute; right: -1px; top: -5.5px; border-left: 8px solid #16283e; border-top: 4.5px solid transparent; border-bottom: 4.5px solid transparent; }
+.hl-q { font-size: 26px; font-weight: 700; color: #0b3d91; margin-left: 6px; }
+.hl-opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin: 12px 0; }
+.hl-opt { text-align: left; border: 2px solid #cfe4f5; background: #fff; border-radius: 12px; padding: 8px 10px; cursor: pointer; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font: inherit; color: #16283e; }
+.hl-opt:hover:not(:disabled) { border-color: #0b3d91; background: #f1f7ff; }
+.hl-opt b { color: #0b3d91; font-size: 16px; }
+.hl-opt.ok { border-color: #1e8e4a; background: #eaf8ef; }
+.hl-opt.bad { border-color: #c0392b; background: #fdecea; }
+.hl-opt:disabled { cursor: default; }
+.hl-step { border-left: 4px solid #9cc4ec; padding: 6px 0 6px 12px; margin: 10px 0; }
+.hl-out { margin: 6px 0; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.hl-or { color: #6a7f96; font-size: 13px; margin: 0 6px; }
+.hl-wrong { font-size: 14px; margin: 8px 0; color: #3a4f66; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.hl-out .hl-mol svg, .hl-wrong .hl-mol svg { max-width: 150px; }
+.hl-res-ok { color: #1e8e4a; } .hl-res-bad { color: #c0392b; }
 .cf-prev { border: 1px solid #dbe6f2; border-radius: 10px; padding: 12px 14px; background: #fff; font-family: "Times New Roman", Times, serif; font-size: 17px; line-height: 1.7; white-space: pre-wrap; }
 .cf-sug { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 8px; }
 .cf-chip { border: 1px solid #cfe4f5; background: #f4f9ff; color: #16283e; border-radius: 999px; padding: 5px 12px; font-size: 16px; cursor: pointer; font-family: "Times New Roman", Times, serif; display: inline-flex; flex-direction: column; align-items: flex-start; line-height: 1.25; }
@@ -6430,6 +6451,113 @@ const CF_LEARN_HTML = () => `
     <li><b>Phương trình phức tạp có chuyển được không?</b> Phân số, căn, tích phân chỉ chuyển được thành dạng chữ đơn giản (a/b, √(...)), ngăn sẽ báo. Hãy dùng cách 2 ở trên.</li>
     <li><b>Dữ liệu của tôi có được lưu không?</b> Không. Mọi thứ chạy trên máy bạn. Chỉ khi xuất .docx, trình duyệt tải thêm một thư viện nén file lần đầu.</li></ul></div>`;
 
+/* ---------------- Ngăn "Luyện Phản Ứng Hữu Cơ": câu hỏi sinh sẵn từ bộ luật (data/huuco-luyen-data.js) ---------------- */
+function renderHhcLuyen() {
+  return `
+  <div class="rbk-wrap hl-wrap">
+    <div class="rbk-card">
+      <p style="margin:0 0 6px;">Luyện chuỗi phản ứng hữu cơ nhiều bước: chọn sản phẩm cuối, rồi xem lời giải từng bước và vì sao các đáp án khác sai.</p>
+      <p class="tkb-note" style="margin-left:0;">Câu hỏi do máy sinh từ bộ luật viết theo slide bài giảng, theo quy ước giáo trình. Nếu khác đáp án của giảng viên, hãy tin giảng viên và báo lỗi qua mục Góp ý. Phần lập thể chỉ tính cis/trans, bỏ qua R/S.</p>
+      <div class="rbk-row" id="hlTopics"></div>
+      <div class="rbk-row"><span class="rbk-prog" id="hlStat"></span><button type="button" id="hlReset" class="pomo-btn pomo-btn-secondary">Làm lại từ đầu</button></div>
+    </div>
+    <div id="hlBox" class="rbk-card"><span class="rbk-prog">Đang tải bộ câu hỏi...</span></div>
+  </div>`;
+}
+
+function initHhcLuyen() {
+  const $ = (id) => document.getElementById(id);
+  const box = $("hlBox"), topicsEl = $("hlTopics"), stat = $("hlStat");
+  let data = null, list = [], idx = 0, topic = "Tất cả", answers = {}, locked = false;
+  const LET = ["A", "B", "C", "D"];
+  const mol = (smi) => '<span class="hl-mol">' + (data.mol[smi] || rbkEsc(smi)) + "</span>";
+  const grp = (frs) => frs.map(mol).join('<span class="hl-plus">+</span>');
+  const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const arrow = (lines) => '<span class="hl-arrow"><span>' + rbkEsc(lines[0] || "") + '</span><span class="hl-arrow-line"></span><span>' + (lines.length > 1 ? lines.slice(1).map(rbkEsc).join("<br>") : "&nbsp;") + "</span></span>";
+  const scheme = (q) => '<div class="hl-scheme">' + mol(q.start) + q.steps.map((s) => arrow(s.lines)).join("") + '<span class="hl-q">?</span></div>';
+
+  const buildList = () => {
+    list = shuffle(data.qs.filter((q) => topic === "Tất cả" || q.topic === topic));
+    idx = 0; answers = {}; locked = false;
+    render();
+  };
+  const drawTopics = () => {
+    const names = ["Tất cả"].concat(Array.from(new Set(data.qs.map((q) => q.topic))));
+    topicsEl.innerHTML = names.map((n) => {
+      const c = n === "Tất cả" ? data.qs.length : data.qs.filter((q) => q.topic === n).length;
+      return '<button type="button" class="cf-btn' + (n === topic ? " cf-on" : "") + '" data-topic="' + rbkEsc(n) + '">' + rbkEsc(n) + " (" + c + ")</button>";
+    }).join("");
+    topicsEl.querySelectorAll("[data-topic]").forEach((b) => b.addEventListener("click", () => { topic = b.getAttribute("data-topic"); drawTopics(); buildList(); }));
+  };
+  const updStat = () => {
+    const done = Object.keys(answers).length, right = Object.values(answers).filter((x) => x).length;
+    stat.textContent = list.length ? "Câu " + Math.min(idx + 1, list.length) + "/" + list.length + " · Đúng " + right + "/" + done : "";
+  };
+  const explain = (q, chosen) => {
+    const ok = q.options[chosen].ok;
+    let h = '<h4 class="' + (ok ? "hl-res-ok" : "hl-res-bad") + '">' + (ok ? "Đúng rồi!" : "Chưa đúng. Đáp án đúng là " + LET[q.options.findIndex((o) => o.ok)] + ".") + "</h4>";
+    h += "<b>Lời giải từng bước</b>";
+    q.steps.forEach((s, i) => {
+      h += '<div class="hl-step"><div><b>Bước ' + (i + 1) + ":</b> " + rbkEsc(s.lines.join(", rồi ")) + " — " + rbkEsc(s.rule) + "</div>";
+      h += '<div class="hl-out">' + s.out.map((g, k) => (k ? '<span class="hl-or">hoặc</span>' : "") + grp(g)).join("") + "</div>";
+      h += '<div class="tkb-note" style="margin:0;">' + rbkEsc(s.why) + (s.conv ? " Lưu ý: " + rbkEsc(s.conv) : "") + "</div></div>";
+    });
+    const wrong = q.options.map((o, k) => ({ o, k })).filter((x) => !x.o.ok);
+    h += "<b>Vì sao các đáp án khác sai</b>" + wrong.map((x) => '<div class="hl-wrong"><b>' + LET[x.k] + ".</b>" + grp(x.o.m) + "<span>" + rbkEsc(x.o.note) + "</span></div>").join("");
+    return h;
+  };
+  function render() {
+    updStat();
+    if (!list.length) { box.innerHTML = '<span class="rbk-prog">Chưa có câu hỏi nào.</span>'; return; }
+    if (idx >= list.length) {
+      const right = Object.values(answers).filter((x) => x).length;
+      box.innerHTML = "<h4>Hoàn thành!</h4><p>Bạn đúng " + right + "/" + list.length + " câu (" + Math.round((100 * right) / list.length) + "%).</p><button type=\"button\" id=\"hlAgain\" class=\"pomo-btn pomo-btn-primary\">Làm lại</button>";
+      $("hlAgain").addEventListener("click", buildList);
+      return;
+    }
+    const q = list[idx];
+    locked = false;
+    box.innerHTML = '<div class="tkb-note" style="margin:0 0 6px;">' + rbkEsc(q.topic) + " · " + q.level + " bước</div>" +
+      "<b>Xác định sản phẩm cuối của chuyển hóa sau:</b>" + scheme(q) +
+      '<div class="hl-opts">' + q.options.map((o, k) => '<button type="button" class="hl-opt" data-k="' + k + '"><b>' + LET[k] + ".</b>" + grp(o.m) + "</button>").join("") + "</div>" +
+      '<div id="hlFb"></div><div class="rbk-row"><button type="button" id="hlNext" class="pomo-btn pomo-btn-primary" style="display:none;">Câu tiếp</button></div>';
+    box.querySelectorAll(".hl-opt").forEach((b) => b.addEventListener("click", () => choose(+b.getAttribute("data-k"))));
+    $("hlNext").addEventListener("click", next);
+  }
+  function choose(k) {
+    if (locked) return;
+    locked = true;
+    const q = list[idx];
+    answers[idx] = !!q.options[k].ok;
+    box.querySelectorAll(".hl-opt").forEach((b) => {
+      const kk = +b.getAttribute("data-k");
+      b.disabled = true;
+      if (q.options[kk].ok) b.classList.add("ok"); else if (kk === k) b.classList.add("bad");
+    });
+    $("hlFb").innerHTML = explain(q, k);
+    $("hlNext").style.display = "";
+    $("hlNext").textContent = idx + 1 >= list.length ? "Xem kết quả" : "Câu tiếp";
+    updStat();
+  }
+  function next() { idx++; render(); box.scrollIntoView && box.scrollIntoView({ block: "start", behavior: "smooth" }); }
+  document.addEventListener("keydown", (e) => {
+    if (!document.body.contains(box) || e.ctrlKey || e.metaKey || e.altKey) return;
+    const t = (e.target && e.target.tagName) || "";
+    if (t === "INPUT" || t === "TEXTAREA" || (e.target && e.target.isContentEditable)) return;
+    const k = LET.indexOf((e.key || "").toUpperCase());
+    if (k >= 0 && list[idx] && k < list[idx].options.length && !locked) choose(k);
+    else if ((e.key === "Enter" || e.key === "ArrowRight") && locked) next();
+  });
+  $("hlReset").addEventListener("click", () => { if (data) buildList(); });
+  rbkLoadScript("data/huuco-luyen-data.js").then(() => {
+    data = window.HHC_LUYEN;
+    if (!data || !data.qs) throw new Error("no data");
+    drawTopics(); buildList();
+  }).catch(() => {
+    box.innerHTML = '<span class="rbk-prog">Chưa tải được file data/huuco-luyen-data.js. Hãy kiểm tra file đã nằm trong thư mục data trên GitHub chưa.</span>';
+  });
+}
+
 function renderChemFormula() {
   const pal = (arr, kind) => arr.map((x) => {
     const html = kind === "sym" ? rbkEsc(x) : cfHtml(cfFix(x, { auto: true, units: kind === "unit", arrows: false }).segs);
@@ -8021,6 +8149,16 @@ const SUBJECTS = [
     desc: "Sửa công thức bị lỗi khi chép từ AI ($CO_2$, \\ce{H2O}) thành chỉ số dưới/trên thật để dán vào Word, soạn nhanh bằng nút, học LaTeX",
     render: renderChemFormula,
     afterRender: initChemFormula,
+  },
+  {
+    id: "luyen-phan-ung-huu-co",
+    hocKy: null,
+    nhomMon: "Tiện ích",
+    icon: "🧪",
+    title: "Luyện Phản Ứng Hữu Cơ",
+    desc: "Luyện chuỗi phản ứng hữu cơ nhiều bước: chọn sản phẩm, xem hình công thức, giải thích từng bước và vì sao các đáp án khác sai",
+    render: renderHhcLuyen,
+    afterRender: initHhcLuyen,
   },
   {
     id: "thcn-nc",
