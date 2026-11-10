@@ -872,6 +872,105 @@ table.tkb tbody tr:nth-child(even) td { background: #f7fbff; }
 @media (max-width: 560px) { .cf-rxcols { grid-template-columns: 1fr; } }
 .cf-code { background: #f4f8fc; border: 1px solid #dbe6f2; border-radius: 8px; padding: 10px 12px; font-size: 14px; line-height: 1.6; }
 </style>
+<script>/* chemcetus-universe: chọn giao diện trước khi vẽ trang */try{var __u=JSON.parse(localStorage.getItem("chemcetus_ui_v1")||"{}");if(__u.theme!=="classic")document.documentElement.classList.add("u-on");}catch(e){document.documentElement.classList.add("u-on");}</script>
+<style id="chemcetus-universe-css">
+/* ===== CHEMCETUS "Chemical Universe" (giao diện bầu trời sao). Xóa khối này + khối script "universe" là về giao diện cũ. ===== */
+.u-canvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; display: none; }
+html.u-on .u-canvas { display: block; }
+.u-hero, .u-tools { display: none; }
+html.u-on body {
+  background:
+    radial-gradient(1100px 650px at 12% -8%, rgba(37, 78, 170, 0.55) 0%, rgba(37, 78, 170, 0) 62%),
+    radial-gradient(900px 600px at 92% 6%, rgba(96, 48, 170, 0.38) 0%, rgba(96, 48, 170, 0) 58%),
+    linear-gradient(180deg, #050b1f 0%, #07122e 55%, #040916 100%);
+  background-attachment: fixed;
+  color: #e6efff;
+  padding-bottom: 70px;
+}
+html.u-on .site-header { padding: 34px 16px 18px; position: relative; }
+html.u-on .site-header .logo { display: none; }
+html.u-on .site-header .subtitle { color: #8fa6cc; font-size: 12.5px; margin: 14px 0 0; }
+html.u-on .u-hero { display: block; max-width: 980px; margin: 0 auto; text-align: center; }
+.u-eyebrow { display: inline-block; font-size: 12.5px; letter-spacing: 0.14em; text-transform: uppercase; color: #9ec5ff; background: rgba(125, 170, 255, 0.10); border: 1px solid rgba(125, 170, 255, 0.28); padding: 6px 14px; border-radius: 999px; }
+.u-title { margin: 16px 0 6px; font-size: clamp(42px, 9vw, 88px); font-weight: 800; letter-spacing: 0.05em; line-height: 1.05; color: #a5b4fc; background: linear-gradient(90deg, #7dd3fc 0%, #a5b4fc 48%, #f0abfc 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.u-tag { margin: 0 auto; max-width: 640px; font-size: 16px; line-height: 1.6; color: #b9cbe8; }
+.u-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 22px 0 6px; }
+.u-btn { font: inherit; font-weight: 600; font-size: 15px; padding: 12px 22px; border-radius: 999px; cursor: pointer; color: #e8f0ff; background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(160, 195, 255, 0.28); }
+.u-btn:hover { background: rgba(255, 255, 255, 0.13); }
+.u-btn-primary { background: linear-gradient(90deg, #38bdf8, #6366f1); border-color: transparent; color: #fff; box-shadow: 0 8px 26px rgba(79, 110, 255, 0.38); }
+.u-btn-primary:hover { background: linear-gradient(90deg, #4cc6fb, #7679f5); }
+.u-stats { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin: 20px 0 0; }
+.u-stats > div { min-width: 140px; padding: 12px 18px; border-radius: 16px; background: rgba(255, 255, 255, 0.055); border: 1px solid rgba(160, 195, 255, 0.18); backdrop-filter: blur(6px); }
+.u-stats b { display: block; font-size: 24px; color: #fff; }
+.u-stats span { font-size: 12.5px; color: #98b0d6; }
+.u-ctrl { position: absolute; top: 10px; right: 12px; display: flex; gap: 6px; z-index: 5; }
+.u-ctrl button, .u-ctrl-classic { font: inherit; font-size: 12px; cursor: pointer; color: #cfe0ff; background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(160, 195, 255, 0.25); padding: 6px 11px; border-radius: 999px; }
+.u-ctrl button:hover { background: rgba(255, 255, 255, 0.15); }
+html:not(.u-on) .u-ctrl { position: static; justify-content: center; margin: 0 0 6px; }
+html:not(.u-on) .u-ctrl button[data-u="fx"] { display: none; }
+html:not(.u-on) .u-ctrl button { color: #0b3d91; background: #eef6ff; border-color: #cfe4f5; }
+html.u-on.u-detail .u-hero .u-tag, html.u-on.u-detail .u-hero .u-cta, html.u-on.u-detail .u-hero .u-stats, html.u-on.u-detail .u-hero .u-eyebrow { display: none; }
+html.u-on.u-detail .site-header { padding: 18px 16px 8px; }
+html.u-on.u-detail .u-title { font-size: clamp(30px, 5vw, 44px); margin: 0; }
+/* thanh điều hướng */
+html.u-on .top-nav { position: sticky; top: 0; background: rgba(7, 16, 42, 0.78); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid rgba(125, 170, 255, 0.16); border-bottom: 1px solid rgba(125, 170, 255, 0.16); }
+html.u-on .top-nav-btn { border-radius: 999px; color: #dbe7ff; }
+html.u-on .top-nav-btn:hover, html.u-on .top-nav-btn.active { background: rgba(125, 170, 255, 0.2); }
+/* công cụ trang chủ: tìm kiếm + lọc nhóm */
+html.u-on .u-tools { display: block; max-width: 1040px; margin: 8px auto 4px; padding: 0 14px; }
+.u-search { width: 100%; box-sizing: border-box; font: inherit; font-size: 15px; color: #eaf1ff; background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(160, 195, 255, 0.28); border-radius: 14px; padding: 12px 16px; outline: none; }
+.u-search::placeholder { color: #8da5cb; }
+.u-search:focus { border-color: #7dd3fc; box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.2); }
+.u-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 2px; }
+.u-chip { font: inherit; font-size: 13px; cursor: pointer; color: #c9dbfa; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(160, 195, 255, 0.22); padding: 6px 13px; border-radius: 999px; }
+.u-chip:hover { background: rgba(255, 255, 255, 0.12); }
+.u-chip.on { background: linear-gradient(90deg, #38bdf8, #6366f1); color: #fff; border-color: transparent; }
+.u-empty { text-align: center; color: #9fb3d1; padding: 24px 0; }
+/* thẻ ngăn */
+html.u-on .drawer-grid { gap: 16px; max-width: 1040px; padding: 8px 14px 24px; box-sizing: border-box; }
+html.u-on .drawer-card { --g: #94a3b8; position: relative; background: linear-gradient(160deg, rgba(24, 44, 96, 0.78), rgba(10, 22, 52, 0.78)); border: 1px solid rgba(125, 170, 255, 0.18); border-top: 3px solid var(--g); border-radius: 20px; min-height: 150px; box-shadow: 0 8px 26px rgba(0, 0, 0, 0.38); color: #eaf1ff; transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s; }
+html.u-on .drawer-card:hover { transform: translateY(-5px); border-color: var(--g); box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--g); }
+html.u-on .drawer-card .drawer-title { color: #f3f7ff; }
+html.u-on .drawer-card .drawer-desc { color: #a8bddc; }
+html.u-on .drawer-card .drawer-icon { display: inline-flex; align-items: center; justify-content: center; min-width: 50px; height: 50px; border-radius: 15px; background: rgba(255, 255, 255, 0.07); box-shadow: inset 0 0 0 1px var(--g); }
+html.u-on .drawer-card .pin-btn { color: #7f95bb; }
+html.u-on .drawer-card .pin-btn.pinned { color: #fbbf24; }
+html.u-on .drawer-card .pinned-label { color: #fbbf24; }
+html.u-on .drawer-card[data-nhom="Tiện ích"] { --g: #38bdf8; }
+html.u-on .drawer-card[data-nhom="5 Môn Nhà Poly"] { --g: #fbbf24; }
+html.u-on .drawer-card[data-nhom="Anh Văn Tổng Hợp"] { --g: #a78bfa; }
+html.u-on .drawer-card[data-nhom="Anh Văn Chuyên Ngành"] { --g: #c084fc; }
+html.u-on .drawer-card[data-nhom="Hóa Học"] { --g: #34d399; }
+html.u-on .drawer-card[data-nhom="Toán Cao Cấp"] { --g: #fb7185; }
+html.u-on .drawer-card[data-nhom="Vật Lý & Vật Liệu"] { --g: #60a5fa; }
+html.u-on .drawer-card[data-id="luyen-phan-ung-huu-co"] { grid-column: span 2; --g: #34d399; background: linear-gradient(135deg, rgba(20, 120, 90, 0.42), rgba(30, 70, 150, 0.55)); }
+html.u-on .drawer-card[data-id="luyen-phan-ung-huu-co"]::after { content: "MỚI"; position: absolute; top: 12px; right: 44px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: #052e1f; background: #34d399; padding: 3px 9px; border-radius: 999px; }
+/* trang chi tiết: giữ nguyên giao diện sáng cũ trong một tấm "giấy" nổi trên nền sao */
+html.u-on .detail-view { max-width: 1000px; margin: 8px auto 24px; background: #eaf4fb; color: #1b2a41; border-radius: 22px; padding: 22px 22px 30px; box-shadow: 0 22px 60px rgba(0, 0, 0, 0.5); border: 1px solid rgba(160, 200, 255, 0.35); box-sizing: border-box; }
+/* dòng bản quyền cố định ở chân trang */
+html.u-on .watermark-bar { color: #c4d4f0; opacity: 0.95; bottom: 0; padding: 18px 16px 6px; background: linear-gradient(rgba(4, 9, 22, 0), rgba(4, 9, 22, 0.92) 60%); }
+@media (max-width: 640px) {
+  html.u-on .drawer-card[data-id="luyen-phan-ung-huu-co"] { grid-column: auto; }
+  .u-ctrl { position: static; justify-content: center; margin-bottom: 8px; }
+  html.u-on .detail-view { border-radius: 16px; padding: 14px 12px 22px; margin: 6px 8px 20px; }
+  .u-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 14px 8px 0; }
+  .u-stats > div { min-width: 0; padding: 9px 6px; border-radius: 14px; }
+  .u-stats b { font-size: 18px; }
+  .u-stats span { font-size: 11px; }
+  .u-cta { gap: 8px; margin: 16px 0 2px; }
+  .u-btn { padding: 10px 16px; font-size: 14px; }
+  .u-tag { font-size: 14.5px; margin: 0 8px; }
+  .u-eyebrow { font-size: 11px; letter-spacing: 0.1em; padding: 5px 12px; }
+  html.u-on .site-header { padding: 14px 10px 10px; }
+}
+@media print {
+  .u-canvas, .u-hero, .u-tools, .u-ctrl { display: none !important; }
+  html.u-on body { background: #fff !important; color: #000; padding: 0; }
+  html.u-on .detail-view { background: #fff; box-shadow: none; border: none; padding: 0; }
+  html.u-on .watermark-bar { color: #1b2a41; background: none; }
+  html.u-on .site-header .logo { display: block; }
+}
+</style>
 </head>
 <body>
 
@@ -8231,7 +8330,7 @@ function renderHome() {
   const cards = sorted.map((s) => {
     const isPinned = pinned.includes(s.id);
     return `
-      <div class="drawer-card" data-id="${s.id}">
+      <div class="drawer-card" data-id="${s.id}" data-nhom="${s.nhomMon || ''}">
         <button class="pin-btn ${isPinned ? "pinned" : ""}" data-pin="${s.id}" title="Ghim / bỏ ghim">
           ${isPinned ? "★" : "☆"}
         </button>
@@ -8768,5 +8867,241 @@ window.addEventListener("hashchange", init);
 init();
 </script>
 
+<script id="chemcetus-universe-js">
+/* ===== CHEMCETUS "Chemical Universe": nền sao + công thức bay + hero + tìm kiếm. Chỉ trang trí, không đụng logic cũ. ===== */
+(function () {
+  "use strict";
+  var KEY = "chemcetus_ui_v1";
+  var MOLS = [{"n":"benzen","a":[[-0.87,0.5,""],[-0.87,-0.5,""],[0.0,-1.0,""],[0.87,-0.5,""],[0.87,0.5,""],[-0.0,1.0,""]],"b":[[0,1,1],[1,2,2],[2,3,1],[3,4,2],[4,5,1],[5,0,2]]},{"n":"caffeine","a":[[-1.62,1.81,""],[-1.4,0.83,"N"],[-2.07,0.08,""],[-1.57,-0.78,"N"],[-0.59,-0.57,""],[-0.49,0.43,""],[0.42,0.84,""],[0.52,1.83,"O"],[1.23,0.25,"N"],[2.15,0.66,""],[1.13,-0.74,""],[1.94,-1.33,"O"],[0.22,-1.15,"N"],[0.12,-2.15,""]],"b":[[0,1,1],[1,2,1],[2,3,2],[3,4,1],[4,5,2],[5,6,1],[6,7,2],[6,8,1],[8,9,1],[8,10,1],[10,11,2],[10,12,1],[12,13,1],[5,1,1],[12,4,1]]},{"n":"aspirin","a":[[-2.66,-0.31,""],[-1.8,0.19,""],[-1.8,1.19,"O"],[-0.93,-0.31,"O"],[-0.07,0.19,""],[-0.07,1.19,""],[0.8,1.69,""],[1.66,1.2,""],[1.67,0.2,""],[0.8,-0.31,""],[0.8,-1.31,""],[-0.06,-1.81,"O"],[1.67,-1.8,"OH"]],"b":[[0,1,1],[1,2,2],[1,3,1],[3,4,1],[4,5,2],[5,6,1],[6,7,2],[7,8,1],[8,9,2],[9,10,1],[10,11,2],[10,12,1],[9,4,1]]},{"n":"glucose","a":[[-2.53,0.37,"OH"],[-1.66,0.87,""],[-0.79,0.37,""],[-0.79,-0.63,"O"],[0.07,-1.12,""],[0.08,-2.12,"OH"],[0.94,-0.62,""],[1.81,-1.12,"OH"],[0.94,0.38,""],[1.8,0.88,"OH"],[0.07,0.88,""],[0.07,1.88,"OH"]],"b":[[0,1,1],[1,2,1],[2,3,1],[3,4,1],[4,5,1],[4,6,1],[6,7,1],[6,8,1],[8,9,1],[8,10,1],[10,11,1],[10,2,1]]},{"n":"naphthalen","a":[[-1.73,-0.5,""],[-1.73,0.5,""],[-0.87,1.0,""],[-0.0,0.5,""],[0.87,1.0,""],[1.73,0.5,""],[1.73,-0.5,""],[0.87,-1.0,""],[0.0,-0.5,""],[-0.87,-1.0,""]],"b":[[0,1,2],[1,2,1],[2,3,2],[3,4,1],[4,5,2],[5,6,1],[6,7,2],[7,8,1],[8,9,2],[9,0,1],[8,3,1]]},{"n":"phenol","a":[[-1.49,0.86,"OH"],[-0.62,0.36,""],[-0.62,-0.64,""],[0.25,-1.14,""],[1.11,-0.64,""],[1.11,0.36,""],[0.25,0.86,""]],"b":[[0,1,1],[1,2,2],[2,3,1],[3,4,2],[4,5,1],[5,6,2],[6,1,1]]},{"n":"paracetamol","a":[[-2.67,0.92,""],[-1.81,0.42,""],[-1.81,-0.58,"O"],[-0.94,0.91,"NH"],[-0.08,0.41,""],[0.79,0.91,""],[1.65,0.4,""],[1.65,-0.6,""],[2.52,-1.1,"OH"],[0.78,-1.09,""],[-0.08,-0.59,""]],"b":[[0,1,1],[1,2,2],[1,3,1],[3,4,1],[4,5,1],[5,6,2],[6,7,1],[7,8,1],[7,9,2],[9,10,1],[10,4,2]]},{"n":"cyclohexan","a":[[-0.87,0.5,""],[-0.87,-0.5,""],[0.0,-1.0,""],[0.87,-0.5,""],[0.87,0.5,""],[-0.0,1.0,""]],"b":[[0,1,1],[1,2,1],[2,3,1],[3,4,1],[4,5,1],[5,0,1]]},{"n":"vanillin","a":[[2.44,0.32,""],[1.58,0.82,"O"],[0.71,0.32,""],[-0.16,0.82,""],[-1.02,0.32,""],[-1.89,0.82,""],[-2.76,0.32,"O"],[-1.02,-0.68,""],[-0.16,-1.18,""],[0.71,-0.68,""],[1.57,-1.18,"OH"]],"b":[[0,1,1],[1,2,1],[2,3,1],[3,4,2],[4,5,1],[5,6,2],[4,7,1],[7,8,2],[8,9,1],[9,10,1],[9,2,2]]},{"n":"toluen","a":[[-1.49,0.86,""],[-0.62,0.36,""],[-0.62,-0.64,""],[0.25,-1.14,""],[1.11,-0.64,""],[1.11,0.36,""],[0.25,0.86,""]],"b":[[0,1,1],[1,2,2],[2,3,1],[3,4,2],[4,5,1],[5,6,2],[6,1,1]]}];
+  var st = { theme: "universe", fx: true };
+  try { var raw = localStorage.getItem(KEY); if (raw) { var d0 = JSON.parse(raw); if (d0.theme === "classic") st.theme = "classic"; if (d0.fx === false) st.fx = false; } } catch (e) {}
+  var reduce = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  var html = document.documentElement, body = document.body;
+  var app = document.getElementById("app");
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} }
+  function norm(s) { return String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").toLowerCase(); }
+
+  /* ---------- Hero ---------- */
+  var header = document.querySelector(".site-header");
+  var hero = document.createElement("div");
+  hero.className = "u-hero";
+  hero.innerHTML =
+    '<div class="u-eyebrow">✦ Knowledge Hub · Hóa học</div>' +
+    '<h1 class="u-title">CHEMCETUS</h1>' +
+    '<p class="u-tag">Kho kiến thức cho sinh viên Công nghệ Kỹ thuật Hóa học: tài liệu, trắc nghiệm và công cụ học tập, miễn phí.</p>' +
+    '<div class="u-cta"><button type="button" class="u-btn u-btn-primary" data-u="explore">Khám phá ngăn học tập</button>' +
+    '<button type="button" class="u-btn" data-u="docs">Tài liệu môn học</button></div>' +
+    '<div class="u-stats"><div><b id="uStatVisits">…</b><span>Lượt truy cập</span></div>' +
+    '<div><b id="uStatDrawers">…</b><span>Ngăn học tập</span></div>' +
+    '<div><b id="uStatQ">…</b><span>Câu hỏi trắc nghiệm</span></div></div>';
+  var ctrl = document.createElement("div");
+  ctrl.className = "u-ctrl";
+  ctrl.innerHTML = '<button type="button" data-u="fx" title="Bật/tắt hiệu ứng nền">✨ Hiệu ứng</button><button type="button" data-u="theme" title="Đổi giao diện">🌌 Giao diện</button>';
+  if (header) { header.insertBefore(hero, header.firstChild); header.insertBefore(ctrl, header.firstChild); }
+
+  function fmt(n) { return n.toLocaleString("vi-VN"); }
+  function updateStats() {
+    var v = document.getElementById("chemcetusVisitCount");
+    var sv = document.getElementById("uStatVisits");
+    if (v && sv) { var t = (v.textContent || "").trim(); sv.textContent = /\d/.test(t) ? t : "…"; }
+    try {
+      if (typeof SUBJECTS !== "undefined") {
+        var vis = SUBJECTS.filter(function (s) { return !(typeof hiddenSubjectsIsHidden === "function" && hiddenSubjectsIsHidden(s.id) && !(typeof hiddenSubjectsIsUnlocked === "function" && hiddenSubjectsIsUnlocked())); });
+        var q = 0;
+        vis.forEach(function (s) { var m = /(\d[\d.]*)\s*câu/i.exec(s.desc || ""); if (m) q += parseInt(m[1].replace(/\./g, ""), 10) || 0; });
+        document.getElementById("uStatDrawers").textContent = fmt(vis.length);
+        document.getElementById("uStatQ").textContent = q ? fmt(q) : "—";
+      }
+    } catch (e) {}
+  }
+  var vEl = document.getElementById("chemcetusVisitCount");
+  if (vEl && window.MutationObserver) new MutationObserver(updateStats).observe(vEl, { childList: true, characterData: true, subtree: true });
+
+  function applyTheme() {
+    html.classList.toggle("u-on", st.theme === "universe");
+    var t = ctrl.querySelector('[data-u="theme"]'), f = ctrl.querySelector('[data-u="fx"]');
+    if (t) t.textContent = st.theme === "universe" ? "🌌 Giao diện sao" : "☀️ Giao diện cũ";
+    if (f) f.textContent = st.fx ? "✨ Hiệu ứng: bật" : "✨ Hiệu ứng: tắt";
+    syncAnim();
+  }
+  header && header.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-u]");
+    if (!b) return;
+    var a = b.getAttribute("data-u");
+    if (a === "theme") { st.theme = st.theme === "universe" ? "classic" : "universe"; save(); applyTheme(); }
+    else if (a === "fx") { st.fx = !st.fx; save(); applyTheme(); }
+    else if (a === "explore") { var t = document.querySelector(".u-tools") || app; if (t && t.scrollIntoView) t.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }); }
+    else if (a === "docs") { var nb = document.querySelector('.top-nav-btn[data-panel="tailieu"]'); if (nb) { nb.click(); var nv = document.getElementById("topNav"); if (nv && nv.scrollIntoView) nv.scrollIntoView({ block: "start" }); } }
+  });
+
+  /* ---------- Trang chủ: tìm kiếm + lọc nhóm ---------- */
+  var filt = { group: "Tất cả", q: "" };
+  function applyFilter(grid) {
+    var cards = grid.querySelectorAll(".drawer-card"), shown = 0;
+    cards.forEach(function (c) {
+      var g = c.getAttribute("data-nhom") || "";
+      var okG = filt.group === "Tất cả" || g === filt.group || (filt.group === "Khác" && !g);
+      var txt = norm((c.querySelector(".drawer-title") || {}).textContent + " " + ((c.querySelector(".drawer-desc") || {}).textContent || ""));
+      var okQ = !filt.q || txt.indexOf(filt.q) !== -1;
+      c.style.display = okG && okQ ? "" : "none";
+      if (okG && okQ) shown++;
+    });
+    var em = app.querySelector(".u-empty");
+    if (!shown && !em) { em = document.createElement("p"); em.className = "u-empty"; em.textContent = "Không tìm thấy ngăn nào khớp."; grid.parentNode.insertBefore(em, grid.nextSibling); }
+    if (shown && em) em.remove();
+  }
+  function enhanceHome() {
+    var first = app.firstElementChild;
+    var isDetail = !!(first && first.classList.contains("detail-view"));
+    html.classList.toggle("u-detail", isDetail);
+    if (!first || !first.classList.contains("drawer-grid") || app.querySelector(".u-tools")) { updateStats(); return; }
+    var grid = first, cards = grid.querySelectorAll(".drawer-card");
+    var groups = [], hasOther = false;
+    cards.forEach(function (c) { var g = c.getAttribute("data-nhom") || ""; if (!g) hasOther = true; else if (groups.indexOf(g) === -1) groups.push(g); });
+    if (hasOther) groups.push("Khác");
+    var tools = document.createElement("div");
+    tools.className = "u-tools";
+    tools.innerHTML = '<input type="search" class="u-search" placeholder="Tìm ngăn học tập (ví dụ: pomodoro, triết, anh văn)..." aria-label="Tìm ngăn học tập">' +
+      '<div class="u-chips">' + ["Tất cả"].concat(groups).map(function (g) { return '<button type="button" class="u-chip' + (g === filt.group ? " on" : "") + '" data-g="' + g.replace(/"/g, "&quot;") + '">' + g + "</button>"; }).join("") + "</div>";
+    app.insertBefore(tools, grid);
+    var inp = tools.querySelector(".u-search");
+    inp.value = filt.q ? filt.q : "";
+    inp.addEventListener("input", function () { filt.q = norm(inp.value.trim()); applyFilter(grid); });
+    tools.querySelectorAll(".u-chip").forEach(function (b) {
+      b.addEventListener("click", function () {
+        filt.group = b.getAttribute("data-g");
+        tools.querySelectorAll(".u-chip").forEach(function (x) { x.classList.toggle("on", x === b); });
+        applyFilter(grid);
+      });
+    });
+    applyFilter(grid);
+    updateStats();
+  }
+  if (app && window.MutationObserver) new MutationObserver(enhanceHome).observe(app, { childList: true });
+  enhanceHome();
+
+  /* ---------- Nền sao + công thức bay (canvas) ---------- */
+  var cv = document.createElement("canvas");
+  cv.className = "u-canvas";
+  cv.setAttribute("aria-hidden", "true");
+  body.insertBefore(cv, body.firstChild);
+  var ctx = cv.getContext && cv.getContext("2d");
+  var W = 0, H = 0, DPR = 1, stars = [], objs = [], shoot = null, nextShoot = 0, mouse = { x: -9999, y: -9999 }, raf = 0, running = false, frame = 0, small = false;
+
+  function makeObj(m) {
+    var sc = (small ? 17 : 24) + Math.random() * (small ? 9 : 16);
+    return { m: m, x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - 0.5) * 0.16, vy: (Math.random() - 0.5) * 0.12,
+      rot: Math.random() * 6.283, vr: (Math.random() - 0.5) * 0.0007, sc: sc, a: 0.11 + Math.random() * 0.12, px: 0, py: 0 };
+  }
+  function seed() {
+    small = W < 700;
+    var ns = small ? 70 : 140, nm = small ? 5 : 9, i;
+    stars = [];
+    for (i = 0; i < ns; i++) stars.push({ x: Math.random() * W, y: Math.random() * H, r: Math.random() * 1.15 + 0.25, p: Math.random() * 6.283, s: 0.5 + Math.random() * 1.3, a: 0.35 + Math.random() * 0.6 });
+    objs = [];
+    for (i = 0; i < nm; i++) objs.push(makeObj(MOLS[i % MOLS.length]));
+  }
+  function resize() {
+    if (!ctx) return;
+    DPR = Math.min(window.devicePixelRatio || 1, 1.5);
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    seed();
+    draw(performance.now());
+  }
+  function drawMol(o) {
+    var m = o.m, sc = o.sc, i, a, b, A, B, dx, dy, L, ux, uy, sh;
+    ctx.save();
+    ctx.translate(o.x, o.y);
+    ctx.rotate(o.rot);
+    ctx.strokeStyle = "rgba(150,200,255," + o.a + ")";
+    ctx.fillStyle = "rgba(190,222,255," + Math.min(o.a + 0.04, 0.3) + ")";
+    ctx.lineWidth = 1.15;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    for (i = 0; i < m.b.length; i++) {
+      a = m.b[i][0]; b = m.b[i][1];
+      A = m.a[a]; B = m.a[b];
+      dx = (B[0] - A[0]) * sc; dy = (B[1] - A[1]) * sc;
+      L = Math.sqrt(dx * dx + dy * dy) || 1; ux = dx / L; uy = dy / L;
+      var x1 = A[0] * sc, y1 = A[1] * sc, x2 = B[0] * sc, y2 = B[1] * sc;
+      sh = sc * 0.3;
+      if (A[2]) { x1 += ux * sh; y1 += uy * sh; }
+      if (B[2]) { x2 -= ux * sh; y2 -= uy * sh; }
+      if (m.b[i][2] === 2) {
+        var ox = -uy * sc * 0.07, oy = ux * sc * 0.07;
+        ctx.moveTo(x1 + ox, y1 + oy); ctx.lineTo(x2 + ox, y2 + oy);
+        ctx.moveTo(x1 - ox, y1 - oy); ctx.lineTo(x2 - ox, y2 - oy);
+      } else { ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); }
+    }
+    ctx.stroke();
+    ctx.font = "600 " + Math.round(sc * 0.42) + "px system-ui, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    for (i = 0; i < m.a.length; i++) if (m.a[i][2]) ctx.fillText(m.a[i][2], m.a[i][0] * sc, m.a[i][1] * sc);
+    ctx.restore();
+  }
+  function draw(t) {
+    if (!ctx) return;
+    ctx.clearRect(0, 0, W, H);
+    var i, s, al;
+    for (i = 0; i < stars.length; i++) {
+      s = stars[i];
+      al = s.a * (0.55 + 0.45 * Math.sin(t * 0.001 * s.s + s.p));
+      ctx.fillStyle = "rgba(205,225,255," + al.toFixed(3) + ")";
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 6.2832); ctx.fill();
+    }
+    for (i = 0; i < objs.length; i++) drawMol(objs[i]);
+    if (shoot) {
+      var k = (t - shoot.t0) / 900;
+      if (k >= 1) shoot = null;
+      else {
+        var x = shoot.x - shoot.dx * k, y = shoot.y + shoot.dy * k;
+        var g = ctx.createLinearGradient(x, y, x + shoot.dx * 0.18, y - shoot.dy * 0.18);
+        g.addColorStop(0, "rgba(255,255,255," + (0.9 * (1 - k)).toFixed(2) + ")"); g.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.strokeStyle = g; ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + shoot.dx * 0.18, y - shoot.dy * 0.18); ctx.stroke();
+      }
+    }
+  }
+  var lastT = 0;
+  function tick(t) {
+    raf = requestAnimationFrame(tick);
+    if (small && (frame++ & 1)) return;
+    var dt = Math.min(t - lastT || 16, 50) / 16; lastT = t;
+    var R = 170, i, o, dx, dy, d, f;
+    for (i = 0; i < objs.length; i++) {
+      o = objs[i];
+      dx = o.x - mouse.x; dy = o.y - mouse.y; d = Math.sqrt(dx * dx + dy * dy);
+      if (d < R && d > 0.1) { f = (1 - d / R) * 0.22; o.px += (dx / d) * f; o.py += (dy / d) * f; }
+      o.px *= 0.95; o.py *= 0.95;
+      o.x += (o.vx + o.px) * dt; o.y += (o.vy + o.py) * dt; o.rot += o.vr * dt * 16;
+      var mg = o.sc * 4;
+      if (o.x < -mg) o.x = W + mg; else if (o.x > W + mg) o.x = -mg;
+      if (o.y < -mg) o.y = H + mg; else if (o.y > H + mg) o.y = -mg;
+    }
+    if (!shoot && t > nextShoot) {
+      if (nextShoot) shoot = { t0: t, x: W * (0.4 + Math.random() * 0.6), y: Math.random() * H * 0.4, dx: 420 + Math.random() * 200, dy: 230 + Math.random() * 120 };
+      nextShoot = t + 9000 + Math.random() * 9000;
+    }
+    draw(t);
+  }
+  function syncAnim() {
+    var want = ctx && st.theme === "universe" && st.fx && !reduce && !document.hidden;
+    if (want && !running) { running = true; lastT = performance.now(); raf = requestAnimationFrame(tick); }
+    else if (!want && running) { running = false; cancelAnimationFrame(raf); }
+    if (!want && ctx && st.theme === "universe") draw(performance.now());
+  }
+  if (ctx) {
+    window.addEventListener("resize", function () { clearTimeout(resize._t); resize._t = setTimeout(resize, 150); });
+    window.addEventListener("mousemove", function (e) { mouse.x = e.clientX; mouse.y = e.clientY; }, { passive: true });
+    window.addEventListener("mouseleave", function () { mouse.x = mouse.y = -9999; });
+    document.addEventListener("visibilitychange", syncAnim);
+    resize();
+  }
+  applyTheme();
+  updateStats();
+})();
+</script>
 </body>
 </html>
