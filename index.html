@@ -971,6 +971,19 @@ html.u-on .watermark-bar { color: #c4d4f0; opacity: 0.95; bottom: 0; padding: 18
   html.u-on .site-header .logo { display: block; }
 }
 </style>
+<style id="chemcetus-notice-css">
+#cc-notice { position: fixed; inset: 0; z-index: 10000; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(3, 8, 22, 0.72); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+#cc-notice.open { display: flex; }
+#cc-notice .cc-box { position: relative; box-sizing: border-box; max-width: 520px; width: 100%; max-height: 90vh; overflow: auto; background: #fff; color: #1b2a41; border-radius: 20px; padding: 26px 24px 20px; border: 1px solid #cfe4f5; box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5); }
+#cc-notice h2 { margin: 0 0 14px; font-size: 20px; color: #0b3d91; }
+#cc-notice p { margin: 0 0 12px; line-height: 1.6; font-size: 15px; }
+#cc-notice a { color: #0b3d91; font-weight: 600; word-break: break-all; }
+#cc-notice .cc-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
+#cc-notice .cc-btn { font: inherit; font-weight: 600; padding: 10px 24px; border: 0; border-radius: 999px; background: #0b3d91; color: #fff; cursor: pointer; }
+#cc-notice .cc-btn:hover { background: #0e4bb0; }
+#cc-notice .cc-x { position: absolute; top: 8px; right: 12px; background: none; border: 0; font-size: 26px; line-height: 1; cursor: pointer; color: #5b7a9a; padding: 4px 8px; }
+@media print { #cc-notice { display: none !important; } }
+</style>
 </head>
 <body>
 
@@ -9101,6 +9114,53 @@ init();
   }
   applyTheme();
   updateStats();
+})();
+</script>
+<script id="chemcetus-notice-js">
+/* Bảng thông báo khi vào web. Hiện một lần mỗi phiên truy cập; bấm Đóng, bấm nền tối, hoặc nhấn Esc để tắt.
+   Muốn hiện lại cho mọi người sau khi đổi nội dung: đổi chữ v1 trong KEY thành v2. Muốn gỡ: xóa khối style và script "chemcetus-notice". */
+(function () {
+  "use strict";
+  var KEY = "chemcetus_notice_v1";
+  try { if (sessionStorage.getItem(KEY)) return; } catch (e) {}
+  var el = document.createElement("div");
+  el.id = "cc-notice";
+  el.setAttribute("role", "dialog");
+  el.setAttribute("aria-modal", "true");
+  el.setAttribute("aria-labelledby", "ccNoticeTitle");
+  el.innerHTML =
+    '<div class="cc-box">' +
+    '<button type="button" class="cc-x" aria-label="Đóng thông báo">×</button>' +
+    '<h2 id="ccNoticeTitle">📢 Thông báo</h2>' +
+    '<p>Một số tài liệu hiện đang được tạm ẩn để rà soát lại nội dung và nguồn sử dụng.</p>' +
+    '<p>Nếu cần hỗ trợ học tập, các bạn có thể liên hệ trực tiếp với mình:<br>' +
+    'Facebook: <a href="https://www.facebook.com/man.phamhuynhminh" target="_blank" rel="noopener noreferrer">https://www.facebook.com/man.phamhuynhminh</a></p>' +
+    '<p>Trong thời gian tới mình sẽ cố gắng bổ sung lại nội dung dưới dạng tài liệu tự biên soạn và lời giải chi tiết.</p>' +
+    '<div class="cc-actions"><button type="button" class="cc-btn">Đóng, xem web</button></div>' +
+    "</div>";
+  document.body.appendChild(el);
+  var prev = document.activeElement;
+  function close() {
+    document.removeEventListener("keydown", onKey, true);
+    try { sessionStorage.setItem(KEY, "1"); } catch (e) {}
+    el.parentNode && el.parentNode.removeChild(el);
+    if (prev && prev.focus) { try { prev.focus(); } catch (e) {} }
+  }
+  function onKey(e) {
+    if (e.key === "Escape") { e.preventDefault(); close(); return; }
+    if (e.key !== "Tab") return;
+    var f = el.querySelectorAll("a[href], button");
+    if (!f.length) return;
+    var first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+  el.addEventListener("click", function (e) { if (e.target === el) close(); });
+  el.querySelector(".cc-x").addEventListener("click", close);
+  el.querySelector(".cc-btn").addEventListener("click", close);
+  document.addEventListener("keydown", onKey, true);
+  el.classList.add("open");
+  el.querySelector(".cc-btn").focus();
 })();
 </script>
 </body>
