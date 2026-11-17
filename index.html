@@ -847,6 +847,9 @@ table.tkb tbody tr:nth-child(even) td { background: #f7fbff; }
 .hl-or { color: #6a7f96; font-size: 13px; margin: 0 6px; }
 .hl-wrong { font-size: 14px; margin: 8px 0; color: #3a4f66; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .hl-out .hl-mol svg, .hl-wrong .hl-mol svg { max-width: 150px; }
+.hl-stem { margin: 4px 0 8px; font-weight: 600; line-height: 1.5; }
+.hl-optt { font-weight: 600; }
+.hl-opts.txt { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
 .hl-res-ok { color: #1e8e4a; } .hl-res-bad { color: #c0392b; }
 .cf-prev { border: 1px solid #dbe6f2; border-radius: 10px; padding: 12px 14px; background: #fff; font-family: "Times New Roman", Times, serif; font-size: 17px; line-height: 1.7; white-space: pre-wrap; }
 .cf-sug { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 8px; }
@@ -6563,13 +6566,15 @@ const CF_LEARN_HTML = () => `
     <li><b>Phương trình phức tạp có chuyển được không?</b> Phân số, căn, tích phân chỉ chuyển được thành dạng chữ đơn giản (a/b, √(...)), ngăn sẽ báo. Hãy dùng cách 2 ở trên.</li>
     <li><b>Dữ liệu của tôi có được lưu không?</b> Không. Mọi thứ chạy trên máy bạn. Chỉ khi xuất .docx, trình duyệt tải thêm một thư viện nén file lần đầu.</li></ul></div>`;
 
-/* ---------------- Ngăn "Luyện Phản Ứng Hữu Cơ": câu hỏi sinh sẵn từ bộ luật (data/huuco-luyen-data.js) ---------------- */
+/* ---------------- Ngăn "Luyện Phản Ứng Hữu Cơ": nạp các "gói câu hỏi" qua data/huuco/manifest.js ----------------
+   Thêm một chương mới = tải thêm file data/huuco/<chương>.js và manifest.js lên GitHub. Không cần sửa index.html. */
 function renderHhcLuyen() {
   return `
   <div class="rbk-wrap hl-wrap">
     <div class="rbk-card">
-      <p style="margin:0 0 6px;">Luyện chuỗi phản ứng hữu cơ nhiều bước: chọn sản phẩm cuối, rồi xem lời giải từng bước và vì sao các đáp án khác sai.</p>
-      <p class="tkb-note" style="margin-left:0;">Câu hỏi do máy sinh từ bộ luật viết theo slide bài giảng, theo quy ước giáo trình. Nếu khác đáp án của giảng viên, hãy tin giảng viên và báo lỗi qua mục Góp ý. Phần lập thể chỉ tính cis/trans, bỏ qua R/S.</p>
+      <p style="margin:0 0 6px;">Luyện chuỗi phản ứng và cơ chế hữu cơ: chọn đáp án, rồi xem lời giải từng bước và vì sao các đáp án khác sai.</p>
+      <p class="tkb-note" style="margin-left:0;">Câu hỏi gồm các "gói": gói tự sinh từ bộ luật viết theo slide bài giảng, và các gói theo từng chương. Đáp án theo quy ước giáo trình; nếu khác đáp án của giảng viên, hãy tin giảng viên và báo lỗi qua mục Góp ý. Phần lập thể chỉ tính cis/trans, bỏ qua R/S.</p>
+      <div class="rbk-row" id="hlPacks"></div>
       <div class="rbk-row" id="hlTopics"></div>
       <div class="rbk-row"><span class="rbk-prog" id="hlStat"></span><button type="button" id="hlReset" class="pomo-btn pomo-btn-secondary">Làm lại từ đầu</button></div>
     </div>
@@ -6579,59 +6584,116 @@ function renderHhcLuyen() {
 
 function initHhcLuyen() {
   const $ = (id) => document.getElementById(id);
-  const box = $("hlBox"), topicsEl = $("hlTopics"), stat = $("hlStat");
-  let data = null, list = [], idx = 0, topic = "Tất cả", answers = {}, locked = false;
-  const LET = ["A", "B", "C", "D"];
-  const mol = (smi) => '<span class="hl-mol">' + (data.mol[smi] || rbkEsc(smi)) + "</span>";
-  const grp = (frs) => frs.map(mol).join('<span class="hl-plus">+</span>');
+  const box = $("hlBox"), packsEl = $("hlPacks"), topicsEl = $("hlTopics"), stat = $("hlStat");
+  const H = (window.HHC = window.HHC || { packs: {} });
+  const LET = ["A", "B", "C", "D", "E", "F"];
+  const stamp = Math.floor(Date.now() / 60000);
+  let packs = [], sel = {}, topic = "Tất cả", list = [], idx = 0, answers = {}, locked = false;
+  const MOL = {};
+  const esc = rbkEsc;
+  const nl = (t) => esc(t).replace(/\n/g, "<br>");
   const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-  const arrow = (lines) => '<span class="hl-arrow"><span>' + rbkEsc(lines[0] || "") + '</span><span class="hl-arrow-line"></span><span>' + (lines.length > 1 ? lines.slice(1).map(rbkEsc).join("<br>") : "&nbsp;") + "</span></span>";
-  const scheme = (q) => '<div class="hl-scheme">' + mol(q.start) + q.steps.map((s) => arrow(s.lines)).join("") + '<span class="hl-q">?</span></div>';
+  const loadJs = (src) => new Promise((res, rej) => { const s = document.createElement("script"); s.src = src; s.async = true; s.onload = () => res(); s.onerror = () => rej(new Error("load " + src)); document.head.appendChild(s); });
+  const mol = (smi) => '<span class="hl-mol">' + (MOL[smi] || esc(smi)) + "</span>";
+  const grp = (frs) => (frs || []).map(mol).join('<span class="hl-plus">+</span>');
+  const side = (v) => (Array.isArray(v) ? grp(v) : typeof v === "string" && v !== "?" ? mol(v) : "");
+  const content = (o) => (o.t ? '<span class="hl-optt">' + esc(o.t) + "</span>" : "") + (o.m ? grp(o.m) : "");
+  const arrow = (lines) => '<span class="hl-arrow"><span>' + esc(lines[0] || "") + '</span><span class="hl-arrow-line"></span><span>' + (lines.length > 1 ? lines.slice(1).map(esc).join("<br>") : "&nbsp;") + "</span></span>";
 
-  const buildList = () => {
-    list = shuffle(data.qs.filter((q) => topic === "Tất cả" || q.topic === topic));
+  /* ---- chuyển câu hỏi cũ (start + steps) sang dạng chung ---- */
+  const schemeOf = (q) => q.scheme || { start: q.start, steps: (q.steps || []).map((s) => s.lines), end: "?" };
+  const explainOf = (q) => q.explain || (q.steps || []).map((s, i) => ({ h: "Bước " + (i + 1) + ": " + (s.lines || []).join(", rồi ") + " — " + s.rule, g: s.out, t: s.why + (s.conv ? " Lưu ý: " + s.conv : "") }));
+  const stemOf = (q, sc) => q.stem || (sc.end === "?" ? "Xác định sản phẩm cuối của chuyển hóa sau:" : "");
+  const schemeHtml = (sc) => '<div class="hl-scheme">' + side(sc.start) + (sc.steps || []).map((st) => arrow(Array.isArray(st) ? st : st.lines || [])).join("") + (sc.end === "?" ? '<span class="hl-q">?</span>' : side(sc.end)) + "</div>";
+
+  /* ---- nạp danh mục và các gói ---- */
+  const addPack = (id) => {
+    const p = H.packs[id]; if (!p) return;
+    Object.keys(p.mol || {}).forEach((k) => { MOL[k] = p.mol[k]; });
+  };
+  const ensure = (p) => {
+    if (H.packs[p.id]) { addPack(p.id); return Promise.resolve(); }
+    return loadJs(p.file + "?v=" + (p.v || stamp)).then(() => { if (!H.packs[p.id]) throw new Error("pack " + p.id); addPack(p.id); });
+  };
+  const loadManifest = () => loadJs("data/huuco/manifest.js?v=" + stamp).then(() => {
+    if (!H.manifest || !H.manifest.packs || !H.manifest.packs.length) throw new Error("manifest");
+    return H.manifest.packs;
+  }).catch(() =>
+    /* dự phòng: bản cũ một file */
+    loadJs("data/huuco-luyen-data.js").then(() => {
+      const d = window.HHC_LUYEN; if (!d || !d.qs) throw new Error("legacy");
+      H.packs.auto = { mol: d.mol, qs: d.qs };
+      return [{ id: "auto", title: "Tự sinh từ bộ luật", count: d.qs.length, default: true }];
+    })
+  );
+
+  const packName = (id) => (packs.find((p) => p.id === id) || {}).title || id;
+  const drawPacks = () => {
+    packsEl.innerHTML = packs.length > 1 ? '<span class="rbk-prog">Nguồn câu hỏi:</span>' + packs.map((p) => '<button type="button" class="cf-btn' + (sel[p.id] ? " cf-on" : "") + '" data-pack="' + esc(p.id) + '">' + esc(p.title) + " (" + (p.count || "?") + ")</button>").join("") : "";
+    packsEl.querySelectorAll("[data-pack]").forEach((b) => b.addEventListener("click", () => {
+      const id = b.getAttribute("data-pack");
+      if (sel[id] && Object.keys(sel).filter((k) => sel[k]).length === 1) return;
+      sel[id] = !sel[id]; topic = "Tất cả"; refresh();
+    }));
+  };
+  const gather = () => {
+    const out = [];
+    packs.forEach((p) => { if (sel[p.id] && H.packs[p.id]) H.packs[p.id].qs.forEach((q) => out.push({ q, pack: p.id })); });
+    return out;
+  };
+  const drawTopics = (all) => {
+    const names = ["Tất cả"].concat(Array.from(new Set(all.map((x) => x.q.topic).filter(Boolean))));
+    topicsEl.innerHTML = names.length > 2 ? names.map((n) => {
+      const c = n === "Tất cả" ? all.length : all.filter((x) => x.q.topic === n).length;
+      return '<button type="button" class="cf-btn' + (n === topic ? " cf-on" : "") + '" data-topic="' + esc(n) + '">' + esc(n) + " (" + c + ")</button>";
+    }).join("") : "";
+    topicsEl.querySelectorAll("[data-topic]").forEach((b) => b.addEventListener("click", () => { topic = b.getAttribute("data-topic"); build(); }));
+  };
+  function refresh() {
+    box.innerHTML = '<span class="rbk-prog">Đang tải gói câu hỏi...</span>';
+    Promise.all(packs.filter((p) => sel[p.id]).map(ensure)).then(() => { drawPacks(); build(); })
+      .catch(() => { box.innerHTML = '<span class="rbk-prog">Chưa tải được một gói câu hỏi. Hãy kiểm tra các file trong thư mục data/huuco trên GitHub (tên file và nội dung).</span>'; });
+  }
+  function build() {
+    const all = gather();
+    drawTopics(all);
+    list = shuffle(all.filter((x) => topic === "Tất cả" || x.q.topic === topic));
+    list.forEach((x) => { x.opts = shuffle((x.q.options || []).slice()); });
     idx = 0; answers = {}; locked = false;
     render();
-  };
-  const drawTopics = () => {
-    const names = ["Tất cả"].concat(Array.from(new Set(data.qs.map((q) => q.topic))));
-    topicsEl.innerHTML = names.map((n) => {
-      const c = n === "Tất cả" ? data.qs.length : data.qs.filter((q) => q.topic === n).length;
-      return '<button type="button" class="cf-btn' + (n === topic ? " cf-on" : "") + '" data-topic="' + rbkEsc(n) + '">' + rbkEsc(n) + " (" + c + ")</button>";
-    }).join("");
-    topicsEl.querySelectorAll("[data-topic]").forEach((b) => b.addEventListener("click", () => { topic = b.getAttribute("data-topic"); drawTopics(); buildList(); }));
-  };
+  }
   const updStat = () => {
     const done = Object.keys(answers).length, right = Object.values(answers).filter((x) => x).length;
     stat.textContent = list.length ? "Câu " + Math.min(idx + 1, list.length) + "/" + list.length + " · Đúng " + right + "/" + done : "";
   };
-  const explain = (q, chosen) => {
-    const ok = q.options[chosen].ok;
-    let h = '<h4 class="' + (ok ? "hl-res-ok" : "hl-res-bad") + '">' + (ok ? "Đúng rồi!" : "Chưa đúng. Đáp án đúng là " + LET[q.options.findIndex((o) => o.ok)] + ".") + "</h4>";
-    h += "<b>Lời giải từng bước</b>";
-    q.steps.forEach((s, i) => {
-      h += '<div class="hl-step"><div><b>Bước ' + (i + 1) + ":</b> " + rbkEsc(s.lines.join(", rồi ")) + " — " + rbkEsc(s.rule) + "</div>";
-      h += '<div class="hl-out">' + s.out.map((g, k) => (k ? '<span class="hl-or">hoặc</span>' : "") + grp(g)).join("") + "</div>";
-      h += '<div class="tkb-note" style="margin:0;">' + rbkEsc(s.why) + (s.conv ? " Lưu ý: " + rbkEsc(s.conv) : "") + "</div></div>";
+  const explain = (x, chosen) => {
+    const q = x.q, ok = x.opts[chosen].ok, okAt = x.opts.findIndex((o) => o.ok);
+    let h = '<h4 class="' + (ok ? "hl-res-ok" : "hl-res-bad") + '">' + (ok ? "Đúng rồi!" : "Chưa đúng. Đáp án đúng là " + LET[okAt] + ".") + "</h4><b>Lời giải</b>";
+    explainOf(q).forEach((s) => {
+      h += '<div class="hl-step"><div><b>' + esc(s.h || "") + "</b></div>";
+      if (s.g && s.g.length) h += '<div class="hl-out">' + s.g.map((g, k) => (k ? '<span class="hl-or">hoặc</span>' : "") + grp(g)).join("") + "</div>";
+      if (s.t) h += '<div class="tkb-note" style="margin:0;">' + nl(s.t) + "</div>";
+      h += "</div>";
     });
-    const wrong = q.options.map((o, k) => ({ o, k })).filter((x) => !x.o.ok);
-    h += "<b>Vì sao các đáp án khác sai</b>" + wrong.map((x) => '<div class="hl-wrong"><b>' + LET[x.k] + ".</b>" + grp(x.o.m) + "<span>" + rbkEsc(x.o.note) + "</span></div>").join("");
+    const wrong = x.opts.map((o, k) => ({ o, k })).filter((y) => !y.o.ok);
+    h += "<b>Vì sao các đáp án khác sai</b>" + wrong.map((y) => '<div class="hl-wrong"><b>' + LET[y.k] + ".</b>" + content(y.o) + "<span>" + esc(y.o.note || "") + "</span></div>").join("");
     return h;
   };
   function render() {
     updStat();
     if (!list.length) { box.innerHTML = '<span class="rbk-prog">Chưa có câu hỏi nào.</span>'; return; }
     if (idx >= list.length) {
-      const right = Object.values(answers).filter((x) => x).length;
-      box.innerHTML = "<h4>Hoàn thành!</h4><p>Bạn đúng " + right + "/" + list.length + " câu (" + Math.round((100 * right) / list.length) + "%).</p><button type=\"button\" id=\"hlAgain\" class=\"pomo-btn pomo-btn-primary\">Làm lại</button>";
-      $("hlAgain").addEventListener("click", buildList);
+      const right = Object.values(answers).filter((v) => v).length;
+      box.innerHTML = '<h4>Hoàn thành!</h4><p>Bạn đúng ' + right + "/" + list.length + " câu (" + Math.round((100 * right) / list.length) + '%).</p><button type="button" id="hlAgain" class="pomo-btn pomo-btn-primary">Làm lại</button>';
+      $("hlAgain").addEventListener("click", build);
       return;
     }
-    const q = list[idx];
+    const x = list[idx], q = x.q, sc = schemeOf(q), stem = stemOf(q, sc);
     locked = false;
-    box.innerHTML = '<div class="tkb-note" style="margin:0 0 6px;">' + rbkEsc(q.topic) + " · " + q.level + " bước</div>" +
-      "<b>Xác định sản phẩm cuối của chuyển hóa sau:</b>" + scheme(q) +
-      '<div class="hl-opts">' + q.options.map((o, k) => '<button type="button" class="hl-opt" data-k="' + k + '"><b>' + LET[k] + ".</b>" + grp(o.m) + "</button>").join("") + "</div>" +
+    const textOnly = x.opts.every((o) => o.t && !o.m);
+    box.innerHTML = '<div class="tkb-note" style="margin:0 0 6px;">' + esc([q.topic, packName(x.pack), q.level ? q.level + " bước" : ""].filter(Boolean).join(" · ")) + "</div>" +
+      (stem ? '<div class="hl-stem">' + nl(stem) + "</div>" : "") + schemeHtml(sc) +
+      '<div class="hl-opts' + (textOnly ? " txt" : "") + '">' + x.opts.map((o, k) => '<button type="button" class="hl-opt" data-k="' + k + '"><b>' + LET[k] + ".</b>" + content(o) + "</button>").join("") + "</div>" +
       '<div id="hlFb"></div><div class="rbk-row"><button type="button" id="hlNext" class="pomo-btn pomo-btn-primary" style="display:none;">Câu tiếp</button></div>';
     box.querySelectorAll(".hl-opt").forEach((b) => b.addEventListener("click", () => choose(+b.getAttribute("data-k"))));
     $("hlNext").addEventListener("click", next);
@@ -6639,14 +6701,14 @@ function initHhcLuyen() {
   function choose(k) {
     if (locked) return;
     locked = true;
-    const q = list[idx];
-    answers[idx] = !!q.options[k].ok;
+    const x = list[idx];
+    answers[idx] = !!x.opts[k].ok;
     box.querySelectorAll(".hl-opt").forEach((b) => {
       const kk = +b.getAttribute("data-k");
       b.disabled = true;
-      if (q.options[kk].ok) b.classList.add("ok"); else if (kk === k) b.classList.add("bad");
+      if (x.opts[kk].ok) b.classList.add("ok"); else if (kk === k) b.classList.add("bad");
     });
-    $("hlFb").innerHTML = explain(q, k);
+    $("hlFb").innerHTML = explain(x, k);
     $("hlNext").style.display = "";
     $("hlNext").textContent = idx + 1 >= list.length ? "Xem kết quả" : "Câu tiếp";
     updStat();
@@ -6657,16 +6719,18 @@ function initHhcLuyen() {
     const t = (e.target && e.target.tagName) || "";
     if (t === "INPUT" || t === "TEXTAREA" || (e.target && e.target.isContentEditable)) return;
     const k = LET.indexOf((e.key || "").toUpperCase());
-    if (k >= 0 && list[idx] && k < list[idx].options.length && !locked) choose(k);
+    if (k >= 0 && list[idx] && k < list[idx].opts.length && !locked) choose(k);
     else if ((e.key === "Enter" || e.key === "ArrowRight") && locked) next();
   });
-  $("hlReset").addEventListener("click", () => { if (data) buildList(); });
-  rbkLoadScript("data/huuco-luyen-data.js").then(() => {
-    data = window.HHC_LUYEN;
-    if (!data || !data.qs) throw new Error("no data");
-    drawTopics(); buildList();
+  $("hlReset").addEventListener("click", () => { if (packs.length) build(); });
+
+  loadManifest().then((ps) => {
+    packs = ps;
+    const def = packs.filter((p) => p.default);
+    (def.length ? def : [packs[0]]).forEach((p) => { sel[p.id] = true; });
+    refresh();
   }).catch(() => {
-    box.innerHTML = '<span class="rbk-prog">Chưa tải được file data/huuco-luyen-data.js. Hãy kiểm tra file đã nằm trong thư mục data trên GitHub chưa.</span>';
+    box.innerHTML = '<span class="rbk-prog">Chưa tải được danh mục câu hỏi. Hãy kiểm tra file data/huuco/manifest.js đã có trên GitHub chưa (hoặc file data/huuco-luyen-data.js của bản cũ).</span>';
   });
 }
 
